@@ -4,35 +4,39 @@
 {% block head %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"HutsGo","url":"{{ SITE_URL }}/","inLanguage":"ja",
- "description":"北アルプスの山小屋の営業期間・料金・予約先・登山口アクセスを、縦走の行程からまとめて確認できるサイト"}
+ "description":"北アルプスの山小屋の標高・営業期間・料金・予約先・登山口アクセスを、縦走の行程からまとめて確認できるサイト"}
 </script>
 {% endblock %}
 {% block body %}
 <section class="hero">
-  <h1>泊まる場所と行き方が、<br>行程の順に並ぶ。</h1>
-  <p class="lede">縦走ルートを選ぶと、通過する山小屋の営業期間・料金・予約先が歩く順番で出てきます。小屋ごとに検索し直す必要はありません。</p>
+  <h1>ルートを選ぶ。<br>泊まる小屋が行程順に並ぶ。</h1>
+  <p class="lede">どこまで登って、どこで泊まるかが断面図で分かります。営業期間・料金・予約先は各小屋の公式サイトで確認したものだけを載せています。</p>
 </section>
 
-<section class="trail-list" aria-labelledby="trails-h">
-  <h2 id="trails-h">ルートを選ぶ</h2>
+<section class="route-list" aria-labelledby="trails-h">
+  <h2 id="trails-h" class="visually-hidden">ルート一覧</h2>
   {% for t in trails %}
-  <a class="trail-row" href="/trails/{{ t.id }}/">
-    <div class="trail-row-main">
+  {% set sm = t.profile %}
+  <a class="route-card" href="/trails/{{ t.id }}/">
+    {{ t.svg_mini }}
+    <div class="route-body">
       <strong>{{ t.name_ja }}</strong>
-      <span>{{ t.summary }}</span>
+      <span class="route-summary">{{ t.summary }}</span>
+      <dl class="route-meta">
+        <div><dt>目安</dt><dd>{{ t.nights_typical }}泊{{ t.nights_typical + 1 }}日</dd></div>
+        <div><dt>歩行</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
+        {% if sm %}<div><dt>最高地点</dt><dd>{{ sm.top.elev | metres }}</dd></div>
+        <div><dt>累積標高差</dt><dd>約{{ sm.gain | metres }}</dd></div>{% endif %}
+        <div><dt>宿泊候補</dt><dd>{{ t.hut_count }}軒</dd></div>
+      </dl>
     </div>
-    <dl class="trail-row-meta">
-      <div><dt>目安</dt><dd>{{ t.nights_typical }}泊{{ t.nights_typical + 1 }}日</dd></div>
-      <div><dt>歩行</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
-      <div><dt>宿泊候補</dt><dd>{{ t.hut_count }}軒</dd></div>
-    </dl>
   </a>
   {% endfor %}
   <p class="quiet">ルートは順次追加します。載っていない場合は<a href="/huts/">条件から探す</a>こともできます。</p>
 </section>
 
 <section class="areas" aria-labelledby="areas-h">
-  <h2 id="areas-h">山域から</h2>
+  <h2 id="areas-h">山域から探す</h2>
   <ul class="chip-row">
     {% for a in areas %}
     <li><a class="chip" href="/huts/?area={{ a.id }}">{{ a.name_ja }}</a></li>
@@ -40,12 +44,13 @@
   </ul>
 </section>
 
-<section class="promise">
-  <h2>このサイトが確認していること</h2>
+<section class="promise" aria-labelledby="promise-h">
+  <h2 id="promise-h">確認していること</h2>
   <ul class="promise-list">
-    <li><span class="dot dot-verified" aria-hidden="true"></span>公式サイトで確認した情報には青い印、二次情報には黄の印を付けています。</li>
-    <li><span class="dot dot-unknown" aria-hidden="true"></span>分からないことは「未確認」と書きます。推測で埋めません。</li>
-    <li>予約は各山小屋の公式サイトで行います。このサイトは仲介料を取りません。</li>
+    <li><span class="dot dot-verified" aria-hidden="true"></span><span><b>公式サイトで確認</b>した情報には青い印と確認日を付けます。二次情報は黄の印です。</span></li>
+    <li><span class="dot dot-unknown" aria-hidden="true"></span><span>分からないことは「<b>未確認</b>」と書きます。推測で埋めません。</span></li>
+    <li><span class="dot dot-none" aria-hidden="true"></span><span>予約は各山小屋の公式サイトへ。仲介も手数料もありません。</span></li>
   </ul>
+  <p class="quiet"><a href="/about/">出典と更新方針</a></p>
 </section>
 {% endblock %}
