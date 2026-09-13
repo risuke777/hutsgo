@@ -132,8 +132,8 @@ urls = ["/", "/huts/", "/about/"] + [f"/huts/{h}/" for h in huts] + [f"/trails/{
 (DIST / "sitemap.xml").write_text(
     '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url><loc>{SITE_URL}{u}</loc><lastmod>{TODAY}</lastmod></url>\n" for u in urls)
-    + "</urlset>\n")
-(DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
+    + "</urlset>\n", encoding="utf-8")
+(DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
 (DIST / "data" ).mkdir()
 (DIST / "data" / "huts.json").write_text(json.dumps(client, ensure_ascii=False, indent=1), encoding="utf-8")
 
