@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """HutsGo static site builder.  python3 build.py  →  dist/"""
-import json, os, pathlib, shutil, sqlite3, datetime
+import json, os, pathlib, shutil, sqlite3, datetime, sys
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 ROOT = pathlib.Path(__file__).parent
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows console (cp932) safety
 DIST = ROOT / "dist"
 SITE_URL = os.environ.get("SITE_URL", "https://hutsgo.jp").rstrip("/")
 ANALYTICS = os.environ.get("ANALYTICS_SNIPPET", "")
@@ -16,7 +18,7 @@ if db.exists():
 con = sqlite3.connect(db)
 con.row_factory = sqlite3.Row
 for f in ("schema.sql", "seed.sql"):
-    con.executescript((ROOT / f).read_text())
+    con.executescript((ROOT / f).read_text(encoding="utf-8"))
 
 def rows(sql, *a):
     return [dict(r) for r in con.execute(sql, a)]
@@ -102,7 +104,7 @@ def fmt_date(d):
 def yen(v):
     return f"¥{v:,}"
 
-env = Environment(loader=FileSystemLoader(ROOT / "templates"),
+env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
 env.filters.update(fmt_time=fmt_time, fmt_date=fmt_date, yen=yen)
 env.globals.update(SITE_URL=SITE_URL, ANALYTICS=ANALYTICS, TODAY=TODAY,
@@ -133,6 +135,6 @@ urls = ["/", "/huts/", "/about/"] + [f"/huts/{h}/" for h in huts] + [f"/trails/{
     + "</urlset>\n")
 (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n")
 (DIST / "data" ).mkdir()
-(DIST / "data" / "huts.json").write_text(json.dumps(client, ensure_ascii=False, indent=1))
+(DIST / "data" / "huts.json").write_text(json.dumps(client, ensure_ascii=False, indent=1), encoding="utf-8")
 
 print(f"built {len(urls)} pages → {DIST}")

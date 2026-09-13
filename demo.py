@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """HutsGo PoC — schema validation + the three query patterns that matter."""
-import sqlite3, pathlib, textwrap
+import sqlite3, pathlib, textwrap, sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows console (cp932) safety
 
 DB = pathlib.Path("hutsgo.db")
 if DB.exists():
@@ -9,7 +11,7 @@ if DB.exists():
 con = sqlite3.connect(DB)
 con.row_factory = sqlite3.Row
 for f in ("schema.sql", "seed.sql"):
-    con.executescript(pathlib.Path(f).read_text())
+    con.executescript(pathlib.Path(f).read_text(encoding="utf-8"))
 
 def head(t):
     print("\n" + "=" * 62 + f"\n{t}\n" + "=" * 62)
