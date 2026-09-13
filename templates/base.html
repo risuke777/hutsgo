@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}HutsGo{% endblock %}</title>
+<meta name="description" content="{% block desc %}北アルプスの山小屋の営業期間・料金・予約先・登山口アクセスを、縦走の行程からまとめて確認できます。{% endblock %}">
+<link rel="canonical" href="{{ SITE_URL }}{% block canonical %}/{% endblock %}">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.desc() }}">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ja_JP">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% block head %}{% endblock %}
+{{ ANALYTICS | safe }}
+</head>
+<body>
+<a class="skip" href="#main">本文へ</a>
+<header class="site-head">
+  <a class="wordmark" href="/" aria-label="HutsGo ホーム">
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M2 22 L10 8 L14 14 L17 10 L24 22 Z" fill="currentColor"/></svg>
+    <span>HutsGo</span>
+  </a>
+  <nav aria-label="主要">
+    <a href="/">ルートから</a>
+    <a href="/huts/">条件で探す</a>
+    <a href="/about/">データについて</a>
+  </nav>
+</header>
+<main id="main">
+{% block body %}{% endblock %}
+</main>
+<footer class="site-foot">
+  <p>掲載内容は各山小屋の公式情報を基にしていますが、営業期間・料金は予告なく変わります。出発前に必ず公式サイトか電話で確認してください。</p>
+  <p><a href="/about/">出典と更新方針</a> ／ 対象山域：北アルプス（表銀座・槍・穂高） ／ 2026年シーズン</p>
+</footer>
+<script src="/static/site.js" defer></script>
+</body>
+</html>

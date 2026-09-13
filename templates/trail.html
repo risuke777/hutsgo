@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ t.name_ja }}の山小屋 — 営業期間・料金・予約先を行程順に | HutsGo{% endblock %}
+{% block desc %}{{ t.name_ja }}で通過する山小屋{{ t.hut_count }}軒の営業期間・料金・予約先を歩く順に一覧。{{ t.summary }}{% endblock %}
+{% block canonical %}/trails/{{ t.id }}/{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"{{ t.name_ja }}の山小屋","itemListOrder":"https://schema.org/ItemListOrderAscending",
+ "itemListElement":[{% for s in t.stops if s.hut %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}/huts/{{ s.hut.id }}/","name":"{{ s.hut.name_ja }}"}{{ "," if not loop.last }}{% endfor %}]}
+</script>
+{% endblock %}
+{% block body %}
+<article class="trail">
+  <header class="page-head">
+    <p class="crumb"><a href="/">ルート</a></p>
+    <h1>{{ t.name_ja }}</h1>
+    <p class="lede">{{ t.summary }}</p>
+    <dl class="facts-inline">
+      <div><dt>目安</dt><dd>{{ t.nights_typical }}泊{{ t.nights_typical + 1 }}日</dd></div>
+      <div><dt>歩行時間</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
+      <div><dt>日付</dt><dd><input type="date" id="plan-date" value="{{ TODAY }}" aria-label="宿泊予定日"></dd></div>
+    </dl>
+  </header>
+
+  <ol class="timeline" data-plan-date>
+  {% for s in t.stops %}
+    <li class="stop {{ 'stop-hut' if s.hut else 'stop-trailhead' }}"
+        {% if s.hut and s.hut.season %}data-status="{{ s.hut.season.status }}" data-open="{{ s.hut.season.open_date or '' }}" data-close="{{ s.hut.season.close_date or '' }}"{% endif %}>
+      <div class="stop-time">{% if s.cumulative_time_min %}{{ s.cumulative_time_min | fmt_time }}{% else %}出発{% endif %}</div>
+      <div class="stop-body">
+        {% if s.hut %}
+        <h2><a href="/huts/{{ s.hut.id }}/">{{ s.hut.name_ja }}</a></h2>
+        <p class="stop-line">
+          <span class="season-badge" data-season-badge></span>
+          {% if s.hut.season and s.hut.season.status == 'open' %}<span>{{ s.hut.season.open_date | fmt_date }}〜{{ s.hut.season.close_date | fmt_date }}</span>{% elif s.hut.season and s.hut.season.status == 'year_round' %}<span>通年営業</span>{% endif %}
+          <span class="dot dot-{{ s.hut.season.confidence if s.hut.season else 'unknown' }}" title="{{ CONF_LABEL[s.hut.season.confidence if s.hut.season else 'unknown'] }}"></span>
+        </p>
+        <p class="stop-line">
+          {% if s.hut.price_two %}1泊2食 <b>{{ s.hut.price_two.price_jpy | yen }}{{ '〜' if s.hut.price_two.is_from_price }}</b>{% endif %}
+          {% if s.hut.price_none %}／ 素泊まり {{ s.hut.price_none.price_jpy | yen }}{{ '〜' if s.hut.price_none.is_from_price }}{% endif %}
+          {% if s.hut.price_tent %}／ テント {{ s.hut.price_tent.price_jpy | yen }}{% endif %}
+        </p>
+        <div class="stop-actions">
+          {% if s.hut.official_url %}<a class="btn btn-primary" href="{{ s.hut.official_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ s.hut.id }}">公式サイトで予約</a>{% endif %}
+          <a class="btn" href="/huts/{{ s.hut.id }}/">設備とアクセス</a>
+        </div>
+        {% else %}
+        <h2>{{ s.trailhead.name_ja }}</h2>
+        {% if s.trailhead.parking_note %}<p class="stop-line">{{ s.trailhead.parking_note }}</p>{% endif %}
+        {% endif %}
+      </div>
+    </li>
+  {% endfor %}
+  </ol>
+
+  <aside class="note">
+    <h2>歩き方の目安</h2>
+    <p>時間は無雪期の標準コースタイムの累計です。休憩は含みません。宿泊地は同じ標高帯に複数の小屋が並ぶことがあるので、混雑や予約状況で選び分けてください。</p>
+  </aside>
+</article>
+{% endblock %}

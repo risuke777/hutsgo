@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% set s = h.season %}
+{% block title %}{{ h.name_ja }} — 2026年の営業期間・料金・予約方法・アクセス | HutsGo{% endblock %}
+{% block desc %}{{ h.name_ja }}（{{ h.area.name_ja if h.area }}）の2026年営業期間{% if s and s.open_date %}は{{ s.open_date | fmt_date }}〜{{ s.close_date | fmt_date }}{% endif %}。{% if h.price_two %}1泊2食{{ h.price_two.price_jpy | yen }}{% endif %}{% if h.price_none %}、素泊まり{{ h.price_none.price_jpy | yen }}{% endif %}。予約先・登山口アクセス・設備の確認状況をまとめています。{% endblock %}
+{% block canonical %}/huts/{{ h.id }}/{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"LodgingBusiness","name":"{{ h.name_ja }}",
+ "url":"{{ SITE_URL }}/huts/{{ h.id }}/"{% if h.official_url %},"sameAs":"{{ h.official_url }}"{% endif %}
+ {% if h.lat %},"geo":{"@type":"GeoCoordinates","latitude":{{ h.lat }},"longitude":{{ h.lon }}}{% endif %}
+ {% if h.price_two %},"priceRange":"{{ h.price_two.price_jpy | yen }}〜"{% endif %},
+ "address":{"@type":"PostalAddress","addressRegion":"{{ h.area.name_ja if h.area }}","addressCountry":"JP"}}
+</script>
+{% endblock %}
+{% block body %}
+<article class="hut">
+  <header class="page-head">
+    <p class="crumb"><a href="/huts/">山小屋</a>{% if h.area %} / {{ h.area.name_ja }}{% endif %}</p>
+    <h1>{{ h.name_ja }}</h1>
+    <p class="lede">{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}。{{ h.operator.name_ja }}が運営{% endif %}{% if h.elevation_m %}。標高{{ h.elevation_m }}m{% endif %}</p>
+    <div class="cta-row">
+      {% if h.official_url %}<a class="btn btn-primary btn-lg" href="{{ h.official_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">公式サイトで予約する</a>{% endif %}
+      {% if s and s.reservation_phone %}<a class="btn btn-lg" href="tel:{{ s.reservation_phone }}" data-track="phone" data-hut="{{ h.id }}">電話 {{ s.reservation_phone }}</a>{% endif %}
+    </div>
+    <p class="quiet">予約は山小屋の公式窓口で直接行います。HutsGoは手数料を受け取りません。</p>
+  </header>
+
+  <section class="block" aria-labelledby="season-h">
+    <h2 id="season-h">2026年の営業</h2>
+    <dl class="facts" data-plan-date>
+      <div>
+        <dt>営業期間</dt>
+        <dd {% if s %}data-status="{{ s.status }}" data-open="{{ s.open_date or '' }}" data-close="{{ s.close_date or '' }}"{% endif %}>
+          {% if s and s.status == 'open' %}{{ s.open_date | fmt_date }}〜{{ s.close_date | fmt_date }}
+          {% elif s and s.status == 'year_round' %}通年
+          {% elif s and s.status == 'closed_this_year' %}2026年は休業
+          {% else %}未確認{% endif %}
+          <span class="dot dot-{{ s.confidence if s else 'unknown' }}" title="{{ CONF_LABEL[s.confidence if s else 'unknown'] }}"></span>
+          {% if s and s.season_note %}<small>{{ s.season_note }}</small>{% endif %}
+        </dd>
+      </div>
+      <div><dt>予約</dt><dd>{% if s and s.reservation_required == 1 %}必要{% elif s and s.reservation_required == 0 %}不要{% else %}未確認{% endif %}</dd></div>
+      <div><dt>予約受付開始</dt><dd>{% if s and s.booking_opens_at %}{{ s.booking_opens_at }}{% else %}未確認{% endif %}</dd></div>
+      <div><dt>テント場</dt><dd>{% if s and s.capacity_tents %}約{{ s.capacity_tents }}張{% elif s and s.capacity_tents == 0 %}なし{% else %}未確認{% endif %}</dd></div>
+    </dl>
+  </section>
+
+  <section class="block" aria-labelledby="rates-h">
+    <h2 id="rates-h">料金</h2>
+    {% if h.rates %}
+    <table class="rates">
+      <tbody>
+      {% for r in h.rates %}
+        <tr><th scope="row">{{ r.label }}</th><td>{{ r.price_jpy | yen }}{{ '〜' if r.is_from_price }} <span class="dot dot-{{ r.confidence }}" title="{{ CONF_LABEL[r.confidence] }}"></span></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="quiet">大人1名・税込。「〜」は最低料金で、部屋タイプや時期で上がります。</p>
+    {% else %}<p class="empty">料金は未確認です。</p>{% endif %}
+  </section>
+
+  <section class="block" aria-labelledby="fac-h">
+    <h2 id="fac-h">設備</h2>
+    {% set f = h.fac %}
+    {% if f.confidence == 'unknown' %}
+    <p class="empty">設備はまだ現地・公式で確認していません。トイレ・水・電源・支払方法を確認したら掲載します。</p>
+    {% else %}
+    <dl class="facts">
+      <div><dt>トイレ</dt><dd>{{ f.toilet_type or '未確認' }}</dd></div>
+      <div><dt>水</dt><dd>{{ f.water_available or '未確認' }}</dd></div>
+      <div><dt>電源</dt><dd>{{ 'あり' if f.power_outlet else '未確認' }}</dd></div>
+      <div><dt>支払い</dt><dd>{% if f.credit_card %}カード可{% elif f.cash_only %}現金のみ{% else %}未確認{% endif %}</dd></div>
+    </dl>
+    {% endif %}
+  </section>
+
+  <section class="block" aria-labelledby="access-h">
+    <h2 id="access-h">登山口とアクセス</h2>
+    {% if h.access %}
+    {% for th in h.access %}
+    <div class="access">
+      <h3>{{ th.name_ja }} <small>徒歩 約{{ th.walk_up | fmt_time }}</small></h3>
+      {% if th.parking_note %}<p>{{ th.parking_note }}</p>{% endif %}
+      <ul class="routes">
+      {% for r in th.routes %}
+        <li>
+          <b>{{ r.mode_label }}</b>{% if r.operator_name %} {{ r.operator_name }}{% endif %}{% if r.from_place %}（{{ r.from_place }}から）{% endif %}
+          {% if r.private_car_restricted %}<span class="flag">マイカー規制</span>{% endif %}
+          {% if r.requires_hut_stay %}<span class="flag">小屋宿泊者限定</span>{% endif %}
+          {% if r.seasonal_only %}<span class="flag flag-soft">季節運行</span>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="empty">登山口からの所要時間はまだ登録していません。</p>
+    {% endif %}
+  </section>
+
+  {% if h.trails %}
+  <section class="block" aria-labelledby="ontrail-h">
+    <h2 id="ontrail-h">この小屋を通るルート</h2>
+    <ul class="link-list">
+      {% for t in h.trails %}<li><a href="/trails/{{ t.id }}/">{{ t.name_ja }}</a></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="block" aria-labelledby="rev-h">
+    <h2 id="rev-h">泊まった人の声</h2>
+    {% if h.reviews %}
+      {% for r in h.reviews %}<blockquote class="review"><p>{{ r.body }}</p><footer>{{ r.stayed_on }}</footer></blockquote>{% endfor %}
+    {% else %}
+    <p class="empty">まだ投稿がありません。投稿機能は準備中です。</p>
+    {% endif %}
+  </section>
+
+  <section class="block source">
+    <h2>出典</h2>
+    <p>{% if s and s.source_url %}営業期間・料金：<a href="{{ s.source_url }}" rel="noopener" target="_blank">{{ s.source_url }}</a>（{{ CONF_LABEL[s.confidence] }}、{{ s.last_verified_at }}時点）{% endif %}</p>
+    <p>青い印は公式サイトで確認した情報、黄の印は二次情報です。出発前に公式サイトで最新情報をご確認ください。</p>
+  </section>
+</article>
+{% endblock %}
