@@ -23,9 +23,15 @@ GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラ�
 - `/huts/<id>/` の閲覧数 → outbound クリック率
 - 日付フィルタの利用率（`change_date`）
 
+## 標高断面図
+- `build.py` がトレイルごとにインライン SVG を生成（PC 用 720px / スマホ用 360px の 2 枚を CSS で出し分け、JS なし）
+- 横軸 = `trail_stops.cumulative_time_min` の累積コースタイム、縦軸 = `huts` / `trailheads` / 通過点 (`trail_stops.label, elevation_m`) の標高を直線で結ぶ
+- 標高が公式未確認の小屋は前後の地点から按分した仮位置に点線の丸で置き「標高未確認」と表示。マーカーはタイムラインの `#stop-<seq>` へのアンカー
+
 ## データの更新
 - `seed.sql` が唯一の真実。編集して `python3 build.py`
-- 公式サイトで確認したら `confidence` を `verified` に、`last_verified_at` を当日に
+- 公式サイトで確認したら `confidence` を `verified` に、`source_url` を公式 URL に、`last_verified_at` を当日に
+- `huts.elevation_m` は公式サイト記載値のみ（`elevation_source='official'`）。稜線の小屋を地理院 API で埋めないこと（位置誤差が大きい）
 - 設備 (`hut_facilities`) を埋めると小屋ページの「未確認」ブロックが自動でデータ表示に変わる
 
 ## 構成
