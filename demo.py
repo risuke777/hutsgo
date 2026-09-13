@@ -38,7 +38,8 @@ for r in rows:
 # --- Q2: 行程からの逆引き（HutsGo のコア導線） ------------------------
 head("Q2  『表銀座縦走 2泊3日』→ 行程上の宿泊候補と予約先")
 rows = con.execute("""
-    SELECT ts.seq, COALESCE(h.name_ja, th.name_ja) AS stop,
+    SELECT ts.seq, COALESCE(h.name_ja, th.name_ja, ts.label) AS stop,
+           COALESCE(h.elevation_m, th.elevation_m, ts.elevation_m) AS elev,
            ts.cumulative_time_min AS t, h.official_url,
            s.open_date, s.close_date
     FROM trail_stops ts
@@ -51,7 +52,8 @@ rows = con.execute("""
 for r in rows:
     hm = f"{r['t']//60}h{r['t']%60:02d}"
     season = f"{r['open_date']}〜{r['close_date']}" if r["open_date"] else "—"
-    print(f"  {r['seq']}. {r['stop']:<14} +{hm:<6} {season}")
+    elev = f"{r['elev']:>5}m" if r["elev"] else "   ？m"
+    print(f"  {r['seq']:>2}. {r['stop']:<14} {elev} +{hm:<6} {season}")
     if r["official_url"]:
         print(f"       予約: {r['official_url']}")
 

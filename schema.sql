@@ -42,6 +42,8 @@ CREATE TABLE huts (
   lat            REAL,
   lon            REAL,
   elevation_m    INTEGER,
+  -- 'official' = 小屋の公式サイト記載値 / 'gsi' = 国土地理院 標高API（平地の宿のみ。稜線の小屋は位置誤差が大きいので使わない）
+  elevation_source TEXT CHECK (elevation_source IN ('official','gsi')),
   official_url   TEXT,
   source_url     TEXT,
   last_verified_at TEXT,
@@ -184,6 +186,10 @@ CREATE TABLE trail_stops (
   trailhead_id TEXT REFERENCES trailheads(id),
   cumulative_time_min INTEGER,
   is_overnight_candidate INTEGER DEFAULT 1,
+  -- 宿泊地でない通過点（ピーク・乗越）。hut_id / trailhead_id が両方 NULL の行で使う。
+  -- 標高は国土地理院の地形図値。時刻は前後の小屋間コースタイムを按分した概算。
+  label       TEXT,
+  elevation_m INTEGER,
   PRIMARY KEY (trail_id, seq)
 );
 
