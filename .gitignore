@@ -1,0 +1,5 @@
+﻿hutsgo.db
+__pycache__/
+dist/
+.env
+.env.*
