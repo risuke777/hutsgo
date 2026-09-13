@@ -20,18 +20,22 @@ GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラ�
 2. GitHub のリポジトリ変数 `SITE_URL` に `https://hutsgo.com` を設定（build.py が `CNAME` ファイルを出力し、リンクのベースパスが `/` になる）
 3. Settings → Pages → Custom domain に `hutsgo.com`、DNS チェック通過後に Enforce HTTPS を ON
 
-## KPI 計測の有効化
-`ANALYTICS_SNIPPET` 環境変数に Plausible / Umami / GA4 のスクリプトタグを入れて build。
-公式サイトへのクリックは自動で `outbound_official_site` / `outbound_phone` イベントとして送られる（hut ID 付き）。
-見るべき数字は 3 つ:
-- オーガニック検索セッション（週次）
-- `/huts/<id>/` の閲覧数 → outbound クリック率
-- 日付フィルタの利用率（`change_date`）
+## KPI
+主 KPI は **送客率** = 小屋ページ閲覧 → 公式サイト / 予約ページ / 電話 のクリック（同一訪問者×小屋で 1 回）。
+副 KPI は 投稿数（`post_submit`）、設備データ被覆率（`python demo.py`）、ドロミティ興味数（`interest_dolomiti`）。
+登録ユーザー数は追わない（ログイン機能は作らない。投稿はログイン無し・承認制）。
 
-## 標高断面図
-- `build.py` がトレイルごとにインライン SVG を生成（PC 用 720px / スマホ用 360px の 2 枚を CSS で出し分け、JS なし）
-- 横軸 = `trail_stops.cumulative_time_min` の累積コースタイム、縦軸 = `huts` / `trailheads` / 通過点 (`trail_stops.label, elevation_m`) の標高を直線で結ぶ
-- 標高が公式未確認の小屋は前後の地点から按分した仮位置に点線の丸で置き「標高未確認」と表示。マーカーはタイムラインの `#stop-<seq>` へのアンカー
+計測はエックスサーバー上の自前 API（`xserver/README.md`）。リポジトリ変数 `API_URL` を設定すると
+`static/site.js` が `navigator.sendBeacon` でイベントを送り、小屋ページに「泊まった情報を送る」フォームが出る。
+`ANALYTICS_SNIPPET` に Plausible / GA4 のタグを入れれば併用もできる。
+
+## 写真
+`static/img/` は運営者撮影のみ。`materials/` の元写真から PIL で 1600px / 800px に書き出し、EXIF（位置情報）は全て除去する。
+掲載位置は `seed.sql` の `photos` テーブルで管理（hero / trail / hut / teaser / area）。背景には敷かない。
+
+## 次の山域（ドロミティ）
+Alta Via 1 は表銀座と同じ「線」のルートなので UI はそのまま使える。`hut_rates.currency` と `mountain_ranges.dolomites` は準備済み。
+着手条件はトップの「ドロミティ版がほしい」の押下数。データは各リフージオの公式サイトで確認したものだけ載せる（日本と同じ基準）。
 
 ## データの更新
 - `seed.sql` が唯一の真実。編集して `python3 build.py`

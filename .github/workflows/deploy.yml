@@ -28,6 +28,8 @@ jobs:
           # repo variable SITE_URL wins (custom domain); otherwise project Pages URL https://<owner>.github.io/<repo>
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
           ANALYTICS_SNIPPET: ${{ vars.ANALYTICS_SNIPPET }}
+          # XServer 上の計測/投稿エンドポイント（例 https://api.hutsgo.com）。未設定なら計測も投稿フォームも無効
+          API_URL: ${{ vars.API_URL }}
         run: python3 build.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -3,3 +3,5 @@ __pycache__/
 dist/
 .env
 .env.*
+xserver/api/config.php
+xserver/api/data/

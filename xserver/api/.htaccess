@@ -1,0 +1,11 @@
+# api.hutsgo.com のドキュメントルートに置く。
+# data/ 配下（イベント・投稿・写真）と config.php は外から読めないようにする。
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^data/ - [F,L]
+  RewriteRule ^(config|config\.sample|common)\.php$ - [F,L]
+</IfModule>
+<FilesMatch "\.(jsonl|log)$">
+  Require all denied
+</FilesMatch>
+Options -Indexes
