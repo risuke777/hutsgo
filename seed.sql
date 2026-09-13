@@ -17,7 +17,8 @@
 BEGIN;
 
 INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES
-  ('kita_alps', '北アルプス', 'Northern Japan Alps');
+  ('kita_alps', '北アルプス', 'Northern Japan Alps'),
+  ('dolomites', 'ドロミティ', 'Dolomites');   -- 準備中: Alta Via 1 のリフージオを同じ形で載せる
 
 INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
   ('omote_ginza',  'kita_alps', '表銀座・常念山脈', 'Omote-Ginza'),
@@ -253,5 +254,16 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('karasawa_base', 8,NULL,NULL,          670,0,'涸沢カール',2300),
 ('karasawa_base', 9,'hotakadake_sanso',NULL,850,1,NULL,NULL),
 ('karasawa_base',10,NULL,NULL,          900,0,'奥穂高岳',3190);
+
+-- photos ---------------------------------------------------------
+-- 全て運営者撮影。位置情報などの EXIF は static/img へ書き出す時に除去済み。
+INSERT INTO photos (id,file,alt,caption,credit,role,hut_id,trail_id,range_id,taken_on,sort) VALUES
+('hero_sunrise','omote-tents-sunrise','稜線のテント場に朝日が差し、雲海が広がっている','稜線のテント場で迎える朝。ここに泊まるために歩く。','撮影：HutsGo','hero',NULL,NULL,'kita_alps','2026-07-19',0),
+('omote_tsubakuro','omote-tsubakuro','白い花崗岩の燕岳の稜線と、緑の斜面にかかる雲','燕岳。燕山荘のすぐ北、花崗岩の白い稜線。','撮影：HutsGo','trail','enzanso','omote_ginza','kita_alps','2026-07-18',0),
+('omote_tents_dawn','omote-tents-dawn','夜明け前の稜線に色とりどりのテントが並ぶ','夜明け前のテント場。雲海の上で目を覚ます。','撮影：HutsGo','trail',NULL,'omote_ginza','kita_alps','2026-07-19',1),
+('ridge_hut_clouds','ridge-hut-clouds','雲の湧く稜線の鞍部に建つ山小屋','雲の湧く稜線と、鞍部の山小屋。','撮影：HutsGo','area',NULL,NULL,'kita_alps',NULL,0),
+('dolomiti_trecime','dolomiti-trecime','夕日に染まるトレ・チーメ・ディ・ラヴァレードの岩峰','Tre Cime di Lavaredo。夕方、岩壁だけが赤く残る。','撮影：HutsGo','teaser',NULL,NULL,'dolomites',NULL,0),
+('dolomiti_locatelli','dolomiti-locatelli','岩峰に囲まれた赤い屋根の山小屋 Rifugio Locatelli','Rifugio Locatelli（Dreizinnenhütte）。ドロミティの山小屋は昼から賑わう。','撮影：HutsGo','teaser',NULL,NULL,'dolomites',NULL,1),
+('dolomiti_pano','dolomiti-pano','ドロミティの岩の稜線から見下ろす谷と遠くの山群','ドロミティの稜線から。谷ごとに小屋があり、線でつなげる。','撮影：HutsGo','teaser',NULL,NULL,'dolomites',NULL,2);
 
 COMMIT;

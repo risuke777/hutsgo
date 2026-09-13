@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_photo.html" import img %}
 {% block title %}HutsGo — 山小屋の予約先と行き方を、行程順に{% endblock %}
 {% block canonical %}/{% endblock %}
 {% block head %}
@@ -10,14 +11,20 @@
 {% block body %}
 <section class="hero">
   <h1>ルートを選ぶ。<br>泊まる小屋が行程順に並ぶ。</h1>
-  <p class="lede">どこまで登って、どこで泊まるかが断面図で分かります。営業期間・料金・予約先は各小屋の公式サイトで確認したものだけを載せています。</p>
+  <p class="lede">どこまで登って、どこで泊まるかが断面図で分かります。営業期間・料金・予約先・設備は各小屋の公式サイトで確認したものだけを載せています。</p>
 </section>
+{% if HERO %}
+<figure class="photo photo-hero">
+  {{ img(HERO, eager=true) }}
+  <figcaption>{{ HERO.caption }} <span class="credit">{{ HERO.credit }}</span></figcaption>
+</figure>
+{% endif %}
 
 <section class="route-list" aria-labelledby="trails-h">
-  <h2 id="trails-h" class="visually-hidden">ルート一覧</h2>
+  <h2 id="trails-h">ルートを選ぶ</h2>
   {% for t in trails %}
   {% set sm = t.profile %}
-  <a class="route-card" href="{{ BASE }}/trails/{{ t.id }}/">
+  <a class="route-card" href="{{ BASE }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}">
     {{ t.svg_mini }}
     <div class="route-body">
       <strong>{{ t.name_ja }}</strong>
@@ -43,6 +50,28 @@
     {% endfor %}
   </ul>
 </section>
+
+{% if TEASER %}
+<section class="teaser" aria-labelledby="teaser-h">
+  <div class="teaser-photos">
+    {% for p in TEASER[:3] %}
+    <figure class="photo {{ 'photo-main' if loop.first else 'photo-sub' }}">
+      {{ img(p, sizes="(max-width: 760px) 100vw, 480px" if loop.first else "(max-width: 760px) 50vw, 240px") }}
+      <figcaption>{{ p.caption }}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  <div class="teaser-body">
+    <p class="eyebrow">次の山域</p>
+    <h2 id="teaser-h">ドロミティ（イタリア）</h2>
+    <p>Alta Via 1 のリフージオを、表銀座と同じ「行程順に小屋が並ぶ」形で。トイレ・シャワー・テント場の情報が一番分からない山域だからこそ、同じ確認基準で載せます。</p>
+    <p class="teaser-cta">
+      <button type="button" class="btn btn-primary" data-track="interest_dolomiti" data-done="登録しました。ありがとうございます">ドロミティ版がほしい</button>
+      <span class="quiet">押した数を見て、作る順番を決めます。</span>
+    </p>
+  </div>
+</section>
+{% endif %}
 
 <section class="promise" aria-labelledby="promise-h">
   <h2 id="promise-h">確認していること</h2>

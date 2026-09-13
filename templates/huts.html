@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_photo.html" import img %}
 {% block title %}北アルプスの山小屋を条件で探す — 営業日・料金・テント場 | HutsGo{% endblock %}
 {% block desc %}北アルプス（表銀座・槍・穂高）の山小屋{{ huts | length }}軒を、宿泊日・料金・テント場の有無で絞り込めます。{% endblock %}
 {% block canonical %}/huts/{% endblock %}
@@ -7,6 +8,7 @@
   <h1>条件で探す</h1>
   <p class="lede">泊まる日と予算を入れると、その日に営業している小屋だけが残ります。</p>
 </section>
+{% if AREA_PHOTO %}<figure class="photo photo-band">{{ img(AREA_PHOTO) }}<figcaption>{{ AREA_PHOTO.caption }}</figcaption></figure>{% endif %}
 
 <form class="filter" id="filter" onsubmit="return false">
   <div class="filter-row">

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_photo.html" import img %}
 {% set sm = t.profile %}
 {% block title %}{{ t.name_ja }}の山小屋 — 標高断面・営業期間・料金・予約先を行程順に | HutsGo{% endblock %}
 {% block desc %}{{ t.name_ja }}で通過する山小屋{{ t.hut_count }}軒の標高・営業期間・料金・予約先を歩く順に一覧。{% if sm %}最高地点{{ sm.top.elev }}m、累積標高差約{{ sm.gain }}m。{% endif %}{{ t.summary }}{% endblock %}
@@ -43,6 +44,14 @@
       <p class="quiet profile-note">横軸は無雪期の標準コースタイムの累計（距離ではありません）。稜線は登録地点を直線で結んだ概形で、実際の地形の細かな起伏は表していません。累積標高差は登録地点間の登りの合計の概算です。{% if sm and sm.unverified %}{{ sm.unverified | join('・') }}は標高が未確認のため、前後の地点から仮に位置を置いています。{% endif %}</p>
     </figcaption>
   </figure>
+
+  {% if t.photos %}
+  <div class="photo-strip">
+    {% for p in t.photos[:2] %}
+    <figure class="photo">{{ img(p, sizes="(max-width: 760px) 50vw, 360px") }}<figcaption>{{ p.caption }}</figcaption></figure>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <div class="plan-bar">
     <label for="plan-date">泊まる日</label>

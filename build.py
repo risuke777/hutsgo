@@ -15,6 +15,7 @@ BASE = urllib.parse.urlsplit(SITE_URL).path.rstrip("/")
 SITE_HOST = urllib.parse.urlsplit(SITE_URL).hostname or ""
 CNAME = SITE_HOST if SITE_HOST and not SITE_HOST.endswith("github.io") and SITE_HOST != "localhost" else None
 ANALYTICS = os.environ.get("ANALYTICS_SNIPPET", "")
+API_URL = os.environ.get("API_URL", "").rstrip("/")   # XServer 上の計測/投稿 API。空なら計測も投稿フォームも無効
 TODAY = datetime.date.today().isoformat()
 
 # ---------------------------------------------------------------- data
@@ -44,6 +45,10 @@ QUALITY_LABEL = {"good": "○", "spotty": "△", "none": "×"}
 areas = {a["id"]: a for a in rows("SELECT * FROM sub_areas")}
 operators = {o["id"]: o for o in rows("SELECT * FROM operators")}
 trailheads = {t["id"]: t for t in rows("SELECT * FROM trailheads")}
+photos = rows("SELECT * FROM photos ORDER BY sort, id")
+HERO = next((p for p in photos if p["role"] == "hero"), None)
+TEASER = [p for p in photos if p["role"] == "teaser"]
+AREA_PHOTO = next((p for p in photos if p["role"] == "area"), None)
 
 
 def conf_text(row):
@@ -124,6 +129,7 @@ for h in rows("SELECT * FROM huts ORDER BY name_ja"):
             r["mode_label"] = MODE_LABEL[r["mode"]]
         h["access"].append(th)
     h["trails"] = []
+    h["photos"] = [p for p in photos if p["hut_id"] == hid]
     # the one link a hiker actually needs: official reservation page, else official site
     h["book_url"] = (h["season"] or {}).get("reservation_url") or h["official_url"]
     huts[hid] = h
@@ -387,6 +393,7 @@ for t in rows("SELECT * FROM trails"):
             s["hut"]["trails"].append(t)
     t["total_min"] = max(s["cumulative_time_min"] or 0 for s in t["stops"])
     t["hut_count"] = sum(1 for s in t["stops"] if s["hut"] and s["is_overnight_candidate"])
+    t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
     t["points"] = build_points(t)
     t["profile"] = summarize(t["points"])
     t["rows"] = build_legs(t, t["points"])
@@ -415,7 +422,8 @@ env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
 env.filters.update(fmt_time=fmt_time, fmt_time_short=fmt_time_short, fmt_date=fmt_date, yen=yen, metres=metres,
                    conf_text=conf_text)
-env.globals.update(SITE_URL=SITE_URL, BASE=BASE, ANALYTICS=ANALYTICS, TODAY=TODAY,
+env.globals.update(SITE_URL=SITE_URL, BASE=BASE, ANALYTICS=ANALYTICS, API_URL=API_URL,
+                   HERO=HERO, TEASER=TEASER, AREA_PHOTO=AREA_PHOTO, TODAY=TODAY,
                    CONF_LABEL=CONF_LABEL, TOILET_LABEL=TOILET_LABEL, WATER_LABEL=WATER_LABEL,
                    areas=list(areas.values()))
 

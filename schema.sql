@@ -82,7 +82,8 @@ CREATE TABLE hut_rates (
   year           INTEGER NOT NULL,
   plan_type      TEXT NOT NULL CHECK (plan_type IN
                    ('two_meals','one_meal','no_meal','tent','private_room','day_use')),
-  price_jpy      INTEGER,
+  price_jpy      INTEGER,               -- 名前は歴史的経緯。currency が 'EUR' なら EUR の額（ドロミティ用）
+  currency       TEXT NOT NULL DEFAULT 'JPY' CHECK (currency IN ('JPY','EUR','CHF')),
   is_from_price  INTEGER DEFAULT 0,    -- 「〜」表記かどうか。UIで誤解を生む要因
   source_url     TEXT,
   last_verified_at TEXT,
@@ -191,6 +192,24 @@ CREATE TABLE trail_stops (
   label       TEXT,
   elevation_m INTEGER,
   PRIMARY KEY (trail_id, seq)
+);
+
+-- ---------------------------------------------------------------
+-- Photos: 運営者撮影のみ（権利処理済み）。EXIF は build 前に剥がす。
+-- role: 'hero' トップ / 'trail' ルート頁 / 'hut' 小屋頁 / 'teaser' 準備中山域の予告
+-- ---------------------------------------------------------------
+CREATE TABLE photos (
+  id        TEXT PRIMARY KEY,
+  file      TEXT NOT NULL,              -- static/img/<file>.jpg（-800 版も同名で存在）
+  alt       TEXT NOT NULL,
+  caption   TEXT,
+  credit    TEXT,
+  role      TEXT NOT NULL CHECK (role IN ('hero','trail','hut','teaser','area')),
+  hut_id    TEXT REFERENCES huts(id),
+  trail_id  TEXT REFERENCES trails(id),
+  range_id  TEXT REFERENCES mountain_ranges(id),
+  taken_on  TEXT,
+  sort      INTEGER DEFAULT 0
 );
 
 -- ---------------------------------------------------------------

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_photo.html" import img %}
 {% set s = h.season %}
 {% set f = h.fac %}
 {% block title %}{{ h.name_ja }} — 2026年の営業期間・料金・予約方法・アクセス | HutsGo{% endblock %}
@@ -32,6 +33,9 @@
     {% if s and s.booking_opens_at %}<p class="booking-open"><span class="k">予約受付</span>{{ s.booking_opens_at }}</p>{% endif %}
     <p class="quiet">予約は山小屋の公式窓口で直接行います。HutsGoは手数料を受け取りません。</p>
   </header>
+  {% for p in h.photos[:1] %}
+  <figure class="photo">{{ img(p) }}<figcaption>{{ p.caption }} <span class="credit">{{ p.credit }}</span></figcaption></figure>
+  {% endfor %}
 
   <section class="block" aria-labelledby="season-h">
     <h2 id="season-h">2026年の営業</h2>
@@ -132,8 +136,34 @@
     {% if h.reviews %}
       {% for r in h.reviews %}<blockquote class="review"><p>{{ r.body }}</p><footer>{{ r.stayed_on }}</footer></blockquote>{% endfor %}
     {% else %}
-    <p class="empty">まだ投稿がありません。投稿機能は準備中です。</p>
+    <p class="empty">まだ投稿がありません。泊まったことがあれば、下のフォームから設備の様子を教えてください。</p>
     {% endif %}
+
+    <details class="contrib" id="contrib" hidden>
+      <summary>泊まった情報を送る<small>ログイン不要。運営者が確認してから掲載します</small></summary>
+      <form class="contrib-form" data-contrib data-hut="{{ h.id }}">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="visually-hidden" aria-hidden="true">
+        <div class="contrib-row">
+          <label>泊まった日<input type="date" name="stayed_on" max="{{ TODAY }}"></label>
+          <label>プラン<select name="plan"><option value="">選ぶ</option><option value="two_meals">1泊2食</option><option value="one_meal">1泊1食</option><option value="no_meal">素泊まり</option><option value="tent">テント</option><option value="private_room">個室</option></select></label>
+        </div>
+        <fieldset class="contrib-facts"><legend>設備（分かるものだけ）</legend>
+          <label>トイレ<select name="toilet"><option value="">—</option><option value="flush">水洗</option><option value="composting">バイオ</option><option value="vault">汲み取り</option><option value="portable">カートリッジ式</option><option value="none">なし</option></select></label>
+          <label>水<select name="water"><option value="">—</option><option value="free">無料</option><option value="paid">有料</option><option value="none">なし</option></select></label>
+          <label>充電<select name="charging"><option value="">—</option><option value="yes">できた</option><option value="no">できない</option></select></label>
+          <label>シャワー<select name="shower"><option value="">—</option><option value="yes">あり</option><option value="no">なし</option></select></label>
+          <label>支払い<select name="payment"><option value="">—</option><option value="cash_only">現金のみ</option><option value="card">カード可</option><option value="qr">QR決済可</option></select></label>
+        </fieldset>
+        <label class="contrib-body">ひとこと（混雑・食事・水場・寝床など）<textarea name="body" rows="4" maxlength="1000" placeholder="例：9月中旬の週末、布団1枚に1人。水は玄関横で無料。トイレは洋式で紙あり。"></textarea></label>
+        <div class="contrib-row">
+          <label>写真（任意・5MBまで）<input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+          <label>連絡先（任意・公開しません）<input type="text" name="contact" maxlength="200" placeholder="メールなど。確認が必要な時だけ使います"></label>
+        </div>
+        <p class="quiet">送っていただいた内容は運営者が読み、事実確認できたものを「二次情報」の印付きで掲載します。写真の位置情報は掲載前に取り除きます。</p>
+        <button type="submit" class="btn btn-primary">送る</button>
+        <output class="contrib-out" aria-live="polite"></output>
+      </form>
+    </details>
   </section>
 
   <section class="block source">
