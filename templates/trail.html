@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ t.name_ja }}の山小屋 — 営業期間・料金・予約先を行程順に | HutsGo{% endblock %}
-{% block desc %}{{ t.name_ja }}で通過する山小屋{{ t.hut_count }}軒の営業期間・料金・予約先を歩く順に一覧。{{ t.summary }}{% endblock %}
+{% set sm = t.profile %}
+{% block title %}{{ t.name_ja }}の山小屋 — 標高断面・営業期間・料金・予約先を行程順に | HutsGo{% endblock %}
+{% block desc %}{{ t.name_ja }}で通過する山小屋{{ t.hut_count }}軒の標高・営業期間・料金・予約先を歩く順に一覧。{% if sm %}最高地点{{ sm.top.elev }}m、累積標高差約{{ sm.gain }}m。{% endif %}{{ t.summary }}{% endblock %}
 {% block canonical %}/trails/{{ t.id }}/{% endblock %}
 {% block head %}
 <script type="application/ld+json">
@@ -10,51 +11,105 @@
 {% endblock %}
 {% block body %}
 <article class="trail">
-  <header class="page-head">
+  <header class="page-head trail-head">
     <p class="crumb"><a href="/">ルート</a></p>
     <h1>{{ t.name_ja }}</h1>
     <p class="lede">{{ t.summary }}</p>
     <dl class="facts-inline">
       <div><dt>目安</dt><dd>{{ t.nights_typical }}泊{{ t.nights_typical + 1 }}日</dd></div>
       <div><dt>歩行時間</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
-      <div><dt>日付</dt><dd><input type="date" id="plan-date" value="{{ TODAY }}" aria-label="宿泊予定日"></dd></div>
+      {% if sm %}<div><dt>最高地点</dt><dd>{{ sm.top.name }} {{ sm.top.elev | metres }}</dd></div>{% endif %}
+      <div><dt>宿泊候補</dt><dd>{{ t.hut_count }}軒</dd></div>
     </dl>
   </header>
 
+  <figure class="profile" aria-label="標高断面図">
+    {{ t.svg_wide }}
+    {{ t.svg_narrow }}
+    <figcaption>
+      {% if sm %}
+      <p class="profile-summary">
+        最高地点 <b>{{ sm.top.elev | metres }}</b>
+        <span class="sep">／</span> 累積標高差 <b>約{{ sm.gain | metres }}</b>
+        <span class="sep">／</span> {{ sm.start.name }}({{ sm.start.elev | metres }}) から <b>{{ sm.climb | metres }}</b> 登る
+      </p>
+      {% endif %}
+      <p class="profile-legend">
+        <span><i class="lg lg-hut"></i>宿泊候補（押すと詳細へ）</span>
+        <span><i class="lg lg-th"></i>登山口</span>
+        <span><i class="lg lg-peak"></i>通過点</span>
+        <span><i class="lg lg-est"></i>標高未確認</span>
+      </p>
+      <p class="quiet profile-note">横軸は無雪期の標準コースタイムの累計（距離ではありません）。稜線は登録地点を直線で結んだ概形で、実際の地形の細かな起伏は表していません。累積標高差は登録地点間の登りの合計の概算です。{% if sm and sm.unverified %}{{ sm.unverified | join('・') }}は標高が未確認のため、前後の地点から仮に位置を置いています。{% endif %}</p>
+    </figcaption>
+  </figure>
+
+  <div class="plan-bar">
+    <label for="plan-date">泊まる日</label>
+    <input type="date" id="plan-date" value="{{ TODAY }}">
+    <span class="quiet">その日に営業しているかを各小屋に表示します</span>
+  </div>
+
   <ol class="timeline" data-plan-date>
-  {% for s in t.stops %}
-    <li class="stop {{ 'stop-hut' if s.hut else 'stop-trailhead' }}"
-        {% if s.hut and s.hut.season %}data-status="{{ s.hut.season.status }}" data-open="{{ s.hut.season.open_date or '' }}" data-close="{{ s.hut.season.close_date or '' }}"{% endif %}>
-      <div class="stop-time">{% if s.cumulative_time_min %}{{ s.cumulative_time_min | fmt_time }}{% else %}出発{% endif %}</div>
-      <div class="stop-body">
-        {% if s.hut %}
-        <h2><a href="/huts/{{ s.hut.id }}/">{{ s.hut.name_ja }}</a></h2>
+  {% for r in t.rows %}
+    {% if r.row == 'stop' %}
+    {% set s = r.stop %}{% set p = r.p %}{% set h = s.hut %}{% set se = h.season if h else None %}
+    <li class="stop {{ 'stop-hut' if h else 'stop-th' }}{{ ' stop-pass' if h and not s.is_overnight_candidate }}" id="stop-{{ s.seq }}"
+        {% if se %}data-status="{{ se.status }}" data-open="{{ se.open_date or '' }}" data-close="{{ se.close_date or '' }}"{% endif %}>
+      <div class="stop-card">
+        <p class="stop-head">
+          <span class="stop-time">{% if p.t %}{{ p.t | fmt_time }}{% else %}出発{% endif %}</span>
+          <span class="stop-elev{{ ' is-est' if p.est }}">{{ p.elev | metres }}{% if p.src == 'gsi' and p.elev %}<small>地理院地図</small>{% endif %}</span>
+        </p>
+        {% if h %}
+        <h2><a href="/huts/{{ h.id }}/">{{ h.name_ja }}</a><small>{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}・{{ h.operator.name_ja }}{% endif %}</small></h2>
         <p class="stop-line">
           <span class="season-badge" data-season-badge></span>
-          {% if s.hut.season and s.hut.season.status == 'open' %}<span>{{ s.hut.season.open_date | fmt_date }}〜{{ s.hut.season.close_date | fmt_date }}</span>{% elif s.hut.season and s.hut.season.status == 'year_round' %}<span>通年営業</span>{% endif %}
-          <span class="dot dot-{{ s.hut.season.confidence if s.hut.season else 'unknown' }}" title="{{ CONF_LABEL[s.hut.season.confidence if s.hut.season else 'unknown'] }}"></span>
+          {% if se and se.status == 'open' %}<span>{{ se.open_date | fmt_date }}〜{{ se.close_date | fmt_date }}</span>
+          {% elif se and se.status == 'year_round' %}<span>通年営業</span>
+          {% elif se and se.status == 'closed_this_year' %}<span>2026年は休業</span>
+          {% else %}<span>営業期間 未確認</span>{% endif %}
+          {% if se and se.season_note %}<span class="quiet">{{ se.season_note }}</span>{% endif %}
+          <span class="conf"><span class="dot dot-{{ se.confidence if se else 'unknown' }}" aria-hidden="true"></span>{{ se | conf_text }}</span>
         </p>
-        <p class="stop-line">
-          {% if s.hut.price_two %}1泊2食 <b>{{ s.hut.price_two.price_jpy | yen }}{{ '〜' if s.hut.price_two.is_from_price }}</b>{% endif %}
-          {% if s.hut.price_none %}／ 素泊まり {{ s.hut.price_none.price_jpy | yen }}{{ '〜' if s.hut.price_none.is_from_price }}{% endif %}
-          {% if s.hut.price_tent %}／ テント {{ s.hut.price_tent.price_jpy | yen }}{% endif %}
+        <p class="stop-line stop-price">
+          {% if h.price_two %}<span>1泊2食 <b>{{ h.price_two.price_jpy | yen }}{{ '〜' if h.price_two.is_from_price }}</b></span>{% endif %}
+          {% if h.price_none %}<span>素泊まり <b>{{ h.price_none.price_jpy | yen }}{{ '〜' if h.price_none.is_from_price }}</b></span>{% endif %}
+          {% if h.price_tent %}<span>テント <b>{{ h.price_tent.price_jpy | yen }}</b></span>{% endif %}
+          {% if not h.rates %}<span class="quiet">料金 未確認</span>{% endif %}
         </p>
+        {% if h.fac_chips %}
+        <ul class="fac-chips" aria-label="設備">{% for c in h.fac_chips %}<li>{{ c }}</li>{% endfor %}</ul>
+        {% else %}<p class="stop-line quiet">設備（トイレ・水・充電・支払）は未確認</p>{% endif %}
+        {% if se and se.booking_opens_at %}<p class="stop-line stop-booking"><span class="k">予約受付</span>{{ se.booking_opens_at }}</p>{% endif %}
         <div class="stop-actions">
-          {% if s.hut.official_url %}<a class="btn btn-primary" href="{{ s.hut.official_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ s.hut.id }}">公式サイトで予約</a>{% endif %}
-          <a class="btn" href="/huts/{{ s.hut.id }}/">設備とアクセス</a>
+          {% if h.book_url %}<a class="btn btn-primary" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">公式サイトで予約</a>{% endif %}
+          {% if se and se.reservation_phone %}<a class="btn" href="tel:{{ se.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">電話 {{ se.reservation_phone }}</a>{% endif %}
+          <a class="btn btn-ghost" href="/huts/{{ h.id }}/">詳細とアクセス</a>
         </div>
         {% else %}
-        <h2>{{ s.trailhead.name_ja }}</h2>
+        <h2>{{ s.trailhead.name_ja }}<small>登山口</small></h2>
         {% if s.trailhead.parking_note %}<p class="stop-line">{{ s.trailhead.parking_note }}</p>{% endif %}
         {% endif %}
       </div>
     </li>
+    {% else %}
+    <li class="leg">
+      <span class="leg-time">{{ r.minutes | fmt_time }}</span>
+      <span class="leg-ud">
+        {% if r.up %}<span class="up">登り {{ r.up | metres }}</span>{% endif %}
+        {% if r.down %}<span class="down">下り {{ r.down | metres }}</span>{% endif %}
+        {% if not r.up and not r.down %}<span class="quiet">標高差 未確認</span>{% elif r.est %}<span class="quiet">（一部の標高が未確認）</span>{% endif %}
+      </span>
+      {% for v in r.vias %}<span class="leg-via"><i class="lg lg-peak"></i>{{ v.name }} {{ v.elev | metres }} を経由</span>{% endfor %}
+    </li>
+    {% endif %}
   {% endfor %}
   </ol>
 
   <aside class="note">
     <h2>歩き方の目安</h2>
-    <p>時間は無雪期の標準コースタイムの累計です。休憩は含みません。宿泊地は同じ標高帯に複数の小屋が並ぶことがあるので、混雑や予約状況で選び分けてください。</p>
+    <p>時間は無雪期の標準コースタイムの累計です。休憩は含みません。同じ標高帯に複数の小屋が並ぶ区間は、混雑や予約状況で選び分けてください。予約は各小屋の公式窓口で行います。</p>
   </aside>
 </article>
 {% endblock %}

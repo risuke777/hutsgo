@@ -14,6 +14,17 @@
     track("outbound_" + a.dataset.track, { hut: a.dataset.hut, page: location.pathname });
   });
 
+  // ---- profile marker <-> timeline card sync (anchors work without it)
+  function syncMarker() {
+    var id = location.hash.slice(1);
+    Array.prototype.forEach.call(document.querySelectorAll(".pm.is-current"), function (a) { a.classList.remove("is-current"); });
+    if (!id) return;
+    var m = document.querySelector('.pm[href="#' + id + '"]');
+    if (m) m.classList.add("is-current");
+  }
+  window.addEventListener("hashchange", syncMarker);
+  syncMarker();
+
   // ---- season status for a chosen date
   function status(el, date) {
     var s = el.dataset.status;
@@ -49,7 +60,6 @@
   var count = document.getElementById("count");
   var priceOut = document.getElementById("price-out");
   var yen = function (n) { return "¥" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); };
-
   var m = /[?&]area=([a-z_]+)/.exec(location.search);
   if (m) {
     Array.prototype.forEach.call(form.querySelectorAll("[name=area]"), function (c) { c.checked = c.value === m[1]; });
@@ -90,9 +100,10 @@
       var p = h[plan];
       var planName = { two: "1泊2食", none: "素泊まり", tent: "テント" }[plan];
       var period = h.open ? h.open.slice(5).replace("-", "/") + "〜" + h.close.slice(5).replace("-", "/") : (h.status === "year_round" ? "通年" : "");
+      var meta = [h.area, h.elev ? yen(h.elev).slice(1) + "m" : "標高未確認", h.tents ? "テント約" + h.tents + "張" : "", period].filter(Boolean);
       return '<li><a class="hut-item" href="/huts/' + h.id + '/">'
-        + '<span class="main"><span class="name">' + h.name + '</span>'
-        + '<span class="meta">' + h.area + (h.tents ? "　テント約" + h.tents + "張" : "") + (period ? "　" + period : "") + '</span></span>'
+        + '<span class="main"><span class="name">' + h.name + '<span class="dot dot-' + h.conf + '"></span></span>'
+        + '<span class="meta">' + meta.join("　") + '</span></span>'
         + '<span class="price">' + (p != null ? yen(p) : "未確認") + '<small>' + planName + '</small></span>'
         + '</a></li>';
     }).join("") : '<li class="empty">この条件に合う小屋はありません。日付か上限を変えてみてください。</li>';
