@@ -15,6 +15,11 @@
 Cloudflare Pages / Netlify も同じ設定で動く。
 GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラッグしても公開できる。
 
+## 独自ドメイン（hutsgo.com）で公開する
+1. DNS: apex の A を GitHub Pages の 4 つ（185.199.108.153 / .109.153 / .110.153 / .111.153）に、www は CNAME で `risuke777.github.io` に向ける
+2. GitHub のリポジトリ変数 `SITE_URL` に `https://hutsgo.com` を設定（build.py が `CNAME` ファイルを出力し、リンクのベースパスが `/` になる）
+3. Settings → Pages → Custom domain に `hutsgo.com`、DNS チェック通過後に Enforce HTTPS を ON
+
 ## KPI 計測の有効化
 `ANALYTICS_SNIPPET` 環境変数に Plausible / Umami / GA4 のスクリプトタグを入れて build。
 公式サイトへのクリックは自動で `outbound_official_site` / `outbound_phone` イベントとして送られる（hut ID 付き）。

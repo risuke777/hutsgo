@@ -11,6 +11,9 @@ DIST = ROOT / "dist"
 SITE_URL = os.environ.get("SITE_URL", "https://hutsgo.jp").rstrip("/")
 # project Pages live under a sub-path (https://user.github.io/repo). Every internal link is prefixed with BASE.
 BASE = urllib.parse.urlsplit(SITE_URL).path.rstrip("/")
+# custom domain (anything that is not *.github.io) → GitHub Pages wants a CNAME file in the published tree
+SITE_HOST = urllib.parse.urlsplit(SITE_URL).hostname or ""
+CNAME = SITE_HOST if SITE_HOST and not SITE_HOST.endswith("github.io") and SITE_HOST != "localhost" else None
 ANALYTICS = os.environ.get("ANALYTICS_SNIPPET", "")
 TODAY = datetime.date.today().isoformat()
 
@@ -440,6 +443,8 @@ urls = ["/", "/huts/", "/about/"] + [f"/huts/{h}/" for h in huts] + [f"/trails/{
     + "".join(f"  <url><loc>{SITE_URL}{u}</loc><lastmod>{TODAY}</lastmod></url>\n" for u in urls)
     + "</urlset>\n", encoding="utf-8")
 (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
+if CNAME:
+    (DIST / "CNAME").write_text(CNAME + "\n", encoding="utf-8")
 (DIST / "data").mkdir()
 (DIST / "data" / "huts.json").write_text(json.dumps(client, ensure_ascii=False, indent=1), encoding="utf-8")
 
