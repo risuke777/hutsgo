@@ -25,7 +25,8 @@ jobs:
       - run: pip install jinja2
       - name: Build site
         env:
-          SITE_URL: ${{ vars.SITE_URL }}
+          # repo variable SITE_URL wins (custom domain); otherwise project Pages URL https://<owner>.github.io/<repo>
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
           ANALYTICS_SNIPPET: ${{ vars.ANALYTICS_SNIPPET }}
         run: python3 build.py
       - uses: actions/configure-pages@v5

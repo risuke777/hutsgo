@@ -17,7 +17,7 @@
   <h2 id="trails-h" class="visually-hidden">ルート一覧</h2>
   {% for t in trails %}
   {% set sm = t.profile %}
-  <a class="route-card" href="/trails/{{ t.id }}/">
+  <a class="route-card" href="{{ BASE }}/trails/{{ t.id }}/">
     {{ t.svg_mini }}
     <div class="route-body">
       <strong>{{ t.name_ja }}</strong>
@@ -32,14 +32,14 @@
     </div>
   </a>
   {% endfor %}
-  <p class="quiet">ルートは順次追加します。載っていない場合は<a href="/huts/">条件から探す</a>こともできます。</p>
+  <p class="quiet">ルートは順次追加します。載っていない場合は<a href="{{ BASE }}/huts/">条件から探す</a>こともできます。</p>
 </section>
 
 <section class="areas" aria-labelledby="areas-h">
   <h2 id="areas-h">山域から探す</h2>
   <ul class="chip-row">
     {% for a in areas %}
-    <li><a class="chip" href="/huts/?area={{ a.id }}">{{ a.name_ja }}</a></li>
+    <li><a class="chip" href="{{ BASE }}/huts/?area={{ a.id }}">{{ a.name_ja }}</a></li>
     {% endfor %}
   </ul>
 </section>
@@ -51,6 +51,6 @@
     <li><span class="dot dot-unknown" aria-hidden="true"></span><span>分からないことは「<b>未確認</b>」と書きます。推測で埋めません。</span></li>
     <li><span class="dot dot-none" aria-hidden="true"></span><span>予約は各山小屋の公式サイトへ。仲介も手数料もありません。</span></li>
   </ul>
-  <p class="quiet"><a href="/about/">出典と更新方針</a></p>
+  <p class="quiet"><a href="{{ BASE }}/about/">出典と更新方針</a></p>
 </section>
 {% endblock %}

@@ -36,5 +36,5 @@
 <p class="result-count" id="count" aria-live="polite"></p>
 <ul class="hut-list" id="results"></ul>
 
-<script id="hut-data" type="application/json">{{ client_json | safe }}</script>
+<script id="hut-data" type="application/json" data-base="{{ BASE }}">{{ client_json | safe }}</script>
 {% endblock %}

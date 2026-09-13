@@ -13,22 +13,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/site.css">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{ BASE }}/static/site.css">
+<link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
 {% block head %}{% endblock %}
 {{ ANALYTICS | safe }}
 </head>
 <body>
 <a class="skip" href="#main">本文へ</a>
 <header class="site-head">
-  <a class="wordmark" href="/" aria-label="HutsGo ホーム">
+  <a class="wordmark" href="{{ BASE }}/" aria-label="HutsGo ホーム">
     <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M2 22 L10 8 L14 14 L17 10 L24 22 Z" fill="currentColor"/></svg>
     <span>HutsGo</span>
   </a>
   <nav aria-label="主要">
-    <a href="/">ルートから</a>
-    <a href="/huts/">条件で探す</a>
-    <a href="/about/">データについて</a>
+    <a href="{{ BASE }}/">ルートから</a>
+    <a href="{{ BASE }}/huts/">条件で探す</a>
+    <a href="{{ BASE }}/about/">データについて</a>
   </nav>
 </header>
 <main id="main">
@@ -36,8 +36,8 @@
 </main>
 <footer class="site-foot">
   <p>掲載内容は各山小屋の公式情報を基にしていますが、営業期間・料金は予告なく変わります。出発前に必ず公式サイトか電話で確認してください。</p>
-  <p><a href="/about/">出典と更新方針</a> ／ 対象山域：北アルプス（表銀座・槍・穂高） ／ 2026年シーズン</p>
+  <p><a href="{{ BASE }}/about/">出典と更新方針</a> ／ 対象山域：北アルプス（表銀座・槍・穂高） ／ 2026年シーズン</p>
 </footer>
-<script src="/static/site.js" defer></script>
+<script src="{{ BASE }}/static/site.js" defer></script>
 </body>
 </html>

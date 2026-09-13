@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """HutsGo static site builder.  python3 build.py  →  dist/"""
-import json, os, pathlib, shutil, sqlite3, datetime, sys
+import json, os, pathlib, shutil, sqlite3, datetime, sys, urllib.parse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
 
@@ -9,6 +9,8 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")  # Windows console (cp932) safety
 DIST = ROOT / "dist"
 SITE_URL = os.environ.get("SITE_URL", "https://hutsgo.jp").rstrip("/")
+# project Pages live under a sub-path (https://user.github.io/repo). Every internal link is prefixed with BASE.
+BASE = urllib.parse.urlsplit(SITE_URL).path.rstrip("/")
 ANALYTICS = os.environ.get("ANALYTICS_SNIPPET", "")
 TODAY = datetime.date.today().isoformat()
 
@@ -410,7 +412,7 @@ env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
 env.filters.update(fmt_time=fmt_time, fmt_time_short=fmt_time_short, fmt_date=fmt_date, yen=yen, metres=metres,
                    conf_text=conf_text)
-env.globals.update(SITE_URL=SITE_URL, ANALYTICS=ANALYTICS, TODAY=TODAY,
+env.globals.update(SITE_URL=SITE_URL, BASE=BASE, ANALYTICS=ANALYTICS, TODAY=TODAY,
                    CONF_LABEL=CONF_LABEL, TOILET_LABEL=TOILET_LABEL, WATER_LABEL=WATER_LABEL,
                    areas=list(areas.values()))
 

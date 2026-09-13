@@ -55,6 +55,7 @@
   var dataEl = document.getElementById("hut-data");
   if (!dataEl) return;
   var huts = JSON.parse(dataEl.textContent);
+  var base = dataEl.dataset.base || "";
   var form = document.getElementById("filter");
   var results = document.getElementById("results");
   var count = document.getElementById("count");
@@ -101,7 +102,7 @@
       var planName = { two: "1泊2食", none: "素泊まり", tent: "テント" }[plan];
       var period = h.open ? h.open.slice(5).replace("-", "/") + "〜" + h.close.slice(5).replace("-", "/") : (h.status === "year_round" ? "通年" : "");
       var meta = [h.area, h.elev ? yen(h.elev).slice(1) + "m" : "標高未確認", h.tents ? "テント約" + h.tents + "張" : "", period].filter(Boolean);
-      return '<li><a class="hut-item" href="/huts/' + h.id + '/">'
+      return '<li><a class="hut-item" href="' + base + '/huts/' + h.id + '/">'
         + '<span class="main"><span class="name">' + h.name + '<span class="dot dot-' + h.conf + '"></span></span>'
         + '<span class="meta">' + meta.join("　") + '</span></span>'
         + '<span class="price">' + (p != null ? yen(p) : "未確認") + '<small>' + planName + '</small></span>'

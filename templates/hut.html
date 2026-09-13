@@ -17,7 +17,7 @@
 {% block body %}
 <article class="hut">
   <header class="page-head">
-    <p class="crumb"><a href="/huts/">山小屋</a>{% if h.area %} / {{ h.area.name_ja }}{% endif %}</p>
+    <p class="crumb"><a href="{{ BASE }}/huts/">山小屋</a>{% if h.area %} / {{ h.area.name_ja }}{% endif %}</p>
     <h1>{{ h.name_ja }}</h1>
     <p class="lede">{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}。{{ h.operator.name_ja }}が運営{% endif %}</p>
     <dl class="facts-inline">
@@ -122,7 +122,7 @@
   <section class="block" aria-labelledby="ontrail-h">
     <h2 id="ontrail-h">この小屋を通るルート</h2>
     <ul class="link-list">
-      {% for t in h.trails %}<li><a href="/trails/{{ t.id }}/#stop-{{ (t.stops | selectattr('hut_id', 'equalto', h.id) | first).seq }}">{{ t.name_ja }}</a> <span class="quiet">断面図で位置を見る</span></li>{% endfor %}
+      {% for t in h.trails %}<li><a href="{{ BASE }}/trails/{{ t.id }}/#stop-{{ (t.stops | selectattr('hut_id', 'equalto', h.id) | first).seq }}">{{ t.name_ja }}</a> <span class="quiet">断面図で位置を見る</span></li>{% endfor %}
     </ul>
   </section>
   {% endif %}

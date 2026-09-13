@@ -12,7 +12,7 @@
 {% block body %}
 <article class="trail">
   <header class="page-head trail-head">
-    <p class="crumb"><a href="/">ルート</a></p>
+    <p class="crumb"><a href="{{ BASE }}/">ルート</a></p>
     <h1>{{ t.name_ja }}</h1>
     <p class="lede">{{ t.summary }}</p>
     <dl class="facts-inline">
@@ -62,7 +62,7 @@
           <span class="stop-elev{{ ' is-est' if p.est }}">{{ p.elev | metres }}{% if p.src == 'gsi' and p.elev %}<small>地理院地図</small>{% endif %}</span>
         </p>
         {% if h %}
-        <h2><a href="/huts/{{ h.id }}/">{{ h.name_ja }}</a><small>{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}・{{ h.operator.name_ja }}{% endif %}</small></h2>
+        <h2><a href="{{ BASE }}/huts/{{ h.id }}/">{{ h.name_ja }}</a><small>{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}・{{ h.operator.name_ja }}{% endif %}</small></h2>
         <p class="stop-line">
           <span class="season-badge" data-season-badge></span>
           {% if se and se.status == 'open' %}<span>{{ se.open_date | fmt_date }}〜{{ se.close_date | fmt_date }}</span>
@@ -85,7 +85,7 @@
         <div class="stop-actions">
           {% if h.book_url %}<a class="btn btn-primary" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">公式サイトで予約</a>{% endif %}
           {% if se and se.reservation_phone %}<a class="btn" href="tel:{{ se.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">電話 {{ se.reservation_phone }}</a>{% endif %}
-          <a class="btn btn-ghost" href="/huts/{{ h.id }}/">詳細とアクセス</a>
+          <a class="btn btn-ghost" href="{{ BASE }}/huts/{{ h.id }}/">詳細とアクセス</a>
         </div>
         {% else %}
         <h2>{{ s.trailhead.name_ja }}<small>登山口</small></h2>
