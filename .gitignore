@@ -8,3 +8,4 @@ xserver/api/data/
 DEPLOY.md
 FINDINGS.md
 xserver/README.md
+xserver/.ftp.env
