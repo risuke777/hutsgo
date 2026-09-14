@@ -5,3 +5,4 @@ dist/
 .env.*
 xserver/api/config.php
 xserver/api/data/
+DEPLOY.md
