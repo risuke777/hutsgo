@@ -56,3 +56,25 @@ function hg_slug(?string $s, int $max = 64): string {
   $s = (string)$s;
   return preg_match('/^[a-z0-9_\-]{1,' . $max . '}$/', $s) ? $s : '';
 }
+
+// 投稿写真を保存する。GD があれば長辺 $edge の JPEG に再エンコードして保存し、
+// 同時に EXIF（位置情報・端末名）を落とす。GD が無いサーバーでは原本を移すだけにする。
+function hg_store_image(string $tmp, string $dest, string $ext, int $edge = 1600, int $quality = 78): bool {
+  if (!function_exists('imagecreatetruecolor')) {
+    return move_uploaded_file($tmp, $dest);   // GD 無し: 原本のまま（取り込み時に縮小する）
+  }
+  $load = ['jpg' => 'imagecreatefromjpeg', 'png' => 'imagecreatefrompng', 'webp' => 'imagecreatefromwebp'][$ext] ?? '';
+  if ($load === '' || !function_exists($load)) { return move_uploaded_file($tmp, $dest); }
+  $src = @$load($tmp);
+  if (!$src) { return move_uploaded_file($tmp, $dest); }
+  $w = imagesx($src); $h = imagesy($src);
+  $scale = min(1.0, $edge / max($w, $h));
+  $nw = max(1, (int)round($w * $scale)); $nh = max(1, (int)round($h * $scale));
+  $dst = imagecreatetruecolor($nw, $nh);
+  imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));   // 透過 PNG を白背景に
+  imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+  $ok = imagejpeg($dst, $dest, $quality);                            // JPEG 再エンコード = EXIF が消える
+  imagedestroy($src); imagedestroy($dst);
+  if ($ok) { @unlink($tmp); }
+  return (bool)$ok;
+}

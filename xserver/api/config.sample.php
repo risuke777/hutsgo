@@ -7,6 +7,9 @@ return [
   'kpi_token'       => 'CHANGE-ME',
   // データ置き場（このディレクトリ配下。.htaccess で外部からは読めない）
   'data_dir'        => __DIR__ . '/data',
-  // 投稿写真の上限（バイト）
-  'max_photo_bytes' => 5 * 1024 * 1024,
+  // 投稿写真の上限（バイト）。受け取った後に下のサイズまで縮小する
+  'max_photo_bytes' => 8 * 1024 * 1024,
+  // 保存時の長辺ピクセルと JPEG 品質。再エンコードで EXIF（位置情報）も消える
+  'max_photo_edge'  => 1600,
+  'photo_quality'   => 78,
 ];

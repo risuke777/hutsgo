@@ -31,14 +31,19 @@ if (mb_strlen($contact) > 200) { $contact = mb_substr($contact, 0, 200); }
 $photo = '';
 if (!empty($_FILES['photo']['tmp_name']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
   $f = $_FILES['photo'];
-  if ($f['size'] > $cfg['max_photo_bytes']) { fail(413, '写真は5MBまでにしてください。'); }
+  $maxBytes = (int)($cfg['max_photo_bytes'] ?? 8 * 1024 * 1024);
+  if ($f['size'] > $maxBytes) { fail(413, '写真は' . round($maxBytes / 1024 / 1024) . 'MBまでにしてください。'); }
   $info = @getimagesize($f['tmp_name']);
   $ext = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$info['mime'] ?? ''] ?? '';
   if ($ext === '') { fail(415, '写真は JPEG / PNG / WebP のみ受け付けます。'); }
   $dir = hg_data_dir($cfg, 'uploads');
-  $photo = date('Ymd') . '-' . $hut . '-' . bin2hex(random_bytes(6)) . '.' . $ext;
-  if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $photo)) { fail(500, '写真の保存に失敗しました。'); }
-  // 位置情報などの EXIF は取り込み時（tools/import_posts.py）に必ず除去してから公開する
+  $photo = date('Ymd') . '-' . $hut . '-' . bin2hex(random_bytes(6)) . '.jpg';
+  // 受け取った時点で長辺 1600px の JPEG に再エンコードする。
+  // 目的は 2 つ: 容量を減らすことと、再エンコードで EXIF（位置情報）がその場で消えること。
+  if (!hg_store_image($f['tmp_name'], $dir . '/' . $photo, $ext,
+                      (int)($cfg['max_photo_edge'] ?? 1600), (int)($cfg['photo_quality'] ?? 78))) {
+    fail(500, '写真の保存に失敗しました。');
+  }
 }
 
 hg_append($cfg, 'posts', [
