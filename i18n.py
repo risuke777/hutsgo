@@ -42,6 +42,7 @@ STRINGS = {
     "foot_disclaimer":  ("掲載内容は各山小屋の公式情報を基にしていますが、営業期間・料金は予告なく変わります。出発前に必ず公式サイトか電話で確認してください。",
                          "Everything here comes from each hut's official source, but dates and prices change without notice. Always confirm with the hut before you go."),
     "foot_about":       ("出典と更新方針", "Sources and how we check"),
+    "foot_data":        ("データ提供", "Data"),
     "foot_meta":        ("対象山域：北アルプス（表銀座・槍・穂高） ／ 2026年シーズン",
                          "Northern Japan Alps (Omote-Ginza, Yari, Hotaka) / 2026 season"),
 

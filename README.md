@@ -51,6 +51,19 @@ GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラ�
 Alta Via 1 は表銀座と同じ「線」のルートなので UI はそのまま使える。`hut_rates.currency` と `mountain_ranges.dolomites` は準備済み。
 着手条件はトップの「ドロミティ版がほしい」の押下数。データは各リフージオの公式サイトで確認したものだけ載せる（日本と同じ基準）。
 
+## データセット公開（/data/ と /api/）
+サイト本体とは別に、確度メタデータを保ったまま JSON を公開している。
+
+    dist/data/index.json   カタログ（版・ライセンス・被覆率・confidence の定義）
+    dist/data/huts.json    21軒。営業・料金・設備・予約受付開始を、ブロックごとの provenance 付きで
+    dist/data/trails.json  ルートを順序付きの地点列（標高・累積時間）で
+    dist/api/index.html    項目の説明（英語）
+    dist/llms.txt          AI 向けの入口
+
+ライセンスは CC BY 4.0。`null` は「未確認」であって 0 ではない、という約束が中核。
+2026 年の検索は 7 割近くがクリックを生まないので、人が来る前提の導線だけでは届かない。
+AI が答える側に回ったときに引用される場所を取りにいくための布石。
+
 ## データの更新
 - `seed.sql` が唯一の真実。編集して `python3 build.py`
 - 公式サイトで確認したら `confidence` を `verified` に、`source_url` を公式 URL に、`last_verified_at` を当日に

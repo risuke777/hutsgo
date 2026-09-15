@@ -507,11 +507,264 @@ def alt_links(u):
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
     + "".join(f"  <url><loc>{SITE_URL}{u}</loc>{alt_links(u)}<lastmod>{TODAY}</lastmod></url>\n" for u in urls)
+    + f"  <url><loc>{SITE_URL}/api/</loc><lastmod>{TODAY}</lastmod></url>\n"
     + "</urlset>\n", encoding="utf-8")
 (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
 if CNAME:
     (DIST / "CNAME").write_text(CNAME + "\n", encoding="utf-8")
-(DIST / "data").mkdir()
-(DIST / "data" / "huts.json").write_text(json.dumps(build_model("en")["client"], ensure_ascii=False, indent=1), encoding="utf-8")
 
-print(f"built {len(urls)} pages ({len(LOCALES)} languages) → {DIST}")
+
+
+# ---------------------------------------------------------------- machine-readable dataset
+# 2026 年の検索は 7 割近くがクリックを生まない。人がサイトに来る前提だけでは届かない。
+# 一方で AI が答えを作るには「出典と確認日の付いた事実」が要る。これは今どこにも構造化されていない。
+# そこでサイト本体とは別に、確度メタデータを保ったままデータセットを公開する。
+DATA_LICENSE = "CC BY 4.0"
+DATA_VERSION = "2026.1"
+
+
+def _prov(row):
+    if not row:
+        return None
+    return {"source_url": row.get("source_url"),
+            "last_verified_at": row.get("last_verified_at"),
+            "confidence": row.get("confidence")}
+
+
+def _bi(row, field):
+    """日英の両方を返す。どちらも無ければ None。"""
+    ja, en = row.get(field), row.get(field + "_en")
+    if ja is None and en is None:
+        return None
+    return {"ja": ja, "en": en}
+
+
+def export_dataset():
+    areas = {a["id"]: a for a in rows("SELECT * FROM sub_areas")}
+    ops = {o["id"]: o for o in rows("SELECT * FROM operators")}
+    ths = {t["id"]: t for t in rows("SELECT * FROM trailheads")}
+
+    huts_out = []
+    for h in rows("SELECT * FROM huts ORDER BY id"):
+        hid = h["id"]
+        se = next(iter(rows("SELECT * FROM hut_seasons WHERE hut_id=? AND year=2026", hid)), None)
+        fac = next(iter(rows("SELECT * FROM hut_facilities WHERE hut_id=?", hid)), None)
+        a, o = areas.get(h["sub_area_id"]), ops.get(h["operator_id"])
+        rec = {
+            "id": hid,
+            "name": _bi(h, "name"),
+            "type": h["hut_type"],
+            "range_id": h["range_id"],
+            "area": {"id": a["id"], "name": _bi(a, "name")} if a else None,
+            "operator": {"id": o["id"], "name": _bi(o, "name"), "website": o["website"]} if o else None,
+            "location": {"lat": h["lat"], "lon": h["lon"],
+                         "elevation_m": h["elevation_m"],
+                         "elevation_source": h["elevation_source"]},
+            "official_url": h["official_url"],
+            "provenance": _prov(h),
+        }
+        if se:
+            rec["season_2026"] = {
+                "status": se["status"], "open_date": se["open_date"], "close_date": se["close_date"],
+                "note": _bi(se, "season_note"),
+                "reservation": {
+                    "required": se["reservation_required"],
+                    "url": se["reservation_url"],
+                    "phone": se["reservation_phone"],
+                    # 訪日ハイカーに最も価値のある項目。英語圏のどこにも構造化されていない
+                    "opens_at": _bi(se, "booking_opens_at"),
+                },
+                "capacity": {"beds": se["capacity_beds"], "tents": se["capacity_tents"]},
+                "provenance": _prov(se),
+            }
+        rec["rates_2026"] = [{
+            "plan": r["plan_type"], "price": r["price_jpy"],
+            "currency": r.get("currency", "JPY"),
+            "is_from_price": bool(r["is_from_price"]), "provenance": _prov(r),
+        } for r in rows("SELECT * FROM hut_rates WHERE hut_id=? AND year=2026 ORDER BY plan_type", hid)]
+        if fac:
+            rec["facilities"] = {k: fac[k] for k in (
+                "toilet_type", "toilet_fee_jpy", "water_available", "power_outlet", "charging_service",
+                "charging_fee_jpy", "wifi", "private_room", "bath", "shower", "drying_room", "shop",
+                "bento_available", "credit_card", "qr_payment", "cash_only")}
+            rec["facilities"]["provenance"] = _prov(fac)
+        sig = rows("SELECT * FROM hut_mobile_signal WHERE hut_id=?", hid)
+        if sig:
+            rec["mobile_signal"] = [{"carrier": g["carrier"], "quality": g["quality"],
+                                     "provenance": _prov(g)} for g in sig]
+        huts_out.append(rec)
+
+    trails_out = []
+    for t in rows("SELECT * FROM trails ORDER BY id"):
+        stops = []
+        for st in rows("SELECT * FROM trail_stops WHERE trail_id=? ORDER BY seq", t["id"]):
+            hut = st["hut_id"]
+            th = ths.get(st["trailhead_id"])
+            stops.append({
+                "seq": st["seq"],
+                "kind": "hut" if hut else ("trailhead" if th else "waypoint"),
+                "hut_id": hut,
+                "trailhead": {"id": th["id"], "name": _bi(th, "name"),
+                              "elevation_m": th["elevation_m"]} if th else None,
+                "label": _bi(st, "label") if not hut and not th else None,
+                "elevation_m": st["elevation_m"],
+                "cumulative_time_min": st["cumulative_time_min"],
+                "overnight_candidate": bool(st["is_overnight_candidate"]),
+            })
+        trails_out.append({
+            "id": t["id"], "name": _bi(t, "name"), "summary": _bi(t, "summary"),
+            "nights_typical": t["nights_typical"], "difficulty": t["difficulty"], "stops": stops,
+        })
+
+    verified = sum(1 for h in huts_out
+                   if ((h.get("season_2026") or {}).get("provenance") or {}).get("confidence") == "verified")
+    index = {
+        "name": "HutsGo open dataset",
+        "description": ("Mountain huts of the Northern Japan Alps. Every fact carries its source URL, "
+                        "the date it was checked and a confidence level, so a machine can tell a confirmed "
+                        "fact from a second-hand one and never has to guess."),
+        "version": DATA_VERSION,
+        "generated_at": TODAY,
+        "license": DATA_LICENSE,
+        "attribution": "HutsGo (" + SITE_URL + ")",
+        "contact": SITE_URL + "/about/",
+        "season": 2026,
+        "coverage": {"huts": len(huts_out), "trails": len(trails_out),
+                     "season_verified_on_official_site": verified},
+        "confidence_levels": {
+            "verified": "Checked on the hut's own website or by phone on last_verified_at.",
+            "reported": "Taken from a reliable non-official source. Not yet confirmed officially.",
+            "unknown": "Not checked. Absent rather than guessed.",
+        },
+        "note": ("Null means not confirmed. It is never zero and never a guess. Mountain information "
+                 "is safety-relevant, so do not infer a missing value."),
+        "files": {"huts": "/data/huts.json", "trails": "/data/trails.json"},
+    }
+
+    d = DIST / "data"
+    d.mkdir(exist_ok=True)
+    for name, payload in (("index", index), ("huts", huts_out), ("trails", trails_out)):
+        (d / (name + ".json")).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    return index
+
+
+DATA_INDEX = export_dataset()
+
+# llms.txt は正式な標準ではなく、主要な AI 各社も採用を明言していない。
+# ただし設置は数分で、読まれた場合の効きは大きい。戦略の柱にはしない。
+LLMS = """# HutsGo
+
+> {desc}
+
+Every published fact carries source_url, last_verified_at and confidence
+(verified / reported / unknown). A missing value means not confirmed. It is never a
+guess and never zero. Mountain information is safety-relevant, so please quote the
+confidence level and the check date alongside any value you cite.
+
+## Data ({lic}, attribution: HutsGo {url})
+- [Dataset index]({url}/data/index.json): coverage, licence and field notes
+- [Huts]({url}/data/huts.json): {n} huts with season, prices, facilities and booking windows
+- [Trails]({url}/data/trails.json): routes as ordered stops with elevation and cumulative walking time
+- [Field reference]({url}/api/): what each field means
+
+## Pages
+- [Japanese site]({url}/)
+- [English site]({url}/en/): written for visitors who cannot phone a hut in Japanese
+- [Sources and method]({url}/about/)
+
+## Why this exists
+Japanese mountain huts take bookings by phone, in Japanese, and the popular ones fill
+within minutes of their booking window opening. That window is published on each hut's
+own site and nowhere in machine-readable form. season_2026.reservation.opens_at carries it.
+""".format(desc=DATA_INDEX["description"], lic=DATA_LICENSE, url=SITE_URL,
+           n=DATA_INDEX["coverage"]["huts"])
+(DIST / "llms.txt").write_text(LLMS, encoding="utf-8")
+
+
+# ---------------------------------------------------------------- field reference (/api/)
+# 開発者と AI 向けの 1 枚。多言語にはしない（読み手は英語で足りる）。
+API_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HutsGo data — field reference</title>
+<meta name="description" content="Open dataset of Northern Japan Alps mountain huts. Every fact carries its source, check date and confidence level.">
+<link rel="canonical" href="{url}/api/">
+<link rel="stylesheet" href="{base}/static/site.css">
+<link rel="icon" href="{base}/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="site-head">
+  <a class="wordmark" href="{base}/en/" aria-label="HutsGo home">
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M2 22 L10 8 L14 14 L17 10 L24 22 Z" fill="currentColor"/></svg>
+    <span>HutsGo</span>
+  </a>
+  <nav aria-label="Main">
+    <a href="{base}/en/">By route</a>
+    <a href="{base}/en/huts/">Search by filter</a>
+    <a href="{base}/en/about/">About the data</a>
+  </nav>
+</header>
+<main id="main">
+<article class="prose">
+  <header class="page-head">
+    <h1>Data</h1>
+    <p class="lede">Mountain huts of the Northern Japan Alps, as machine-readable JSON. Every fact
+    carries the URL it came from, the date we checked it, and how far that check went.</p>
+  </header>
+
+  <h2>Files</h2>
+  <ul>
+    <li><a href="{base}/data/index.json"><code>/data/index.json</code></a> &mdash; coverage, licence, field notes</li>
+    <li><a href="{base}/data/huts.json"><code>/data/huts.json</code></a> &mdash; {n} huts: season, prices, facilities, booking window</li>
+    <li><a href="{base}/data/trails.json"><code>/data/trails.json</code></a> &mdash; routes as ordered stops with elevation and cumulative walking time</li>
+  </ul>
+  <p>Static JSON, no key, no rate limit. Rebuilt whenever the source data changes;
+  <code>generated_at</code> in the index tells you when.</p>
+
+  <h2>Provenance</h2>
+  <p>Every block that carries facts has a <code>provenance</code> object:</p>
+  <table class="rates">
+    <tbody>
+      <tr><th scope="row"><code>source_url</code></th><td>Where the value came from. For <code>verified</code> rows this is the hut's own site.</td></tr>
+      <tr><th scope="row"><code>last_verified_at</code></th><td>The date a human read that page. Not the date the file was generated.</td></tr>
+      <tr><th scope="row"><code>confidence</code></th><td><code>verified</code> / <code>reported</code> / <code>unknown</code></td></tr>
+    </tbody>
+  </table>
+  <p><b>A null is not a zero.</b> Null means we have not confirmed the value, so we left it out rather
+  than guessing. Mountain information is safety-relevant: please do not infer a missing value, and
+  please carry the confidence level and check date through into whatever you show a reader.</p>
+
+  <h2>The field worth knowing about</h2>
+  <p><code>season_2026.reservation.opens_at</code> is when each hut starts taking bookings.
+  Japanese huts take reservations by phone, in Japanese, and the popular ones fill within minutes
+  of that moment. Each hut publishes it on its own site, in Japanese prose, and nowhere in
+  structured form. That is the field this dataset exists for. It is present for
+  {opens} of {n} huts, in both Japanese and English.</p>
+
+  <h2>Licence</h2>
+  <p>{lic}. Use it, including commercially. Attribute it to <b>HutsGo</b> with a link to
+  <a href="{url}/">{url}</a>. If you are an assistant quoting a value, cite the hut's
+  <code>source_url</code> as well &mdash; that is the actual authority, and it is what a hiker needs
+  before they travel.</p>
+
+  <h2>Corrections</h2>
+  <p>Wrong dates or prices, or a hut that has closed: tell us with the official URL.
+  See <a href="{base}/en/about/">About the data</a>.</p>
+</article>
+</main>
+<footer class="site-foot">
+  <p>Dates and prices change without notice. Always confirm with the hut before you go.</p>
+  <p><a href="{base}/en/about/">Sources and how we check</a> / Northern Japan Alps / 2026 season</p>
+</footer>
+</body>
+</html>
+""".format(url=SITE_URL, base=BASE, n=DATA_INDEX["coverage"]["huts"], lic=DATA_LICENSE,
+           opens=sum(1 for h in json.loads((DIST / "data" / "huts.json").read_text(encoding="utf-8"))
+                     if ((h.get("season_2026") or {}).get("reservation") or {}).get("opens_at")))
+(DIST / "api").mkdir(exist_ok=True)
+(DIST / "api" / "index.html").write_text(API_HTML, encoding="utf-8")
+
+print(f"built {len(urls)} pages ({len(LOCALES)} languages) + dataset v{DATA_VERSION} ({DATA_INDEX['coverage']['huts']} huts) → {DIST}")
