@@ -106,6 +106,8 @@ $report = [
   'posts'        => ['total' => count($posts), 'pending' => $pending,
                      'by_lang' => array_count_values(array_map(fn($p) => $p['lang'] ?? 'ja', $posts))],
   'interest_dolomiti' => $counts['interest_dolomiti'] ?? 0,
+  // 静的ホスティングでは JSON の取得数が測れない。MCP 経由の利用はここで数える。
+  'mcp' => array_filter($counts, fn($k) => strpos($k, 'mcp_') === 0, ARRAY_FILTER_USE_KEY),
 ];
 
 if (($_GET['format'] ?? '') === 'json') {
@@ -138,7 +140,18 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}small{color:#6F7B74
   <div class="tile"><small>訪問者</small><b><?= count($vis) ?></b><small>日替わりハッシュ。PV <?= $counts['pageview'] ?? 0 ?></small></div>
   <div class="tile"><small>投稿</small><b><?= count($posts) ?></b><small>未承認 <?= $pending ?> 件</small></div>
   <div class="tile"><small>ドロミティ興味</small><b><?= $counts['interest_dolomiti'] ?? 0 ?></b><small>作る前に需要を測る</small></div>
+  <div class="tile"><small>MCP ツール呼び出し</small><b><?= array_sum($report['mcp']) ?: 0 ?></b>
+    <small>AI 経由の利用。初期化 <?= $counts['mcp_initialize'] ?? 0 ?> 回</small></div>
 </div>
+
+<?php if ($report['mcp']): ?>
+<h2>MCP（AI から）</h2>
+<p><small>サイトに人が来なくても、データが使われていればここに出る。ゼロクリック時代の実質的な到達数。</small></p>
+<table><tr><th>ツール</th><th class="n">呼び出し</th></tr>
+<?php foreach ($report['mcp'] as $k => $n): ?>
+<tr><td><code><?= $h(substr($k, 4)) ?></code></td><td class="n"><?= $n ?></td></tr>
+<?php endforeach; ?></table>
+<?php endif; ?>
 
 <h2>言語別（英語版の仮説検証）</h2>
 <p><small>英語版は電話が使えない層。送客率が日本語版より高ければ「英語で出す価値がある」の裏づけになる。</small></p>

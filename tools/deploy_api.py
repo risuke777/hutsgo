@@ -20,7 +20,7 @@ import argparse, ftplib, hashlib, os, pathlib, secrets, ssl, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "api" if (ROOT / "api").is_dir() else ROOT / "xserver" / "api"
 ENV_FILE = ROOT / "xserver" / ".ftp.env"
-FILES = [".htaccess", "common.php", "config.sample.php", "kpi.php", "post.php", "track.php"]
+FILES = [".htaccess", "common.php", "config.sample.php", "kpi.php", "mcp.php", "post.php", "track.php"]
 DEFAULTS = ["index.html", "default_page.png"]
 
 

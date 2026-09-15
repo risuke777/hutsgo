@@ -135,6 +135,17 @@ def main() -> None:
         print(f"\n■ 投稿  合計 {po['total']} 件 / 未承認 {po['pending']} 件  {po.get('by_lang', {})}")
         if po["pending"]:
             print("   → やること: tools/import_posts.py で取り込み、設備を hut_facilities に反映してください。")
+        mcp = report.get("mcp") or {}
+        calls = sum(v for k, v in mcp.items() if k != "mcp_initialize")
+        print(f"\n■ MCP（AI からの利用）  ツール呼び出し {calls} 回 / 接続 {mcp.get('mcp_initialize', 0)} 回")
+        for k, v in sorted(mcp.items(), key=lambda kv: -kv[1]):
+            if k != "mcp_initialize":
+                print(f"   {k[4:]:<18} {v}")
+        if calls:
+            print("   → 判断: サイトに来なくてもデータが使われています。ゼロクリック時代の実質的な到達数です。")
+        else:
+            print("   → 判断: まだ呼ばれていません。/api/ の掲載と MCP レジストリへの登録を確認してください。")
+
         print(f"\n■ ドロミティ興味  {report['interest_dolomiti']} 回")
         if report["interest_dolomiti"] >= 20:
             print("   → 判断: 着手の目安に届いています。")

@@ -64,6 +64,16 @@ Alta Via 1 は表銀座と同じ「線」のルートなので UI はそのま�
 2026 年の検索は 7 割近くがクリックを生まないので、人が来る前提の導線だけでは届かない。
 AI が答える側に回ったときに引用される場所を取りにいくための布石。
 
+## MCP サーバー
+`xserver/api/mcp.php`。`https://api.hutsgo.com/mcp.php` で AI アシスタントにデータを渡す。
+
+    claude mcp add --transport http hutsgo https://api.hutsgo.com/mcp.php
+
+ツールは search_huts / get_hut / booking_windows / get_trail。
+「null は未確認であって 0 ではない」をツール説明と応答の両方に書いてあり、
+設備で絞ったときは「未確認ゆえに除外した数」を必ず返す。推測で埋めさせないため。
+呼び出し数は KPI に乗る（ゼロクリック時代に、サイトに来ない利用を測る唯一の手段）。
+
 ## データの更新
 - `seed.sql` が唯一の真実。編集して `python3 build.py`
 - 公式サイトで確認したら `confidence` を `verified` に、`source_url` を公式 URL に、`last_verified_at` を当日に

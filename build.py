@@ -532,8 +532,12 @@ def _prov(row):
 
 
 def _bi(row, field):
-    """日英の両方を返す。どちらも無ければ None。"""
-    ja, en = row.get(field), row.get(field + "_en")
+    """日英の両方を返す。どちらも無ければ None。
+    列名は name_ja/name_en の形と、label/label_en のように日本語側が無印の形が混在する。"""
+    ja = row.get(field + "_ja")
+    if ja is None:
+        ja = row.get(field)
+    en = row.get(field + "_en")
     if ja is None and en is None:
         return None
     return {"ja": ja, "en": en}
@@ -600,14 +604,18 @@ def export_dataset():
         for st in rows("SELECT * FROM trail_stops WHERE trail_id=? ORDER BY seq", t["id"]):
             hut = st["hut_id"]
             th = ths.get(st["trailhead_id"])
+            # 標高は hut / trailhead / 通過点のどこかにある。消費側で結合させず、ここで解決して入れる。
+            hrow = next((x for x in rows("SELECT * FROM huts WHERE id=?", hut)), None) if hut else None
+            elev = (hrow or {}).get("elevation_m") if hut else (th["elevation_m"] if th else st["elevation_m"])
             stops.append({
                 "seq": st["seq"],
                 "kind": "hut" if hut else ("trailhead" if th else "waypoint"),
                 "hut_id": hut,
-                "trailhead": {"id": th["id"], "name": _bi(th, "name"),
-                              "elevation_m": th["elevation_m"]} if th else None,
-                "label": _bi(st, "label") if not hut and not th else None,
-                "elevation_m": st["elevation_m"],
+                "name": _bi(hrow, "name") if hrow else (_bi(th, "name") if th else _bi(st, "label")),
+                "trailhead_id": th["id"] if th else None,
+                "elevation_m": elev,
+                # 稜線の小屋は公式に標高記載が無いものがある。false のときは断面図を描く前に注意すること
+                "elevation_confirmed": elev is not None,
                 "cumulative_time_min": st["cumulative_time_min"],
                 "overnight_candidate": bool(st["is_overnight_candidate"]),
             })
@@ -667,6 +675,8 @@ confidence level and the check date alongside any value you cite.
 - [Huts]({url}/data/huts.json): {n} huts with season, prices, facilities and booking windows
 - [Trails]({url}/data/trails.json): routes as ordered stops with elevation and cumulative walking time
 - [Field reference]({url}/api/): what each field means
+- MCP server (hosted, no install): `https://api.hutsgo.com/mcp.php`
+  tools: search_huts, get_hut, booking_windows, get_trail
 
 ## Pages
 - [Japanese site]({url}/)
@@ -743,6 +753,31 @@ API_HTML = """<!doctype html>
   of that moment. Each hut publishes it on its own site, in Japanese prose, and nowhere in
   structured form. That is the field this dataset exists for. It is present for
   {opens} of {n} huts, in both Japanese and English.</p>
+
+  <h2>MCP server</h2>
+  <p>The same data is available to AI assistants over the
+  <a href="https://modelcontextprotocol.io/">Model Context Protocol</a>. Hosted, so there is nothing
+  to install:</p>
+  <pre class="code">https://api.hutsgo.com/mcp.php</pre>
+  <p>In Claude Code:</p>
+  <pre class="code">claude mcp add --transport http hutsgo https://api.hutsgo.com/mcp.php</pre>
+  <p>Or in a client that takes a config file:</p>
+  <pre class="code">{{
+  "mcpServers": {{
+    "hutsgo": {{ "type": "http", "url": "https://api.hutsgo.com/mcp.php" }}
+  }}
+}}</pre>
+  <p>Four tools:</p>
+  <table class="rates">
+    <tbody>
+      <tr><th scope="row"><code>search_huts</code></th><td>Huts matching a date, a price ceiling, an area or a facility. Filtering on a facility reports how many huts were excluded only because that facility has not been checked.</td></tr>
+      <tr><th scope="row"><code>get_hut</code></th><td>One hut in full, every block with its own provenance.</td></tr>
+      <tr><th scope="row"><code>booking_windows</code></th><td>When each hut starts taking reservations, with the phone number and booking URL. Times are JST.</td></tr>
+      <tr><th scope="row"><code>get_trail</code></th><td>A traverse as ordered stops with elevation and cumulative walking time, ready to lay out night by night.</td></tr>
+    </tbody>
+  </table>
+  <p>Read-only, no key, rate limited per caller. The server is stateless: POST JSON-RPC, get one
+  response. Tool results repeat the null rule above, so an assistant carries it through to the reader.</p>
 
   <h2>Licence</h2>
   <p>{lic}. Use it, including commercially. Attribute it to <b>HutsGo</b> with a link to

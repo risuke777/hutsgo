@@ -304,3 +304,9 @@ button.btn{font:inherit;cursor:pointer}
 .contrib-form textarea{resize:vertical}
 .contrib-out{font-size:.9rem;color:var(--moss-deep)}
 .contrib-out.is-error{color:var(--rust)}
+
+/* /api/ の設定例 */
+.code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.7rem .9rem;
+  overflow-x:auto;font-size:.85rem;line-height:1.6;margin:0 0 1rem;white-space:pre}
+.prose code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.05rem .35rem;font-size:.9em}
+.prose .code code{border:0;padding:0;background:none}
