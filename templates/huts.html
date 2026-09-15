@@ -1,42 +1,41 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
-{% block title %}北アルプスの山小屋を条件で探す — 営業日・料金・テント場 | HutsGo{% endblock %}
-{% block desc %}北アルプス（表銀座・槍・穂高）の山小屋{{ huts | length }}軒を、宿泊日・料金・テント場の有無で絞り込めます。{% endblock %}
-{% block canonical %}/huts/{% endblock %}
+{% block title %}{{ T.filter_title }}{% endblock %}
 {% block body %}
 <section class="page-head">
-  <h1>条件で探す</h1>
-  <p class="lede">泊まる日と予算を入れると、その日に営業している小屋だけが残ります。</p>
+  <h1>{{ T.filter_h1 }}</h1>
+  <p class="lede">{{ T.filter_lede }}</p>
 </section>
-{% if AREA_PHOTO %}<figure class="photo photo-band">{{ img(AREA_PHOTO) }}<figcaption>{{ AREA_PHOTO.caption }}</figcaption></figure>{% endif %}
+{% if AREA_PHOTO %}<figure class="photo photo-band">{{ img(AREA_PHOTO) }}<figcaption>{{ AREA_PHOTO.caption_t }}</figcaption></figure>{% endif %}
 
 <form class="filter" id="filter" onsubmit="return false">
   <div class="filter-row">
-    <label>宿泊日<input type="date" name="date" value="{{ TODAY }}"></label>
-    <label>プラン
+    <label>{{ T.filter_date }}<input type="date" name="date" value="{{ TODAY }}"></label>
+    <label>{{ T.filter_plan }}
       <select name="plan">
-        <option value="two">1泊2食</option>
-        <option value="none">素泊まり</option>
-        <option value="tent">テント</option>
+        <option value="two">{{ T.plan_two_meals }}</option>
+        <option value="none">{{ T.plan_no_meal }}</option>
+        <option value="tent">{{ T.plan_tent }}</option>
       </select>
     </label>
-    <label>上限 <output id="price-out">指定なし</output>
+    <label>{{ T.filter_max }} <output id="price-out">{{ T.filter_any }}</output>
       <input type="range" name="price" min="8000" max="20000" step="500" value="20000">
     </label>
   </div>
   <div class="filter-row">
     <fieldset class="chips">
-      <legend>山域</legend>
-      <label class="chip"><input type="checkbox" name="area" value="omote_ginza" checked>表銀座・常念</label>
-      <label class="chip"><input type="checkbox" name="area" value="yari_hotaka" checked>槍・穂高</label>
-      <label class="chip"><input type="checkbox" name="area" value="kamikochi" checked>上高地</label>
+      <legend>{{ T.filter_area }}</legend>
+      {% for a in areas %}
+      <label class="chip"><input type="checkbox" name="area" value="{{ a.id }}" checked>{{ a.name }}</label>
+      {% endfor %}
     </fieldset>
-    <label class="check"><input type="checkbox" name="tents">テント場がある小屋だけ</label>
+    <label class="check"><input type="checkbox" name="tents">{{ T.filter_tents }}</label>
   </div>
 </form>
 
 <p class="result-count" id="count" aria-live="polite"></p>
 <ul class="hut-list" id="results"></ul>
 
-<script id="hut-data" type="application/json" data-base="{{ BASE }}">{{ client_json | safe }}</script>
+<script id="hut-data" type="application/json" data-base="{{ LB }}"
+        data-i18n='{"count":"{{ T.filter_count }}","none":"{{ T.filter_none }}","any":"{{ T.filter_any }}","tents":"{{ T.filter_tents_n }}","yearRound":"{{ T.filter_year_round }}","elevUnknown":"{{ T.elev_unknown }}","unknown":"{{ T.unknown }}","two":"{{ T.plan_two_meals }}","noMeal":"{{ T.plan_no_meal }}","tent":"{{ T.plan_tent }}"}'>{{ client_json | safe }}</script>
 {% endblock %}

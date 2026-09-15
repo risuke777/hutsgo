@@ -1,35 +1,36 @@
 {% extends "base.html" %}
-{% block title %}データについて — 出典・確認方法・更新方針 | HutsGo{% endblock %}
-{% block desc %}HutsGoに掲載している山小屋情報の出典、確認の仕方、更新の頻度について。{% endblock %}
-{% block canonical %}/about/{% endblock %}
+{% block title %}{{ T.about_title }}{% endblock %}
 {% block body %}
 <article class="prose">
   <header class="page-head">
-    <h1>データについて</h1>
-    <p class="lede">山の情報は間違うと安全に関わります。何をどこまで確認したかを、そのまま見せることにしています。</p>
+    <h1>{{ T.about_h1 }}</h1>
+    <p class="lede">{{ T.about_lede }}</p>
   </header>
 
-  <h2>三つの印</h2>
+  <h2>{{ T.about_marks_h }}</h2>
   <dl class="legend">
-    <div><dt><span class="dot dot-verified"></span>公式サイトで確認</dt><dd>山小屋の公式サイト、または電話で確認した情報。小屋ページには「公式サイトで確認（確認日）」と文字でも書きます。</dd></div>
-    <div><dt><span class="dot dot-reported"></span>二次情報</dt><dd>登山雑誌や山岳団体の公開資料など、公式以外の信頼できる出典から転記した情報。公式確認が済んだら青に変わります。</dd></div>
-    <div><dt><span class="dot dot-unknown"></span>未確認</dt><dd>まだ確認できていない項目。推測で埋めず「未確認」と表示します。</dd></div>
+    <div><dt><span class="dot dot-verified"></span>{{ T.about_mark1_t }}</dt><dd>{{ T.about_mark1_d }}</dd></div>
+    <div><dt><span class="dot dot-reported"></span>{{ T.about_mark2_t }}</dt><dd>{{ T.about_mark2_d }}</dd></div>
+    <div><dt><span class="dot dot-unknown"></span>{{ T.about_mark3_t }}</dt><dd>{{ T.about_mark3_d }}</dd></div>
   </dl>
 
-  <h2>標高と断面図</h2>
-  <p>小屋の標高は公式サイトの記載値です。公式に記載が無い平地の宿は国土地理院の地形図（標高API）から読み、その旨を併記しています。稜線上の小屋は地形図の読み取り誤差が大きいため、公式に無いものは「標高未確認」のままにし、断面図では点線の丸で仮の位置に置いています。</p>
-  <p>断面図の横軸は距離ではなく標準コースタイムの累計です。稜線は登録した地点を直線で結んだ概形で、実際の地形の細かな起伏は表しません。通過点（山頂・乗越）の標高は国土地理院の地形図と各小屋公式サイトの記載によります。</p>
+  <h2>{{ T.about_elev_h }}</h2>
+  <p>{{ T.about_elev_1 }}</p>
+  <p>{{ T.about_elev_2 }}</p>
 
-  <h2>掲載していないもの</h2>
-  <p>登山記録サービスや個人ブログの本文は転載しません。口コミは、このサイトに直接投稿されたものと、運営者が実際に宿泊して書いたものだけを載せます。</p>
+  <h2>{{ T.about_excl_h }}</h2>
+  <p>{{ T.about_excl }}</p>
 
-  <h2>予約について</h2>
-  <p>予約は各山小屋の公式窓口で行ってください。HutsGoは予約を仲介せず、手数料も受け取りません。公式サイトへのリンクをクリックした回数だけを、どの情報が役に立っているかを知るために数えています。</p>
+  <h2>{{ T.about_book_h }}</h2>
+  <p>{{ T.about_book }}</p>
 
-  <h2>現在の対象</h2>
-  <p>2026年シーズンの北アルプス、表銀座・常念山脈から槍ヶ岳・穂高連峰までの{{ huts | length }}軒。ここで確認の手順が固まったら、他の山域に広げます。</p>
+  <h2>{{ T.about_scope_h }}</h2>
+  <p>{{ T.about_scope.format(n=huts | length) }}</p>
 
-  <h2>誤りを見つけたら</h2>
-  <p>営業期間や料金の誤り、休業の情報などは、公式サイトのURLを添えて知らせていただけると助かります。連絡先は近日中に掲載します。</p>
+  <h2>{{ T.about_en_h }}</h2>
+  <p>{{ T.about_en }}</p>
+
+  <h2>{{ T.about_fix_h }}</h2>
+  <p>{{ T.about_fix }}</p>
 </article>
 {% endblock %}

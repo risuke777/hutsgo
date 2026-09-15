@@ -39,6 +39,8 @@ b{font-weight:700}
 .site-head nav a+a{margin-left:1.1rem}
 .site-head nav a{text-decoration:none;color:var(--ink-soft);padding:.25rem 0;border-bottom:2px solid transparent}
 .site-head nav a:hover{border-color:var(--yellow)}
+.site-head nav a.lang{color:var(--moss-deep);font-weight:500}
+.site-head nav a.lang::before{content:"";display:inline-block;width:1px;height:.9em;background:var(--line-strong);margin-right:1.1rem;vertical-align:-.1em}
 .site-foot{max-width:var(--w);margin:3rem auto 0;padding:1.5rem 1.25rem 3rem;border-top:1px solid var(--line);color:var(--granite);font-size:.85rem}
 main{max-width:var(--w);margin:0 auto;padding:0 1.25rem}
 

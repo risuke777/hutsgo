@@ -2,13 +2,16 @@
   "use strict";
   var meta = function (n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.content : ""; };
   var API = meta("hutsgo-api");
+  var LANG = meta("hutsgo-lang") || "ja";
   var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
 
   // ---- KPI events. Own endpoint on XServer (API_URL) first; Plausible / GA4 / Umami if present.
   function track(name, props) {
     props = props || {};
+    props.lang = LANG;
     if (API && navigator.sendBeacon) {
-      var payload = { ev: name, hut: props.hut || "", trail: props.trail || "", page: location.pathname, ref: document.referrer };
+      var payload = { ev: name, lang: LANG, hut: props.hut || "", trail: props.trail || "",
+                      page: location.pathname, ref: document.referrer };
       navigator.sendBeacon(API + "/track.php", new Blob([JSON.stringify(payload)], { type: "text/plain" }));
     }
     if (window.plausible) window.plausible(name, { props: props });
@@ -22,7 +25,8 @@
     var a = e.target.closest("[data-track]");
     if (!a) return;
     var ev = a.dataset.track;
-    track(/^(official_site|reservation|phone|access)$/.test(ev) ? "outbound_" + ev : ev, { hut: a.dataset.hut || "", trail: a.dataset.trail || "" });
+    track(/^(official_site|reservation|phone|access)$/.test(ev) ? "outbound_" + ev : ev,
+          { hut: a.dataset.hut || "", trail: a.dataset.trail || "" });
     if (a.tagName === "BUTTON" && a.dataset.done) { a.textContent = a.dataset.done; a.disabled = true; }
   });
 
@@ -47,14 +51,16 @@
       return date >= el.dataset.open && date <= el.dataset.close ? "open" : "closed";
     return null;
   }
-  var LABEL = { open: "この日は営業中", closed: "この日は営業期間外", off: "今年は休業" };
+  var SEASON = LANG === "en"
+    ? { open: "Open on this date", closed: "Outside the season on this date", off: "Closed this year" }
+    : { open: "この日は営業中", closed: "この日は営業期間外", off: "今年は休業" };
   function paint(date) {
     each(document.querySelectorAll("[data-plan-date] [data-status]"), function (el) {
       var st = status(el, date);
       var badge = el.querySelector("[data-season-badge]");
       if (!badge) return;
       badge.className = "season-badge" + (st ? " season-" + st : "");
-      badge.textContent = st ? LABEL[st] : "";
+      badge.textContent = st ? SEASON[st] : "";
     });
   }
   var dateInput = document.getElementById("plan-date");
@@ -69,22 +75,32 @@
     contrib.hidden = false;
     var form = contrib.querySelector("form");
     var out = form.querySelector(".contrib-out");
+    var MSG = LANG === "en"
+      ? { need: "Please fill in either a facility or a note.", sending: "Sending…",
+          thanks: "Received. We will check it before publishing. Thank you.",
+          failed: "Could not send. ", retry: "Please try again in a moment." }
+      : { need: "設備かひとことのどちらかを入れてください。", sending: "送信中…",
+          thanks: "受け取りました。確認してから掲載します。ありがとうございます。",
+          failed: "送れませんでした。", retry: "時間をおいてもう一度お試しください。" };
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var fd = new FormData(form);
       fd.append("hut", form.dataset.hut);
+      fd.append("lang", LANG);
       if (!fd.get("body") && !fd.get("toilet") && !fd.get("water") && !fd.get("charging") && !fd.get("payment") && !fd.get("shower")) {
-        out.className = "contrib-out is-error"; out.textContent = "設備かひとことのどちらかを入れてください。"; return;
+        out.className = "contrib-out is-error"; out.textContent = MSG.need; return;
       }
-      var btn = form.querySelector("[type=submit]"); btn.disabled = true; out.className = "contrib-out"; out.textContent = "送信中…";
+      var btn = form.querySelector("[type=submit]");
+      btn.disabled = true; out.className = "contrib-out"; out.textContent = MSG.sending;
       fetch(API + "/post.php", { method: "POST", body: fd }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j.ok) throw new Error(j.error || "error");
-        out.textContent = "受け取りました。確認してから掲載します。ありがとうございます。";
+        out.textContent = MSG.thanks;
         track("post_submit", { hut: form.dataset.hut });
         form.reset();
       }).catch(function (err) {
         out.className = "contrib-out is-error";
-        out.textContent = "送れませんでした。" + (err.message !== "error" && err.message !== "Failed to fetch" ? err.message : "時間をおいてもう一度お試しください。");
+        var known = err.message && err.message !== "error" && err.message !== "Failed to fetch";
+        out.textContent = MSG.failed + (known ? err.message : MSG.retry);
       }).then(function () { btn.disabled = false; });
     });
   }
@@ -94,6 +110,7 @@
   if (!dataEl) return;
   var huts = JSON.parse(dataEl.textContent);
   var base = dataEl.dataset.base || "";
+  var L = JSON.parse(dataEl.dataset.i18n || "{}");
   var filter = document.getElementById("filter");
   var results = document.getElementById("results");
   var count = document.getElementById("count");
@@ -110,8 +127,9 @@
   function val(name) { var el = filter.querySelector("[name=" + name + "]"); return el ? el.value : ""; }
   function checked(name) { var o = []; each(filter.querySelectorAll("[name=" + name + "]:checked"), function (c) { o.push(c.value); }); return o; }
   function render() {
-    var date = val("date"), plan = val("plan"), max = Number(val("price")), areas = checked("area"), tents = checked("tents").length > 0;
-    priceOut.textContent = max >= 20000 ? "指定なし" : yen(max);
+    var date = val("date"), plan = val("plan"), max = Number(val("price")),
+        areas = checked("area"), tents = checked("tents").length > 0;
+    priceOut.textContent = max >= 20000 ? L.any : yen(max);
     var list = huts.filter(function (h) {
       if (areas.indexOf(h.area_id) < 0) return false;
       if (date && !openOn(h, date)) return false;
@@ -121,18 +139,20 @@
       if (tents && !h.tents) return false;
       return true;
     }).sort(function (a, b) { return (a[plan] || 1e9) - (b[plan] || 1e9); });
-    count.textContent = list.length ? list.length + "軒が条件に合います" : "";
+    count.textContent = list.length ? L.count.replace("{n}", list.length) : "";
     results.innerHTML = list.length ? list.map(function (h) {
       var p = h[plan];
-      var planName = { two: "1泊2食", none: "素泊まり", tent: "テント" }[plan];
-      var period = h.open ? h.open.slice(5).replace("-", "/") + "〜" + h.close.slice(5).replace("-", "/") : (h.status === "year_round" ? "通年" : "");
-      var meta = [h.area, h.elev ? yen(h.elev).slice(1) + "m" : "標高未確認", h.tents ? "テント約" + h.tents + "張" : "", period].filter(Boolean);
+      var planName = { two: L.two, none: L.noMeal, tent: L.tent }[plan];
+      var period = h.open ? h.open.slice(5).replace("-", "/") + "〜" + h.close.slice(5).replace("-", "/")
+                          : (h.status === "year_round" ? L.yearRound : "");
+      var meta = [h.area, h.elev ? yen(h.elev).slice(1) + "m" : L.elevUnknown,
+                  h.tents ? L.tents.replace("{n}", h.tents) : "", period].filter(Boolean);
       return '<li><a class="hut-item" href="' + base + '/huts/' + h.id + '/">'
         + '<span class="main"><span class="name">' + h.name + '<span class="dot dot-' + h.conf + '"></span></span>'
         + '<span class="meta">' + meta.join("　") + '</span></span>'
-        + '<span class="price">' + (p != null ? yen(p) : "未確認") + '<small>' + planName + '</small></span>'
+        + '<span class="price">' + (p != null ? yen(p) : L.unknown) + '<small>' + planName + '</small></span>'
         + '</a></li>';
-    }).join("") : '<li class="empty">この条件に合う小屋はありません。日付か上限を変えてみてください。</li>';
+    }).join("") : '<li class="empty">' + L.none + '</li>';
   }
   filter.addEventListener("input", render);
   filter.addEventListener("change", render);

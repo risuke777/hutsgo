@@ -46,8 +46,11 @@ if (!empty($_FILES['photo']['tmp_name']) && is_uploaded_file($_FILES['photo']['t
   }
 }
 
+$lang = in_array((string)($_POST['lang'] ?? ''), ['ja', 'en'], true) ? (string)$_POST['lang'] : 'ja';
+
 hg_append($cfg, 'posts', [
   'hut'       => $hut,
+  'lang'      => $lang,
   'stayed_on' => $stayed,
   'plan'      => $enum('plan', ['two_meals', 'one_meal', 'no_meal', 'tent', 'private_room']),
   'toilet'    => $enum('toilet', ['flush', 'vault', 'composting', 'portable', 'none']),

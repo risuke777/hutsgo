@@ -23,6 +23,7 @@ CREATE TABLE sub_areas (
 CREATE TABLE operators (
   id            TEXT PRIMARY KEY,      -- 'enzanso_group'
   name_ja       TEXT NOT NULL,
+  name_en       TEXT,
   website       TEXT,
   -- one operator often runs many huts with a shared booking system.
   -- this is the unit you negotiate an API deal with, not the hut.
@@ -64,10 +65,13 @@ CREATE TABLE hut_seasons (
   open_date      TEXT,                 -- ISO. NULL when status<>'open'
   close_date     TEXT,
   season_note    TEXT,                 -- '年末年始も営業' 等、非連続営業の注記
+  season_note_en TEXT,
   reservation_required INTEGER,        -- 0/1/NULL
   reservation_url TEXT,
   reservation_phone TEXT,
   booking_opens_at TEXT,               -- 予約解禁日時。競争の激しい小屋で価値が高い
+  -- 英語版の中核。訪日ハイカーは電話が使えず、受付開始を逃すと泊まれない
+  booking_opens_at_en TEXT,
   capacity_beds  INTEGER,
   capacity_tents INTEGER,
   source_url     TEXT,
@@ -135,9 +139,11 @@ CREATE TABLE hut_mobile_signal (
 CREATE TABLE trailheads (
   id           TEXT PRIMARY KEY,       -- 'nakabusa'
   name_ja      TEXT NOT NULL,
+  name_en      TEXT,
   lat REAL, lon REAL, elevation_m INTEGER,
   parking_spaces INTEGER,
-  parking_note TEXT
+  parking_note TEXT,
+  parking_note_en TEXT
 );
 
 CREATE TABLE access_routes (
@@ -146,7 +152,9 @@ CREATE TABLE access_routes (
   mode          TEXT NOT NULL CHECK (mode IN
                   ('bus','train','taxi','car','shuttle','ropeway','ferry')),
   operator_name TEXT,
+  operator_name_en TEXT,
   from_place    TEXT,
+  from_place_en TEXT,
   seasonal_only INTEGER DEFAULT 0,
   -- 南アの東海フォレスト型: 特定の小屋に泊まらないと乗れない
   requires_hut_stay INTEGER DEFAULT 0,
@@ -175,9 +183,11 @@ CREATE TABLE hut_trailheads (
 CREATE TABLE trails (
   id          TEXT PRIMARY KEY,        -- 'omote_ginza_yari'
   name_ja     TEXT NOT NULL,
+  name_en     TEXT,
   nights_typical INTEGER,
   difficulty  TEXT CHECK (difficulty IN ('easy','moderate','hard','expert')),
-  summary     TEXT
+  summary     TEXT,
+  summary_en  TEXT
 );
 
 CREATE TABLE trail_stops (
@@ -190,6 +200,7 @@ CREATE TABLE trail_stops (
   -- 宿泊地でない通過点（ピーク・乗越）。hut_id / trailhead_id が両方 NULL の行で使う。
   -- 標高は国土地理院の地形図値。時刻は前後の小屋間コースタイムを按分した概算。
   label       TEXT,
+  label_en    TEXT,
   elevation_m INTEGER,
   PRIMARY KEY (trail_id, seq)
 );
@@ -202,7 +213,9 @@ CREATE TABLE photos (
   id        TEXT PRIMARY KEY,
   file      TEXT NOT NULL,              -- static/img/<file>.jpg（-800 版も同名で存在）
   alt       TEXT NOT NULL,
+  alt_en    TEXT,
   caption   TEXT,
+  caption_en TEXT,
   credit    TEXT,
   role      TEXT NOT NULL CHECK (role IN ('hero','trail','hut','teaser','area')),
   hut_id    TEXT REFERENCES huts(id),

@@ -266,4 +266,105 @@ INSERT INTO photos (id,file,alt,caption,credit,role,hut_id,trail_id,range_id,tak
 ('dolomiti_locatelli','dolomiti-locatelli','岩峰に囲まれた赤い屋根の山小屋 Rifugio Locatelli','Rifugio Locatelli（Dreizinnenhütte）。ドロミティの山小屋は昼から賑わう。','撮影：HutsGo','teaser',NULL,NULL,'dolomites',NULL,1),
 ('dolomiti_pano','dolomiti-pano','ドロミティの岩の稜線から見下ろす谷と遠くの山群','ドロミティの稜線から。谷ごとに小屋があり、線でつなげる。','撮影：HutsGo','teaser',NULL,NULL,'dolomites',NULL,2);
 
+-- ---------------------------------------------------------------
+-- 英語版のためのデータ（訪日ハイカー向け）
+--   小屋名はローマ字。画面では「Enzanso (燕山荘)」と日本語を併記して出す。
+--   現地で小屋の人やバス運転手に見せる必要があるため、日本語を落とさないこと。
+--   booking_opens_at_en は英語版の中核。電話が使えない相手に「いつ受付が開くか」を伝える。
+-- ---------------------------------------------------------------
+UPDATE operators SET name_en='Enzanso Group'          WHERE id='enzanso';
+UPDATE operators SET name_en='Yarigatake Sanso Group' WHERE id='yarigatake';
+UPDATE operators SET name_en='Chogatake Hutte'        WHERE id='chougatake';
+UPDATE operators SET name_en='Karasawa Hutte'         WHERE id='karasawa_h';
+UPDATE operators SET name_en='Independent'            WHERE id='indep';
+
+UPDATE huts SET name_en='Nakabusa Onsen'    WHERE id='nakabusa_onsen';
+UPDATE huts SET name_en='Ariakeso'          WHERE id='ariakeso';
+UPDATE huts SET name_en='Enzanso'           WHERE id='enzanso';
+UPDATE huts SET name_en='Daitenso'          WHERE id='daitenso';
+UPDATE huts SET name_en='Otensho Hutte'     WHERE id='otenjo_hutte';
+UPDATE huts SET name_en='Hutte Nishidake'   WHERE id='hutte_nishidake';
+UPDATE huts SET name_en='Jonen-goya'        WHERE id='jonen_goya';
+UPDATE huts SET name_en='Chogatake Hutte'   WHERE id='chougatake_hutte';
+UPDATE huts SET name_en='Yarigatake Sanso'  WHERE id='yarigatake_sanso';
+UPDATE huts SET name_en='Hutte Oyari'       WHERE id='hutte_ooyari';
+UPDATE huts SET name_en='Sessho-goya'       WHERE id='sesshou_goya';
+UPDATE huts SET name_en='Yarisawa Lodge'    WHERE id='yarisawa_lodge';
+UPDATE huts SET name_en='Minamidake-goya'   WHERE id='minamidake_goya';
+UPDATE huts SET name_en='Yokoo Sanso'       WHERE id='yokoo_sanso';
+UPDATE huts SET name_en='Karasawa Hutte'    WHERE id='karasawa_hutte';
+UPDATE huts SET name_en='Karasawa-goya'     WHERE id='karasawa_goya';
+UPDATE huts SET name_en='Kitahotaka-goya'   WHERE id='kitahotaka_goya';
+UPDATE huts SET name_en='Hotakadake Sanso'  WHERE id='hotakadake_sanso';
+UPDATE huts SET name_en='Nishiho Sanso'     WHERE id='nishiho_sanso';
+UPDATE huts SET name_en='Dakesawa-goya'     WHERE id='dakesawa_goya';
+UPDATE huts SET name_en='Tokusawaen'        WHERE id='tokusawaen';
+
+UPDATE trailheads SET name_en='Nakabusa Onsen trailhead',
+  parking_note_en='Three car parks. Full from early morning in peak season.' WHERE id='nakabusa';
+UPDATE trailheads SET name_en='Kamikochi',
+  parking_note_en='Closed to private cars all year. Bus or taxi from Sawando or Hirayu.' WHERE id='kamikochi';
+UPDATE trailheads SET name_en='Shin-Hotaka' WHERE id='shin_hotaka';
+
+UPDATE trails SET name_en='Omote-Ginza Traverse (Nakabusa Onsen to Yarigatake)',
+  summary_en='The classic Northern Alps ridge line: up to Tsubakuro-dake, along to Daitenjo, then the Higashi-Kama ridge to the spire of Yarigatake.'
+  WHERE id='omote_ginza';
+UPDATE trails SET name_en='Karasawa Base: the Hotaka circuit',
+  summary_en='Walk in from Kamikochi to the Karasawa cirque, then round Kita-Hotaka and Oku-Hotaka and back down.'
+  WHERE id='karasawa_base';
+
+UPDATE trail_stops SET label_en='Akaiwa-dake'      WHERE label='赤岩岳';
+UPDATE trail_stops SET label_en='Suimata-nokkoshi' WHERE label='水俣乗越';
+UPDATE trail_stops SET label_en='Yarigatake'       WHERE label='槍ヶ岳';
+UPDATE trail_stops SET label_en='Kita-Hotaka'      WHERE label='北穂高岳';
+UPDATE trail_stops SET label_en='Karasawa cirque'  WHERE label='涸沢カール';
+UPDATE trail_stops SET label_en='Oku-Hotaka'       WHERE label='奥穂高岳';
+
+UPDATE hut_seasons SET season_note_en='Also open over the New Year period' WHERE hut_id='enzanso' AND year=2026;
+UPDATE hut_seasons SET season_note_en='Closed for repairs 1-30 June' WHERE hut_id='yokoo_sanso' AND year=2026;
+UPDATE hut_seasons SET season_note_en='Closed for refurbishment 11-31 May' WHERE hut_id='karasawa_hutte' AND year=2026;
+UPDATE hut_seasons SET season_note_en='Campsite opens from mid June' WHERE hut_id='kitahotaka_goya' AND year=2026;
+UPDATE hut_seasons SET season_note_en='Open all year' WHERE hut_id='nishiho_sanso' AND year=2026;
+
+-- 予約受付開始（英語版の中核。時刻はすべて日本時間）
+UPDATE hut_seasons SET booking_opens_at_en='1 April, 10:00 JST, for April-June stays' WHERE hut_id='nakabusa_onsen' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='Online booking closes the day before. Private rooms open in stages from 1 April.' WHERE hut_id='enzanso' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='otenjo_hutte' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay (same date, previous month)' WHERE hut_id='jonen_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='1 April, 10:00 JST. From 14 May, six weeks ahead on the same weekday, 00:00 JST.' WHERE hut_id='chougatake_hutte' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='yarigatake_sanso' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='Online booking closes at 07:00 JST on the day' WHERE hut_id='hutte_ooyari' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='sesshou_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='yarisawa_lodge' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='minamidake_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 07:00 JST, by phone. For 1 July - 25 Oct a limited number opens two months ahead via Yamatan.' WHERE hut_id='yokoo_sanso' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay (same date), 08:00 JST' WHERE hut_id='karasawa_hutte' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay (same date). Stays up to 25 May open on 25 April.' WHERE hut_id='karasawa_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay (same date, previous month), 07:00 JST' WHERE hut_id='kitahotaka_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 08:00 JST, online' WHERE hut_id='hotakadake_sanso' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='Two months before your stay (same date), 09:30 JST, online or by phone' WHERE hut_id='nishiho_sanso' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='One month before your stay, 09:00 JST' WHERE hut_id='dakesawa_goya' AND year=2026;
+UPDATE hut_seasons SET booking_opens_at_en='Taking bookings for the whole season now, by phone only' WHERE hut_id='tokusawaen' AND year=2026;
+
+UPDATE photos SET alt_en='Tents on a ridge at sunrise above a sea of cloud',
+  caption_en='Morning on the ridge campsite. This is what you walk up for.' WHERE id='hero_sunrise';
+UPDATE photos SET alt_en='The white granite ridge of Tsubakuro-dake with cloud on the green slopes',
+  caption_en='Tsubakuro-dake, just north of Enzanso, on white granite.' WHERE id='omote_tsubakuro';
+UPDATE photos SET alt_en='Colourful tents on the ridge before dawn',
+  caption_en='The campsite before dawn. You wake above the clouds.' WHERE id='omote_tents_dawn';
+UPDATE photos SET alt_en='A mountain hut on a saddle with cloud building along the ridge',
+  caption_en='Cloud rising along the ridge, and a hut on the saddle.' WHERE id='ridge_hut_clouds';
+UPDATE photos SET alt_en='The towers of Tre Cime di Lavaredo lit red at sunset',
+  caption_en='Tre Cime di Lavaredo. At dusk only the walls stay lit.' WHERE id='dolomiti_trecime';
+UPDATE photos SET alt_en='Rifugio Locatelli, a red-roofed hut ringed by rock towers',
+  caption_en='Rifugio Locatelli (Dreizinnenhuette). Dolomite huts are busy from midday.' WHERE id='dolomiti_locatelli';
+UPDATE photos SET alt_en='A valley and distant peaks seen from a rocky Dolomite ridge',
+  caption_en='From a Dolomite ridge. A hut in every valley, waiting to be joined up.' WHERE id='dolomiti_pano';
+
+-- アクセスの英語表記。駅名・バス会社名は現地で探す必要があるので日本語も残す
+UPDATE access_routes SET operator_name_en='Nan-an Taxi (shared bus) 南安タクシー', from_place_en='Hotaka Station 穂高駅' WHERE id='nakabusa_bus';
+UPDATE access_routes SET operator_name_en='Alpico Kotsu アルピコ交通', from_place_en='Sawando or Hirayu 沢渡・平湯' WHERE id='kamikochi_bus';
+UPDATE access_routes SET from_place_en='Sawando or Hirayu 沢渡・平湯' WHERE id='kamikochi_taxi';
+UPDATE access_routes SET operator_name_en='Okuhida Kanko Kaihatsu 奥飛騨観光開発', from_place_en='Shin-Hotaka Onsen 新穂高温泉' WHERE id='shinhotaka_ropeway';
+
 COMMIT;

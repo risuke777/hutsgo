@@ -1,52 +1,51 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
-{% block title %}HutsGo — 山小屋の予約先と行き方を、行程順に{% endblock %}
-{% block canonical %}/{% endblock %}
+{% block title %}{{ T.home_title }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"HutsGo","url":"{{ SITE_URL }}/","inLanguage":"ja",
- "description":"北アルプスの山小屋の標高・営業期間・料金・予約先・登山口アクセスを、縦走の行程からまとめて確認できるサイト"}
+{"@context":"https://schema.org","@type":"WebSite","name":"HutsGo","url":"{{ SITE_URL }}{{ PREFIX }}/","inLanguage":"{{ LANG }}",
+ "description":"{{ T.site_desc }}"}
 </script>
 {% endblock %}
 {% block body %}
 <section class="hero">
-  <h1>ルートを選ぶ。<br>泊まる小屋が行程順に並ぶ。</h1>
-  <p class="lede">どこまで登って、どこで泊まるかが断面図で分かります。営業期間・料金・予約先・設備は各小屋の公式サイトで確認したものだけを載せています。</p>
+  <h1>{{ T.home_h1_a }}<br>{{ T.home_h1_b }}</h1>
+  <p class="lede">{{ T.home_lede }}</p>
 </section>
 {% if HERO %}
 <figure class="photo photo-hero">
   {{ img(HERO, eager=true) }}
-  <figcaption>{{ HERO.caption }} <span class="credit">{{ HERO.credit }}</span></figcaption>
+  <figcaption>{{ HERO.caption_t }} <span class="credit">{{ HERO.credit_t }}</span></figcaption>
 </figure>
 {% endif %}
 
 <section class="route-list" aria-labelledby="trails-h">
-  <h2 id="trails-h">ルートを選ぶ</h2>
+  <h2 id="trails-h">{{ T.home_routes_h }}</h2>
   {% for t in trails %}
   {% set sm = t.profile %}
-  <a class="route-card" href="{{ BASE }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}">
+  <a class="route-card" href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}">
     {{ t.svg_mini }}
     <div class="route-body">
-      <strong>{{ t.name_ja }}</strong>
-      <span class="route-summary">{{ t.summary }}</span>
+      <strong>{{ t.name }}</strong>
+      <span class="route-summary">{{ t.summary_t }}</span>
       <dl class="route-meta">
-        <div><dt>目安</dt><dd>{{ t.nights_typical }}泊{{ t.nights_typical + 1 }}日</dd></div>
-        <div><dt>歩行</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
-        {% if sm %}<div><dt>最高地点</dt><dd>{{ sm.top.elev | metres }}</dd></div>
-        <div><dt>累積標高差</dt><dd>約{{ sm.gain | metres }}</dd></div>{% endif %}
-        <div><dt>宿泊候補</dt><dd>{{ t.hut_count }}軒</dd></div>
+        <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</dd></div>
+        <div><dt>{{ T.l_walking }}</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
+        {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.elev | metres }}</dd></div>
+        <div><dt>{{ T.l_gain }}</dt><dd>{{ T.approx }}{{ sm.gain | metres }}</dd></div>{% endif %}
+        <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>
       </dl>
     </div>
   </a>
   {% endfor %}
-  <p class="quiet">ルートは順次追加します。載っていない場合は<a href="{{ BASE }}/huts/">条件から探す</a>こともできます。</p>
+  <p class="quiet">{{ T.home_more_routes }}<a href="{{ LB }}/huts/">{{ T.home_more_link }}</a>{{ T.home_more_tail }}</p>
 </section>
 
 <section class="areas" aria-labelledby="areas-h">
-  <h2 id="areas-h">山域から探す</h2>
+  <h2 id="areas-h">{{ T.home_areas_h }}</h2>
   <ul class="chip-row">
     {% for a in areas %}
-    <li><a class="chip" href="{{ BASE }}/huts/?area={{ a.id }}">{{ a.name_ja }}</a></li>
+    <li><a class="chip" href="{{ LB }}/huts/?area={{ a.id }}">{{ a.name }}</a></li>
     {% endfor %}
   </ul>
 </section>
@@ -57,29 +56,29 @@
     {% for p in TEASER[:3] %}
     <figure class="photo {{ 'photo-main' if loop.first else 'photo-sub' }}">
       {{ img(p, sizes="(max-width: 760px) 100vw, 480px" if loop.first else "(max-width: 760px) 50vw, 240px") }}
-      <figcaption>{{ p.caption }}</figcaption>
+      <figcaption>{{ p.caption_t }}</figcaption>
     </figure>
     {% endfor %}
   </div>
   <div class="teaser-body">
-    <p class="eyebrow">次の山域</p>
-    <h2 id="teaser-h">ドロミティ（イタリア）</h2>
-    <p>Alta Via 1 のリフージオを、表銀座と同じ「行程順に小屋が並ぶ」形で。トイレ・シャワー・テント場の情報が一番分からない山域だからこそ、同じ確認基準で載せます。</p>
+    <p class="eyebrow">{{ T.teaser_eyebrow }}</p>
+    <h2 id="teaser-h">{{ T.teaser_h }}</h2>
+    <p>{{ T.teaser_body }}</p>
     <p class="teaser-cta">
-      <button type="button" class="btn btn-primary" data-track="interest_dolomiti" data-done="登録しました。ありがとうございます">ドロミティ版がほしい</button>
-      <span class="quiet">押した数を見て、作る順番を決めます。</span>
+      <button type="button" class="btn btn-primary" data-track="interest_dolomiti" data-done="{{ T.teaser_done }}">{{ T.teaser_btn }}</button>
+      <span class="quiet">{{ T.teaser_note }}</span>
     </p>
   </div>
 </section>
 {% endif %}
 
 <section class="promise" aria-labelledby="promise-h">
-  <h2 id="promise-h">確認していること</h2>
+  <h2 id="promise-h">{{ T.home_promise_h }}</h2>
   <ul class="promise-list">
-    <li><span class="dot dot-verified" aria-hidden="true"></span><span><b>公式サイトで確認</b>した情報には青い印と確認日を付けます。二次情報は黄の印です。</span></li>
-    <li><span class="dot dot-unknown" aria-hidden="true"></span><span>分からないことは「<b>未確認</b>」と書きます。推測で埋めません。</span></li>
-    <li><span class="dot dot-none" aria-hidden="true"></span><span>予約は各山小屋の公式サイトへ。仲介も手数料もありません。</span></li>
+    <li><span class="dot dot-verified" aria-hidden="true"></span><span><b>{{ T.home_promise_1a }}</b>{{ T.home_promise_1b }}</span></li>
+    <li><span class="dot dot-unknown" aria-hidden="true"></span><span>{{ T.home_promise_2a }}<b>{{ T.home_promise_2b }}</b>{{ T.home_promise_2c }}</span></li>
+    <li><span class="dot dot-none" aria-hidden="true"></span><span>{{ T.home_promise_3 }}</span></li>
   </ul>
-  <p class="quiet"><a href="{{ BASE }}/about/">出典と更新方針</a></p>
+  <p class="quiet"><a href="{{ LB }}/about/">{{ T.foot_about }}</a></p>
 </section>
 {% endblock %}
