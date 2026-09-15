@@ -20,14 +20,28 @@ GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラ�
 2. GitHub のリポジトリ変数 `SITE_URL` に `https://hutsgo.com` を設定（build.py が `CNAME` ファイルを出力し、リンクのベースパスが `/` になる）
 3. Settings → Pages → Custom domain に `hutsgo.com`、DNS チェック通過後に Enforce HTTPS を ON
 
+## 言語
+日本語を `/`、英語を `/en/` に出す。文言は `i18n.py`、データの英語は各テーブルの `_en` カラム。
+英語版の狙いは訪日ハイカー（電話が使えず、受付開始を逃すと泊まれない層）なので、
+`booking_opens_at_en`（受付がいつ開くか）が中核。小屋・登山口・山名は現地で指させるよう日本語を併記する。
+
 ## KPI
 主 KPI は **送客率** = 小屋ページ閲覧 → 公式サイト / 予約ページ / 電話 のクリック（同一訪問者×小屋で 1 回）。
 副 KPI は 投稿数（`post_submit`）、設備データ被覆率（`python demo.py`）、ドロミティ興味数（`interest_dolomiti`）。
 登録ユーザー数は追わない（ログイン機能は作らない。投稿はログイン無し・承認制）。
 
-計測はエックスサーバー上の自前 API（`xserver/README.md`）。リポジトリ変数 `API_URL` を設定すると
+計測はエックスサーバー上の自前 API。リポジトリ変数 `API_URL` を設定すると
 `static/site.js` が `navigator.sendBeacon` でイベントを送り、小屋ページに「泊まった情報を送る」フォームが出る。
-`ANALYTICS_SNIPPET` に Plausible / GA4 のタグを入れれば併用もできる。
+イベントには言語が乗るので、英語版と日本語版の送客率を並べて比較できる（英語版の仮説検証そのもの）。
+
+確認と判断は 1 コマンド:
+
+    python tools/kpi_report.py            # 送客率・言語別・小屋別・投稿・データ被覆率＋判断
+    python tools/kpi_report.py --days 7
+    python tools/kpi_report.py --save     # 生 JSON を tools/kpi/ に残して後で差分を見る
+
+接続情報は `xserver/.kpi.env`（`.kpi.env.sample` をコピー、git 管理外）。
+ブラウザで見るなら `https://api.hutsgo.com/kpi.php?token=<合言葉>`、JSON は `&format=json`。
 
 ## 写真
 `static/img/` は運営者撮影のみ。`materials/` の元写真から PIL で 1600px / 800px に書き出し、EXIF（位置情報）は全て除去する。
