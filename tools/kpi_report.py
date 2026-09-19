@@ -11,6 +11,8 @@
     KPI_TOKEN=<config.php の kpi_token>
 
 見ている指標:
+判断のしきい値は kpi.php が持つ（ここは表示するだけ。古い kpi.php なら手元の規則で出す）。
+
   主KPI   送客率 = 小屋ページを見た人のうち公式サイト/予約/電話を押した割合（人×小屋で1回）
   仮説    英語版の送客率 > 日本語版なら「英語で出す価値がある」の裏づけ
   データ  設備の被覆率。ここが埋まらないと他社と差がつかない
@@ -70,6 +72,20 @@ def coverage() -> list:
     return out
 
 
+LEVEL = {"wait": "保留", "act": "要対応", "ok": "妥当", "good": "良い"}
+
+
+def say(report: dict, key: str) -> bool:
+    """kpi.php が出した判断を表示する。古い kpi.php で判断が無ければ False（手元の規則で出す）。"""
+    j = (report.get("judgement") or {}).get(key)
+    if not j:
+        return False
+    print(f"   → 判断[{LEVEL.get(j['level'], j['level'])}]: {j['head']}。{j['why']}")
+    if j.get("todo"):
+        print(f"      やること: {j['todo']}")
+    return True
+
+
 def bar(n: int, total: int, width: int = 20) -> str:
     fill = round(n / total * width) if total else 0
     return "█" * fill + "·" * (width - fill)
@@ -96,13 +112,25 @@ def main() -> None:
         except Exception as e:
             print(f"\n[計測] 取得できませんでした: {e}")
 
+    if report and report.get("judgement"):
+        todo = [j for j in report["judgement"].values() if j["level"] == "act" and j.get("todo")]
+        print("\n■ 今やること")
+        for j in todo or [{"todo": "要対応なし", "head": ""}]:
+            print(f"   - {j['todo']}" + (f"（{j['head']}）" if j["head"] else ""))
+        c = report["judgement"].get("continue")
+        if c:
+            print(f"   {c['head']} — {c['why']}")
+        say(report, "huts")
+
     if report:
         p = report["primary"]
         print(f"\n■ 主KPI 送客率  {p['value']}%")
         print(f"   小屋ページを見た {p['hut_viewers']}（人×小屋）のうち {p['senders']} が公式/予約/電話へ")
         print(f"   訪問者 {report['visitors']} 人 / ページビュー {report['pageviews']}")
 
-        if p["hut_viewers"] < 30:
+        if say(report, "send_rate"):
+            pass
+        elif p["hut_viewers"] < 30:
             print("   → 判断: まだ母数が足りません。30（人×小屋）を超えるまで率は見ないこと。")
         elif p["value"] < 10:
             print("   → 判断: 低い。小屋ページに来ても予約へ進んでいません。")
@@ -118,7 +146,9 @@ def main() -> None:
         for k, v in (("日本語", ja), ("English", en)):
             print(f"   {k:<8} PV {v.get('pageviews', 0):>5}  小屋を見た {v.get('hut_viewers', 0):>4}  "
                   f"送客 {v.get('senders', 0):>4}  送客率 {v.get('send_rate', 0)}%")
-        if en.get("hut_viewers", 0) < 30:
+        if say(report, "language"):
+            pass
+        elif en.get("hut_viewers", 0) < 30:
             print("   → 判断: 英語版の母数が足りません。結論を出すのは早い。")
         elif en.get("send_rate", 0) > ja.get("send_rate", 0):
             print("   → 判断: 仮説どおり。英語圏のほうが困っている裏づけです。英語の情報を増やす価値があります。")
@@ -133,7 +163,9 @@ def main() -> None:
 
         po = report["posts"]
         print(f"\n■ 投稿  合計 {po['total']} 件 / 未承認 {po['pending']} 件  {po.get('by_lang', {})}")
-        if po["pending"]:
+        if say(report, "posts"):
+            pass
+        elif po["pending"]:
             print("   → やること: tools/import_posts.py で取り込み、設備を hut_facilities に反映してください。")
         mcp = report.get("mcp") or {}
         calls = sum(v for k, v in mcp.items() if k != "mcp_initialize")
@@ -141,13 +173,17 @@ def main() -> None:
         for k, v in sorted(mcp.items(), key=lambda kv: -kv[1]):
             if k != "mcp_initialize":
                 print(f"   {k[4:]:<18} {v}")
-        if calls:
+        if say(report, "mcp"):
+            pass
+        elif calls:
             print("   → 判断: サイトに来なくてもデータが使われています。ゼロクリック時代の実質的な到達数です。")
         else:
             print("   → 判断: まだ呼ばれていません。/api/ の掲載と MCP レジストリへの登録を確認してください。")
 
         print(f"\n■ ドロミティ興味  {report['interest_dolomiti']} 回")
-        if report["interest_dolomiti"] >= 20:
+        if say(report, "dolomiti"):
+            pass
+        elif report["interest_dolomiti"] >= 20:
             print("   → 判断: 着手の目安に届いています。")
 
     print("\n■ データ被覆率（サイトの中身。ここが差別化の実体）")

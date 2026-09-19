@@ -74,28 +74,7 @@ if (!hg_rate_limit($cfg, 'mcp', 240)) { rpc_error($id, -32000, 'Too many request
 // ---- data -----------------------------------------------------------
 function load(string $name): array {
   global $cfg;
-  $dir = hg_data_dir($cfg, 'cache');
-  $f = $dir . '/' . $name . '.json';
-  if (is_file($f) && (time() - filemtime($f)) < CACHE_TTL) {
-    $d = json_decode((string)file_get_contents($f), true);
-    if (is_array($d)) { return $d; }
-  }
-  $body = null;
-  if (function_exists('curl_init')) {
-    $ch = curl_init(DATA_BASE . '/' . $name . '.json');
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15,
-                            CURLOPT_FOLLOWLOCATION => true, CURLOPT_USERAGENT => 'hutsgo-mcp/1.0']);
-    $body = curl_exec($ch);
-    curl_close($ch);
-  }
-  if (!is_string($body) || $body === '') { $body = @file_get_contents(DATA_BASE . '/' . $name . '.json'); }
-  $d = is_string($body) ? json_decode($body, true) : null;
-  if (is_array($d)) { file_put_contents($f, $body, LOCK_EX); return $d; }
-  if (is_file($f)) {                       // 取得に失敗したら期限切れキャッシュで凌ぐ
-    $d = json_decode((string)file_get_contents($f), true);
-    if (is_array($d)) { return $d; }
-  }
-  return [];
+  return hg_public_data($cfg, $name, DATA_BASE, CACHE_TTL);
 }
 
 // ---- tools ----------------------------------------------------------

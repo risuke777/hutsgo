@@ -78,3 +78,29 @@ function hg_store_image(string $tmp, string $dest, string $ext, int $edge = 1600
   if ($ok) { @unlink($tmp); }
   return (bool)$ok;
 }
+
+// 公開データ（hutsgo.com/data/<name>.json）を取得してキャッシュする。mcp.php と kpi.php が使う。
+// 取得に失敗したら期限切れのキャッシュで凌ぐ。どちらも無ければ空配列。
+function hg_public_data(array $cfg, string $name, string $base, int $ttl): array {
+  $f = hg_data_dir($cfg, 'cache') . '/' . $name . '.json';
+  if (is_file($f) && (time() - filemtime($f)) < $ttl) {
+    $d = json_decode((string)file_get_contents($f), true);
+    if (is_array($d)) { return $d; }
+  }
+  $body = null;
+  if (function_exists('curl_init')) {
+    $ch = curl_init($base . '/' . $name . '.json');
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15,
+                            CURLOPT_FOLLOWLOCATION => true, CURLOPT_USERAGENT => 'hutsgo-api/1.0']);
+    $body = curl_exec($ch);
+    curl_close($ch);
+  }
+  if (!is_string($body) || $body === '') { $body = @file_get_contents($base . '/' . $name . '.json'); }
+  $d = is_string($body) ? json_decode($body, true) : null;
+  if (is_array($d)) { file_put_contents($f, $body, LOCK_EX); return $d; }
+  if (is_file($f)) {
+    $d = json_decode((string)file_get_contents($f), true);
+    if (is_array($d)) { return $d; }
+  }
+  return [];
+}
