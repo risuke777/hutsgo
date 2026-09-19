@@ -8,7 +8,7 @@
 
 ## 公開（Vercel、5分）
 1. https://vercel.com/new → "Deploy without Git" は使わず、まず GitHub にこのフォルダを push
-2. Vercel で Import → Framework: Other、Build Command: `pip install jinja2 && python3 build.py`、Output Directory: `dist`
+2. Vercel で Import → Framework: Other、Build Command: `pip install jinja2 markdown && python3 build.py`、Output Directory: `dist`
 3. Environment Variables に `SITE_URL=https://<あなたのドメイン>` を追加
 4. Deploy。以後は git push で自動更新
 
@@ -73,6 +73,11 @@ AI が答える側に回ったときに引用される場所を取りにいく�
 「null は未確認であって 0 ではない」をツール説明と応答の両方に書いてあり、
 設備で絞ったときは「未確認ゆえに除外した数」を必ず返す。推測で埋めさせないため。
 呼び出し数は KPI に乗る（ゼロクリック時代に、サイトに来ない利用を測る唯一の手段）。
+
+## 記事
+`content/articles/<slug>.md`（英語は `<slug>.en.md`）を置くと `/articles/<slug>/` になる。書式は `content/articles/README.md`。
+メタ情報の `huts:` / `trails:` に書いた小屋・ルートのページに記事へのリンクが自動で出る。記事が 0 本のあいだは一覧ページもリンクも出ない。
+小屋のデータ（営業期間・料金）は記事に書き写さず `seed.sql` を正とする。
 
 ## データの更新
 - `seed.sql` が唯一の真実。編集して `python3 build.py`

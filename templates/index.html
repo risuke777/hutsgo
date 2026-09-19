@@ -41,6 +41,16 @@
   <p class="quiet">{{ T.home_more_routes }}<a href="{{ LB }}/huts/">{{ T.home_more_link }}</a>{{ T.home_more_tail }}</p>
 </section>
 
+{% if articles %}
+<section class="areas" aria-labelledby="articles-h">
+  <h2 id="articles-h">{{ T.articles_h1 }}</h2>
+  <ul class="link-list">
+    {% for a in articles %}<li><a href="{{ LB }}/articles/{{ a.slug }}/">{{ a.title }}</a> <span class="quiet">{{ a.date | fmt_ymd }}</span></li>{% endfor %}
+  </ul>
+  <p class="quiet"><a href="{{ LB }}/articles/">{{ T.articles_all }}</a></p>
+</section>
+{% endif %}
+
 <section class="areas" aria-labelledby="areas-h">
   <h2 id="areas-h">{{ T.home_areas_h }}</h2>
   <ul class="chip-row">

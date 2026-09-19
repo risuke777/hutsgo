@@ -130,6 +130,15 @@
   </section>
   {% endif %}
 
+  {% if h.articles %}
+  <section class="block" aria-labelledby="art-h">
+    <h2 id="art-h">{{ T.articles_related_h }}</h2>
+    <ul class="link-list">
+      {% for a in h.articles %}<li><a href="{{ LB }}/articles/{{ a.slug }}/">{{ a.title }}</a> <span class="quiet">{{ a.date | fmt_ymd }}</span></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
   <section class="block" aria-labelledby="rev-h">
     <h2 id="rev-h">{{ T.h_reviews }}</h2>
     {% if h.reviews %}

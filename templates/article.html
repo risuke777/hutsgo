@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }} | HutsGo{% endblock %}
+{% block desc %}{{ a.summary or a.title }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "Article", "headline": a.title,
+  "datePublished": a.date, "inLanguage": LANG, "description": a.summary or a.title,
+  "author": {"@type": "Organization", "name": a.author or "HutsGo"},
+  "publisher": {"@type": "Organization", "name": "HutsGo", "url": SITE_URL}} | tojson }}</script>
+{% endblock %}
+{% block body %}
+<article class="prose">
+  <header class="page-head">
+    <p class="eyebrow"><a href="{{ LB }}/articles/">{{ T.articles_h1 }}</a></p>
+    <h1>{{ a.title }}</h1>
+    <p class="quiet"><time datetime="{{ a.date }}">{{ a.date | fmt_ymd }}</time>{% if a.visited %}{{ T.mid }}{{ T.article_visited.format(date=a.visited | fmt_ymd) }}{% endif %}{% if a.author %}{{ T.mid }}{{ a.author }}{% endif %}</p>
+    {% if a.summary %}<p class="lede">{{ a.summary }}</p>{% endif %}
+  </header>
+
+  {{ a.html }}
+
+  {% if a.huts or a.trails %}
+  <aside class="note">
+    <h2>{{ T.article_related_h }}</h2>
+    <ul class="link-list">
+      {% for id in a.trails %}<li><a href="{{ LB }}/trails/{{ id }}/">{{ trail_names[id] }}</a></li>{% endfor %}
+      {% for id in a.huts %}<li><a href="{{ LB }}/huts/{{ id }}/">{{ hut_names[id] }}</a></li>{% endfor %}
+    </ul>
+    <p class="quiet">{{ T.article_data_note }}</p>
+  </aside>
+  {% endif %}
+</article>
+{% endblock %}

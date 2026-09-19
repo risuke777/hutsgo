@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install jinja2
+      - run: pip install jinja2 markdown
       - name: Build site
         env:
           # repo variable SITE_URL wins (custom domain); otherwise project Pages URL https://<owner>.github.io/<repo>

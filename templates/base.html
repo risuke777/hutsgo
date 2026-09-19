@@ -6,9 +6,9 @@
 <title>{% block title %}HutsGo{% endblock %}</title>
 <meta name="description" content="{% block desc %}{{ T.site_desc }}{% endblock %}">
 <link rel="canonical" href="{{ SITE_URL }}{{ PREFIX }}{{ page }}">
-<link rel="alternate" hreflang="ja" href="{{ SITE_URL }}{{ page }}">
+{% if not single_lang %}<link rel="alternate" hreflang="ja" href="{{ SITE_URL }}{{ page }}">
 <link rel="alternate" hreflang="en" href="{{ SITE_URL }}/en{{ page }}">
-<link rel="alternate" hreflang="x-default" href="{{ SITE_URL }}{{ page }}">
+<link rel="alternate" hreflang="x-default" href="{{ SITE_URL }}{{ page }}">{% endif %}
 <meta property="og:title" content="{{ self.title() }}">
 <meta property="og:description" content="{{ self.desc() }}">
 <meta property="og:type" content="website">
@@ -35,7 +35,7 @@
     <a href="{{ LB }}/">{{ T.nav_routes }}</a>
     <a href="{{ LB }}/huts/">{{ T.nav_filter }}</a>
     <a href="{{ LB }}/about/">{{ T.nav_about }}</a>
-    <a class="lang" href="{{ ALT }}{{ page }}" hreflang="{{ ALT_LANG }}" lang="{{ ALT_LANG }}"
+    <a class="lang" href="{{ ALT }}{{ alt_page or page }}" hreflang="{{ ALT_LANG }}" lang="{{ ALT_LANG }}"
        aria-label="{{ T.lang_switch_aria }}" data-track="lang_switch">{{ T.lang_switch }}</a>
   </nav>
 </header>
@@ -44,7 +44,7 @@
 </main>
 <footer class="site-foot">
   <p>{{ T.foot_disclaimer }}</p>
-  <p><a href="{{ LB }}/about/">{{ T.foot_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
+  <p>{% if HAS_ARTICLES %}<a href="{{ LB }}/articles/">{{ T.nav_articles }}</a>{{ T.mid }}{% endif %}<a href="{{ LB }}/about/">{{ T.foot_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
 </footer>
 <script src="{{ BASE }}/static/site.js" defer></script>
 </body>

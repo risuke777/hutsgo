@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ T.articles_title }}{% endblock %}
+{% block desc %}{{ T.articles_lede }}{% endblock %}
+{% block body %}
+<section class="page-head">
+  <h1>{{ T.articles_h1 }}</h1>
+  <p class="lede">{{ T.articles_lede }}</p>
+</section>
+<ul class="article-list">
+  {% for a in articles %}
+  <li>
+    <a href="{{ LB }}/articles/{{ a.slug }}/"><b>{{ a.title }}</b></a>
+    <span class="quiet"><time datetime="{{ a.date }}">{{ a.date | fmt_ymd }}</time>{% if a.visited %}{{ T.mid }}{{ T.article_visited.format(date=a.visited | fmt_ymd) }}{% endif %}</span>
+    {% if a.summary %}<p>{{ a.summary }}</p>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

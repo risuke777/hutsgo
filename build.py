@@ -7,6 +7,7 @@
 import json, os, pathlib, shutil, sqlite3, datetime, sys, urllib.parse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
+import markdown
 
 import i18n
 
@@ -447,6 +448,63 @@ def build_model(lang):
                 fmt_time=fmt_time, fmt_date=fmt_date, metres=metres_t, conf_text=conf_text)
 
 
+# ---------------------------------------------------------------- articles
+# 記事は content/articles/*.md。1 記事 1 ファイル、先頭に --- で挟んだメタ情報。
+#   <slug>.md     → /articles/<slug>/      （日本語）
+#   <slug>.en.md  → /en/articles/<slug>/   （英語。同じ slug なら言語切替で行き来できる）
+# 書式は content/articles/README.md。下書きはリポジトリの外に置く（公開リポジトリなので）。
+ARTICLES_DIR = ROOT / "content" / "articles"
+ARTICLE_KEYS = {"title", "date", "summary", "huts", "trails", "author", "visited", "draft"}
+
+
+def load_articles():
+    hut_ids = {r["id"] for r in rows("SELECT id FROM huts")}
+    trail_ids = {r["id"] for r in rows("SELECT id FROM trails")}
+    out = {"ja": [], "en": []}
+    files = sorted(ARTICLES_DIR.glob("*.md")) if ARTICLES_DIR.is_dir() else []
+    for f in files:
+        if f.name.upper() == "README.MD":
+            continue
+        stem, lang = (f.stem[:-3], "en") if f.stem.endswith(".en") else (f.stem, "ja")
+        text = f.read_text(encoding="utf-8").lstrip("﻿")
+        if not text.startswith("---"):
+            sys.exit(f"{f.name}: 先頭に --- で挟んだメタ情報が要る（content/articles/README.md）")
+        _, head, body = text.split("---", 2)
+        meta = {}
+        for line in head.strip().splitlines():
+            k, _, v = line.partition(":")
+            k = k.strip()
+            if k not in ARTICLE_KEYS:
+                sys.exit(f"{f.name}: 知らないキー '{k}'（使えるのは {sorted(ARTICLE_KEYS)}）")
+            meta[k] = v.strip()
+        if meta.get("draft", "").lower() in ("true", "yes", "1"):
+            continue
+        for k in ("title", "date"):
+            if not meta.get(k):
+                sys.exit(f"{f.name}: {k} が無い")
+        huts_ = [x.strip() for x in meta.get("huts", "").split(",") if x.strip()]
+        trails_ = [x.strip() for x in meta.get("trails", "").split(",") if x.strip()]
+        bad = [x for x in huts_ if x not in hut_ids] + [x for x in trails_ if x not in trail_ids]
+        if bad:   # 黙ってリンク切れを出さない
+            sys.exit(f"{f.name}: 存在しない小屋/ルート id: {', '.join(bad)}")
+        out[lang].append({
+            "slug": stem, "lang": lang, "title": meta["title"], "date": meta["date"],
+            "visited": meta.get("visited") or None,
+            "summary": meta.get("summary", ""), "author": meta.get("author") or None,
+            "huts": huts_, "trails": trails_,
+            "html": Markup(markdown.markdown(body, extensions=["tables", "sane_lists"])),
+        })
+    for lang in out:
+        out[lang].sort(key=lambda a: a["date"], reverse=True)
+        other = {a["slug"] for a in out["en" if lang == "ja" else "ja"]}
+        for a in out[lang]:
+            a["has_alt"] = a["slug"] in other
+    return out
+
+
+ARTICLES = load_articles()
+
+
 # ---------------------------------------------------------------- render
 env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
@@ -458,6 +516,7 @@ for p in DIST.iterdir():
 shutil.copytree(ROOT / "static", DIST / "static")
 
 urls = []
+article_urls = []   # (url, 相手言語版があるか, 更新日)
 
 
 def write(path, tpl, **ctx):
@@ -468,7 +527,9 @@ def write(path, tpl, **ctx):
 
 for lang, prefix in LOCALES:
     m = build_model(lang)
-    env.filters.update(fmt_time=m["fmt_time"], fmt_date=m["fmt_date"], yen=yen,
+    # 記事の日付は年をまたぐので年まで出す（小屋の営業期間は年が自明なので fmt_date は月日だけ）
+    fmt_ymd = (lambda d: f"{d[:4]}年{m['fmt_date'](d)}") if lang == "ja" else (lambda d: f"{m['fmt_date'](d)} {d[:4]}")
+    env.filters.update(fmt_time=m["fmt_time"], fmt_date=m["fmt_date"], yen=yen, fmt_ymd=fmt_ymd,
                        metres=m["metres"], conf_text=m["conf_text"])
     photos = m["photos"]
     g = dict(T=m["T"], LANG=lang, LB=BASE + prefix,
@@ -482,7 +543,14 @@ for lang, prefix in LOCALES:
     d = (prefix.lstrip("/") + "/") if prefix else ""
     huts_l, trails_l = list(m["huts"].values()), m["trails"]
 
-    write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", **g)
+    arts = ARTICLES[lang]
+    for h in huts_l:
+        h["articles"] = [a for a in arts if h["id"] in a["huts"]]
+    for t in trails_l:
+        t["articles"] = [a for a in arts if t["id"] in a["trails"]]
+    g["HAS_ARTICLES"] = bool(arts)
+
+    write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", articles=arts[:3], **g)
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
@@ -490,6 +558,21 @@ for lang, prefix in LOCALES:
         write(f"{d}huts/{h['id']}/index.html", "hut.html", h=h, page=f"/huts/{h['id']}/", **g)
     for t in trails_l:
         write(f"{d}trails/{t['id']}/index.html", "trail.html", t=t, page=f"/trails/{t['id']}/", **g)
+
+    if arts:
+        hut_names = {h["id"]: h["name"] for h in huts_l}
+        trail_names = {t["id"]: t["name"] for t in trails_l}
+        alt_has_articles = bool(ARTICLES[g["ALT_LANG"]])
+        write(f"{d}articles/index.html", "articles.html", articles=arts, page="/articles/",
+              single_lang=not alt_has_articles, alt_page="/articles/" if alt_has_articles else "/", **g)
+        for a in arts:
+            # 記事は言語ごとに別物。相手言語に同じ slug が無ければ、言語切替は相手のトップへ
+            pg = f"/articles/{a['slug']}/"
+            write(f"{d}articles/{a['slug']}/index.html", "article.html", a=a, page=pg,
+                  single_lang=not a["has_alt"], alt_page=pg if a["has_alt"] else "/",
+                  hut_names=hut_names, trail_names=trail_names, **g)
+            article_urls.append((f"{prefix}{pg}", a["has_alt"], a["date"]))
+        article_urls.append((f"{prefix}/articles/", alt_has_articles, TODAY))
 
     urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/"] \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
@@ -507,6 +590,8 @@ def alt_links(u):
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
     + "".join(f"  <url><loc>{SITE_URL}{u}</loc>{alt_links(u)}<lastmod>{TODAY}</lastmod></url>\n" for u in urls)
+    + "".join(f"  <url><loc>{SITE_URL}{u}</loc>{alt_links(u) if paired else ''}<lastmod>{d}</lastmod></url>\n"
+              for u, paired, d in article_urls)
     + f"  <url><loc>{SITE_URL}/api/</loc><lastmod>{TODAY}</lastmod></url>\n"
     + "</urlset>\n", encoding="utf-8")
 (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8")
@@ -802,4 +887,5 @@ API_HTML = """<!doctype html>
 (DIST / "api").mkdir(exist_ok=True)
 (DIST / "api" / "index.html").write_text(API_HTML, encoding="utf-8")
 
+print(f"articles: ja {len(ARTICLES['ja'])} / en {len(ARTICLES['en'])}")
 print(f"built {len(urls)} pages ({len(LOCALES)} languages) + dataset v{DATA_VERSION} ({DATA_INDEX['coverage']['huts']} huts) → {DIST}")
