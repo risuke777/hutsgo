@@ -2,7 +2,9 @@
 """XServer に溜まった投稿 (posts/*.jsonl) を seed.sql 用の SQL に変換する。
    python tools/import_posts.py posts/2026-09.jsonl [uploads_dir] > pending.sql
    出力を読んで問題ないものだけ seed.sql の reviews に貼る。写真は EXIF を剥がして static/img/ug/ に書き出す。"""
-import json, pathlib, sys, hashlib
+import json, pathlib, sys, hashlib, re
+
+URL = re.compile(r"(?:https?://|www\.)[^\s<>\"']{3,200}", re.I)
 
 if len(sys.argv) < 2:
     sys.exit(__doc__)
@@ -23,7 +25,17 @@ for line in src.read_text(encoding="utf-8").splitlines():
     if p.get("status") != "pending" or not p.get("body"):
         continue
     rid = "ug_" + hashlib.sha1((p["ts"] + p["hut"]).encode()).hexdigest()[:10]
-    rows.append(f"({q(rid)},{q(p['hut'])},'user',{q(p.get('stayed_on'))},{q(p.get('plan'))},{q(p['body'])},0,{q(p['ts'][:10])})")
+    # 本文にリンクは入れない。post.php が退避したものも、古い投稿に残っているものもここで消す。
+    # 出したいリンクがあるなら reviews.link_url に手で入れる（行き先は小屋の公式か自社のみ）。
+    body = URL.sub("", p["body"]).strip()
+    links = list(p.get("links") or []) + URL.findall(p["body"])
+    if links:
+        print(f"-- リンクを本文から除外 {p['hut']}: {links}  → スパムなら丸ごと捨てる。"
+              f"載せるなら reviews.link_url に手で入れる")
+    if not body:
+        print(f"-- 本文がリンクだけだった投稿を捨てた: {p['hut']} {p['ts'][:10]}")
+        continue
+    rows.append(f"({q(rid)},{q(p['hut'])},'user',{q(p.get('stayed_on'))},{q(p.get('plan'))},{q(body)},0,{q(p['ts'][:10])})")
     fac = {k: p.get(k) for k in ("toilet", "water", "charging", "payment", "shower") if p.get(k)}
     if fac:
         print(f"-- 設備の申告 {p['hut']} ({p.get('stayed_on') or '日付なし'}): {fac}  → hut_facilities を手で更新 (confidence='reported')")

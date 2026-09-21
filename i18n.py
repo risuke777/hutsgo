@@ -64,6 +64,8 @@ STRINGS = {
                          "Booking date known for {k} of {n} huts ({v} confirmed on the hut's own site)"),
     "booking_link":     ("予約受付開始日まとめ", "Booking windows"),
     "booking_official": ("公式サイト", "Official site"),
+    "review_editorial": ("運営が泊まった記録", "We stayed here"),
+    "review_link":      ("全文を読む", "Read the full write-up"),
     "lang_switch":      ("English", "日本語"),
     "lang_switch_aria": ("Switch to English", "日本語版に切り替え"),
     "site_desc":        ("北アルプスの山小屋の営業期間・料金・予約先・登山口アクセスを、縦走の行程からまとめて確認できます。",

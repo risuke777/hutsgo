@@ -27,6 +27,10 @@ TODAY = datetime.date.today().isoformat()
 
 LOCALES = [("ja", ""), ("en", "/en")]   # (言語, URL 接頭辞)
 
+# 口コミから出していいリンク先。自社サイトと、その小屋自身の公式サイトだけ。
+# 承認制でもリンクを自由にすると投稿がスパムの的になる。出口を塞いでおけば的にならない。
+REVIEW_LINK_HOSTS = {"emospot.com", "www.emospot.com", SITE_HOST} - {""}
+
 # ---------------------------------------------------------------- data
 db = ROOT / "hutsgo.db"
 if db.exists():
@@ -188,6 +192,14 @@ def build_model(lang):
                                    "rakuten": "Rakuten", "starlink": "Starlink"}[sg["carrier"]]
             sg["quality_label"] = {"good": "○", "spotty": "△", "none": "×"}.get(sg["quality"], T.unknown)
         h["reviews"] = rows("SELECT * FROM reviews WHERE hut_id=? ORDER BY stayed_on DESC", hid)
+        for r in h["reviews"]:
+            r["link_label_t"] = pick(r, "link_label", lang)
+            if r.get("link_url"):
+                host = urllib.parse.urlsplit(r["link_url"]).hostname or ""
+                allowed = REVIEW_LINK_HOSTS | {urllib.parse.urlsplit(h["official_url"] or "").hostname or ""}
+                if not r["link_url"].startswith("https://") or host not in allowed:
+                    sys.exit(f"review {r['id']}: リンク先 {r['link_url']} は許可されていない"
+                             f"（小屋の公式サイトか {', '.join(sorted(REVIEW_LINK_HOSTS))} のみ）")
         h["access"] = []
         for ht in rows("SELECT * FROM hut_trailheads WHERE hut_id=?", hid):
             th = dict(trailheads[ht["trailhead_id"]])

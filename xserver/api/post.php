@@ -25,6 +25,14 @@ $stayed = (string)($_POST['stayed_on'] ?? '');
 if ($stayed !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $stayed)) { $stayed = ''; }
 $body = trim((string)($_POST['body'] ?? ''));
 if (mb_strlen($body) > 1000) { $body = mb_substr($body, 0, 1000); }
+// 本文の URL は本文から外し、別枠に退避する。承認制でも本文にリンクが残っていると
+// 貼り付けの手が滑って公開されうる。出口を最初から塞いでおく（リンクは運営が link_url に入れる）。
+$links = [];
+$body = preg_replace_callback('#(?:https?://|www\.)[^\s<>"\']{3,200}#iu', function ($m) use (&$links) {
+  $links[] = $m[0];
+  return '';
+}, $body);
+$body = trim(preg_replace('/[ \t]{2,}/u', ' ', (string)$body));
 $contact = trim((string)($_POST['contact'] ?? ''));   // 任意。確認したい時にだけ使う。公開しない
 if (mb_strlen($contact) > 200) { $contact = mb_substr($contact, 0, 200); }
 
@@ -59,6 +67,8 @@ hg_append($cfg, 'posts', [
   'payment'   => $enum('payment', ['cash_only', 'card', 'qr']),
   'shower'    => $enum('shower', ['yes', 'no']),
   'body'      => $body,
+  // 本文から外した URL。公開しない。スパム判定の材料として運営だけが見る
+  'links'     => array_slice($links, 0, 5),
   'photo'     => $photo,
   'contact'   => $contact,
   'v'         => hg_visitor_hash(),

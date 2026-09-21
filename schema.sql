@@ -242,6 +242,12 @@ CREATE TABLE reviews (
   rating_staff       INTEGER,
   rating_crowding    INTEGER,
   body          TEXT,
+  -- 本文にはリンクを入れない（投稿の URL は post.php が別枠に退避し、取り込み時に本文から消える）。
+  -- リンクは 1 件だけ、この欄に運営者が手で入れる。行き先は小屋の公式サイトか自社サイトのみで、
+  -- それ以外のドメインはビルドが落ちる（build.py の REVIEW_LINK_HOSTS）。スパムの出口を作らないため。
+  link_url      TEXT,
+  link_label    TEXT,
+  link_label_en TEXT,
   verified_stay INTEGER DEFAULT 0,
   created_at    TEXT
 );

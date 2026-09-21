@@ -143,7 +143,17 @@
   <section class="block" aria-labelledby="rev-h">
     <h2 id="rev-h">{{ T.h_reviews }}</h2>
     {% if h.reviews %}
-      {% for r in h.reviews %}<blockquote class="review"><p>{{ r.body }}</p><footer>{{ r.stayed_on }}</footer></blockquote>{% endfor %}
+      {% for r in h.reviews %}
+      <blockquote class="review">
+        <p>{{ r.body }}</p>
+        <footer>
+          {{ r.stayed_on }}{% if r.author_type == 'editorial' %}{{ T.mid }}{{ T.review_editorial }}{% endif %}
+          {% if r.link_url %}{{ T.mid }}<a href="{{ r.link_url }}" target="_blank"
+             rel="{{ 'noopener' if r.author_type == 'editorial' else 'nofollow ugc noopener' }}"
+             data-track="article_click" data-hut="{{ h.id }}">{{ r.link_label_t or T.review_link }}</a>{% endif %}
+        </footer>
+      </blockquote>
+      {% endfor %}
     {% else %}
     <p class="empty">{{ T.reviews_empty }}</p>
     {% endif %}
