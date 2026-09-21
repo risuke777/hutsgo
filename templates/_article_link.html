@@ -1,0 +1,9 @@
+{# 記事へのリンク 1 行。自前の記事と外部記事（Emospot 等）を同じ形で出す #}
+{% macro article_link(a, LB, T) %}
+{%- if a.external -%}
+<a href="{{ a.external }}" target="_blank" rel="noopener" data-track="article_click">{{ a.title }}</a>
+<span class="quiet">{{ a.site }}{{ T.mid }}{{ a.date | fmt_ymd }}</span>
+{%- else -%}
+<a href="{{ LB }}/articles/{{ a.slug }}/">{{ a.title }}</a> <span class="quiet">{{ a.date | fmt_ymd }}</span>
+{%- endif -%}
+{% endmacro %}

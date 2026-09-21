@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
+{% from "_article_link.html" import article_link %}
 {% set s = h.season %}
 {% set f = h.fac %}
 {% block title %}{{ T.hut_title.format(name=h.name) }}{% endblock %}
@@ -134,7 +135,7 @@
   <section class="block" aria-labelledby="art-h">
     <h2 id="art-h">{{ T.articles_related_h }}</h2>
     <ul class="link-list">
-      {% for a in h.articles %}<li><a href="{{ LB }}/articles/{{ a.slug }}/">{{ a.title }}</a> <span class="quiet">{{ a.date | fmt_ymd }}</span></li>{% endfor %}
+      {% for a in h.articles %}<li>{{ article_link(a, LB, T) }}</li>{% endfor %}
     </ul>
   </section>
   {% endif %}

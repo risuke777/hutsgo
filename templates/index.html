@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
+{% from "_article_link.html" import article_link %}
 {% block title %}{{ T.home_title }}{% endblock %}
 {% block head %}
 <script type="application/ld+json">
@@ -39,13 +40,14 @@
   </a>
   {% endfor %}
   <p class="quiet">{{ T.home_more_routes }}<a href="{{ LB }}/huts/">{{ T.home_more_link }}</a>{{ T.home_more_tail }}</p>
+  <p class="quiet"><a href="{{ LB }}/booking/">{{ T.booking_link }}</a></p>
 </section>
 
 {% if articles %}
 <section class="areas" aria-labelledby="articles-h">
   <h2 id="articles-h">{{ T.articles_h1 }}</h2>
   <ul class="link-list">
-    {% for a in articles %}<li><a href="{{ LB }}/articles/{{ a.slug }}/">{{ a.title }}</a> <span class="quiet">{{ a.date | fmt_ymd }}</span></li>{% endfor %}
+    {% for a in articles %}<li>{{ article_link(a, LB, T) }}</li>{% endfor %}
   </ul>
   <p class="quiet"><a href="{{ LB }}/articles/">{{ T.articles_all }}</a></p>
 </section>

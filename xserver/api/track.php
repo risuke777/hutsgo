@@ -15,7 +15,9 @@ $in = json_decode((string)$raw, true);
 if (!is_array($in)) { http_response_code(400); echo '{"ok":false}'; exit; }
 
 $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'outbound_phone', 'outbound_access',
-               'change_date', 'interest_dolomiti', 'post_submit', 'profile_marker', 'route', 'lang_switch'];
+               'change_date', 'interest_dolomiti', 'post_submit', 'profile_marker', 'route', 'lang_switch',
+               // 外部記事（Emospot 等）へのクリック。outbound_ で始めない: 小屋への送客率に混ぜないため
+               'article_click'];
 $ev = (string)($in['ev'] ?? '');
 if (!in_array($ev, $allowed_ev, true)) { http_response_code(400); echo '{"ok":false}'; exit; }
 if (!hg_rate_limit($cfg, 'track', 120)) { http_response_code(429); echo '{"ok":false}'; exit; }

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ T.booking_title }}{% endblock %}
+{% block desc %}{{ T.booking_lede }}{% endblock %}
+{% block body %}
+<section class="page-head">
+  <h1>{{ T.booking_h1 }}</h1>
+  <p class="lede">{{ T.booking_lede }}</p>
+  <p class="quiet">{{ T.booking_count.format(n=huts | length, k=known | length,
+     v=known | selectattr('season.confidence', 'equalto', 'verified') | list | length) }}</p>
+</section>
+
+<div class="table-wrap">
+<table class="rates booking-table">
+  <thead>
+    <tr><th scope="col">{{ T.booking_col_hut }}</th><th scope="col">{{ T.booking_col_opens }}</th><th scope="col">{{ T.booking_col_where }}</th></tr>
+  </thead>
+  <tbody>
+    {% for h in known %}
+    <tr>
+      <th scope="row"><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.name }}</a>{% if h.area %}<small>{{ h.area.name }}</small>{% endif %}</th>
+      <td>{{ h.season.opens }}<small class="conf"><span class="dot dot-{{ h.season.confidence }}" aria-hidden="true"></span>{{ h.season | conf_text }}</small></td>
+      <td>
+        {% if h.book_url %}<a href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.l_booking_page }}</a>{% endif %}
+        {% if h.season.reservation_phone %}{% if h.book_url %}{{ T.mid }}{% endif %}<a href="tel:{{ h.season.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ h.season.reservation_phone }}</a>{% endif %}
+        {% if not h.book_url and not h.season.reservation_phone %}<span class="quiet">{{ T.unknown }}</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="quiet">{{ T.booking_note }}</p>
+
+{% if unknown %}
+<section class="block" aria-labelledby="unknown-h">
+  <h2 id="unknown-h">{{ T.booking_unknown_h }}</h2>
+  <ul class="link-list">
+    {% for h in unknown %}<li><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.name }}</a>{% if h.official_url %} <a class="quiet" href="{{ h.official_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.booking_official }}</a>{% endif %}</li>{% endfor %}
+  </ul>
+  <p class="quiet">{{ T.booking_unknown_note }}</p>
+</section>
+{% endif %}
+{% endblock %}

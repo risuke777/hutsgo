@@ -316,10 +316,14 @@ button.btn{font:inherit;cursor:pointer}
 .article-list{list-style:none;padding:0;margin:0}
 .article-list li{padding:1rem 0;border-top:1px solid var(--line)}
 .article-list li:last-child{border-bottom:1px solid var(--line)}
-.article-list b{font-size:1.08rem}
+.article-list>li>a{font-size:1.08rem;font-weight:600}
 .article-list .quiet{display:block;font-size:.85rem;margin-top:.15rem;font-variant-numeric:tabular-nums}
 .article-list p{margin:.4rem 0 0;max-width:36em}
 .prose img{max-width:100%;height:auto;border-radius:6px}
 .prose table{border-collapse:collapse;margin:1rem 0;font-variant-numeric:tabular-nums}
 .prose th,.prose td{border-bottom:1px solid var(--line);padding:.35rem .6rem;text-align:left}
 .note .link-list{margin:.4rem 0 .6rem}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.booking-table{min-width:30rem}
+.booking-table th[scope=row]{white-space:nowrap}
+.booking-table th[scope=row] small{display:block;font-weight:400;color:var(--ink-soft)}

@@ -454,7 +454,7 @@ def build_model(lang):
 #   <slug>.en.md  → /en/articles/<slug>/   （英語。同じ slug なら言語切替で行き来できる）
 # 書式は content/articles/README.md。下書きはリポジトリの外に置く（公開リポジトリなので）。
 ARTICLES_DIR = ROOT / "content" / "articles"
-ARTICLE_KEYS = {"title", "date", "summary", "huts", "trails", "author", "visited", "draft"}
+ARTICLE_KEYS = {"title", "date", "summary", "huts", "trails", "author", "visited", "draft", "external"}
 
 
 def load_articles():
@@ -487,18 +487,24 @@ def load_articles():
         bad = [x for x in huts_ if x not in hut_ids] + [x for x in trails_ if x not in trail_ids]
         if bad:   # 黙ってリンク切れを出さない
             sys.exit(f"{f.name}: 存在しない小屋/ルート id: {', '.join(bad)}")
+        # external: 本文を持たず、他サイト（Emospot 等）の記事へリンクするだけの行。
+        # 体験記は Emospot に置き、HutsGo は小屋・ルートから参照する。重複掲載はしない。
+        ext = meta.get("external") or None
+        if ext and not ext.startswith("https://"):
+            sys.exit(f"{f.name}: external は https:// で始まる URL にする")
         out[lang].append({
             "slug": stem, "lang": lang, "title": meta["title"], "date": meta["date"],
             "visited": meta.get("visited") or None,
             "summary": meta.get("summary", ""), "author": meta.get("author") or None,
             "huts": huts_, "trails": trails_,
-            "html": Markup(markdown.markdown(body, extensions=["tables", "sane_lists"])),
+            "external": ext, "site": urllib.parse.urlsplit(ext).hostname if ext else None,
+            "html": Markup(markdown.markdown(body, extensions=["tables", "sane_lists"])) if not ext else None,
         })
     for lang in out:
         out[lang].sort(key=lambda a: a["date"], reverse=True)
-        other = {a["slug"] for a in out["en" if lang == "ja" else "ja"]}
+        other = {a["slug"] for a in out["en" if lang == "ja" else "ja"] if not a["external"]}
         for a in out[lang]:
-            a["has_alt"] = a["slug"] in other
+            a["has_alt"] = not a["external"] and a["slug"] in other
     return out
 
 
@@ -554,6 +560,11 @@ for lang, prefix in LOCALES:
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
+    # データから作るまとめページ。手書き記事と違い seed.sql を直せば直る
+    write(f"{d}booking/index.html", "booking.html", huts=huts_l, page="/booking/",
+          known=sorted([h for h in huts_l if h["season"] and h["season"].get("opens")],
+                       key=lambda h: ((h["area"] or {}).get("name", ""), h["name"])),
+          unknown=[h for h in huts_l if not (h["season"] and h["season"].get("opens"))], **g)
     for h in huts_l:
         write(f"{d}huts/{h['id']}/index.html", "hut.html", h=h, page=f"/huts/{h['id']}/", **g)
     for t in trails_l:
@@ -566,6 +577,8 @@ for lang, prefix in LOCALES:
         write(f"{d}articles/index.html", "articles.html", articles=arts, page="/articles/",
               single_lang=not alt_has_articles, alt_page="/articles/" if alt_has_articles else "/", **g)
         for a in arts:
+            if a["external"]:      # 外部記事はページを作らない（重複掲載しない）
+                continue
             # 記事は言語ごとに別物。相手言語に同じ slug が無ければ、言語切替は相手のトップへ
             pg = f"/articles/{a['slug']}/"
             write(f"{d}articles/{a['slug']}/index.html", "article.html", a=a, page=pg,
@@ -574,7 +587,7 @@ for lang, prefix in LOCALES:
             article_urls.append((f"{prefix}{pg}", a["has_alt"], a["date"]))
         article_urls.append((f"{prefix}/articles/", alt_has_articles, TODAY))
 
-    urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/"] \
+    urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/"] \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
         + [f"{prefix}/trails/{t['id']}/" for t in trails_l]
 

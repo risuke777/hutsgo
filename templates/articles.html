@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_article_link.html" import article_link %}
 {% block title %}{{ T.articles_title }}{% endblock %}
 {% block desc %}{{ T.articles_lede }}{% endblock %}
 {% block body %}
@@ -9,8 +10,8 @@
 <ul class="article-list">
   {% for a in articles %}
   <li>
-    <a href="{{ LB }}/articles/{{ a.slug }}/"><b>{{ a.title }}</b></a>
-    <span class="quiet"><time datetime="{{ a.date }}">{{ a.date | fmt_ymd }}</time>{% if a.visited %}{{ T.mid }}{{ T.article_visited.format(date=a.visited | fmt_ymd) }}{% endif %}</span>
+    {{ article_link(a, LB, T) }}
+    {% if a.visited %}<span class="quiet">{{ T.article_visited.format(date=a.visited | fmt_ymd) }}</span>{% endif %}
     {% if a.summary %}<p>{{ a.summary }}</p>{% endif %}
   </li>
   {% endfor %}
