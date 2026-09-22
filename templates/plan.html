@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ T.plan_title }}{% endblock %}
+{% block desc %}{{ T.plan_lede }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ BASE }}/static/plan.css">
+<meta name="hutsgo-data" content="{{ BASE }}/data/huts.json">
+<script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};</script>
+{% endblock %}
+{% block body %}
+<section class="page-head">
+  <h1>{{ T.plan_h1 }}</h1>
+  <p class="lede">{{ T.plan_lede }}</p>
+  <p class="quiet">{{ T.plan_privacy }}</p>
+</section>
+
+<noscript>
+  <p class="note">{{ T.plan_noscript }} <a href="{{ LB }}/huts/">{{ T.nav_filter }}</a></p>
+</noscript>
+
+<div id="plan" hidden>
+  <div class="plan-top">
+    <label class="plan-start">{{ T.plan_start_date }}
+      <input type="date" id="plan-start" min="2026-01-01" max="2026-12-31">
+    </label>
+    <label class="plan-nights">{{ T.plan_nights }}
+      <select id="plan-nights">
+        {% for n in [1, 2, 3, 4, 5] %}<option value="{{ n }}"{{ ' selected' if n == 2 }}>{{ T.nights.format(n=n, m=n + 1) }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="button" class="btn" id="plan-share">{{ T.plan_share }}</button>
+    <button type="button" class="btn btn-ghost" id="plan-clear">{{ T.plan_clear }}</button>
+    <output id="plan-msg" aria-live="polite"></output>
+  </div>
+
+  <section class="plan-picker" aria-labelledby="picker-h">
+    <h2 id="picker-h">{{ T.plan_picker_h }}</h2>
+    <p class="quiet">{{ T.plan_picker_note }}</p>
+    <div class="plan-ridge" id="plan-ridge"></div>
+    <details class="plan-list">
+      <summary>{{ T.plan_list_summary }}</summary>
+      <div id="plan-list"></div>
+    </details>
+  </section>
+
+  <section class="plan-board" aria-labelledby="board-h">
+    <h2 id="board-h">{{ T.plan_board_h }}</h2>
+    <p class="quiet">{{ T.plan_board_note }}</p>
+    <div id="plan-days"></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}

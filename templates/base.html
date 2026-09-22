@@ -44,8 +44,9 @@
 </main>
 <footer class="site-foot">
   <p>{{ T.foot_disclaimer }}</p>
-  <p><a href="{{ LB }}/access/">{{ T.access_link }}</a>{{ T.mid }}<a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}{% if HAS_ARTICLES %}<a href="{{ LB }}/articles/">{{ T.nav_articles }}</a>{{ T.mid }}{% endif %}<a href="{{ LB }}/about/">{{ T.foot_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
+  <p><a href="{{ LB }}/plan/">{{ T.plan_link }}</a>{{ T.mid }}<a href="{{ LB }}/access/">{{ T.access_link }}</a>{{ T.mid }}<a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}{% if HAS_ARTICLES %}<a href="{{ LB }}/articles/">{{ T.nav_articles }}</a>{{ T.mid }}{% endif %}<a href="{{ LB }}/about/">{{ T.foot_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
 </footer>
 <script src="{{ BASE }}/static/site.js" defer></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

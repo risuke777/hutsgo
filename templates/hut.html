@@ -29,6 +29,7 @@
     <div class="cta-row">
       {% if h.book_url %}<a class="btn btn-primary btn-lg" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.btn_book_lg }}</a>{% endif %}
       {% if s and s.reservation_phone %}<a class="btn btn-lg" href="tel:{{ s.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ T.btn_phone.format(n=s.reservation_phone) }}</a>{% endif %}
+      <a class="btn btn-ghost btn-lg" href="{{ LB }}/plan/#add={{ h.id }}" data-track="plan_add" data-hut="{{ h.id }}">{{ T.plan_add_btn }}</a>
     </div>
     {% if s and s.opens %}<p class="booking-open"><span class="k">{{ T.booking_opens }}</span>{{ s.opens }}</p>{% endif %}
     <p class="quiet">{{ T.book_direct }}</p>

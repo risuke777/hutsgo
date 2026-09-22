@@ -635,6 +635,10 @@ for lang, prefix in LOCALES:
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
+    # 行程ボードは JS 側にも文言が要る。i18n を唯一の出どころにするため、ここで渡す
+    plan_strings = {k[len("plan_js_"):]: v for k, v in m["T"].items() if k.startswith("plan_js_")}
+    write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings, **g)
+
     tr = transit_model(lang)
     if tr["gateways"]:
         write(f"{d}access/index.html", "access.html", page="/access/", gateways=tr["gateways"], **g)
@@ -665,7 +669,7 @@ for lang, prefix in LOCALES:
             article_urls.append((f"{prefix}{pg}", a["has_alt"], a["date"]))
         article_urls.append((f"{prefix}/articles/", alt_has_articles, TODAY))
 
-    urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/"] \
+    urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/", f"{prefix}/plan/"] \
         + ([f"{prefix}/access/"] if tr["gateways"] else []) \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
         + [f"{prefix}/trails/{t['id']}/" for t in trails_l]
