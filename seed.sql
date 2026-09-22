@@ -368,3 +368,57 @@ UPDATE access_routes SET from_place_en='Sawando or Hirayu 沢渡・平湯' WHERE
 UPDATE access_routes SET operator_name_en='Okuhida Kanko Kaihatsu 奥飛騨観光開発', from_place_en='Shin-Hotaka Onsen 新穂高温泉' WHERE id='shinhotaka_ropeway';
 
 COMMIT;
+
+-- ---------------------------------------------------------------
+-- 交通（フェーズ1）。2026-09-22 に各社公式ページで確認。
+-- confidence='reported': 公式ページの記載だが人の目での再確認がまだ。再確認したら 'verified' に上げる。
+-- 始発・最終が PDF にしか無いものは NULL のまま（未確認であって「無い」ではない）。
+-- ---------------------------------------------------------------
+INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES
+  ('chuo_alps', '中央アルプス', 'Central Japan Alps');
+
+INSERT INTO trailheads (id,name_ja,name_en,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('senjojiki','千畳敷','Senjojiki',NULL,0,'マイカーは菅の台バスセンターまで。路線バス＋ロープウェイで上がる','Private cars stop at Sugadaira Bus Center; take the bus and ropeway up.');
+
+INSERT INTO transit_operators (id,name_ja,name_en,website,timetable_url,booking_url,source_url,last_verified_at,confidence) VALUES
+('chuo_alps_kanko','中央アルプス観光','Chuo Alps Kanko','https://www.chuo-alps.com/','https://www.chuo-alps.com/timetable/',NULL,'https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('alpico','アルピコ交通','Alpico Kotsu','https://www.alpico.co.jp/','https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/',NULL,'https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('okuhida','奥飛騨観光開発','Okuhida Kanko Kaihatsu','https://shinhotaka-ropeway.jp/','https://shinhotaka-ropeway.jp/price/',NULL,'https://shinhotaka-ropeway.jp/price/','2026-09-22','reported');
+
+INSERT INTO transit_lines (id,operator_id,mode,name_ja,name_en,reservation,seat_policy,ic_card,fare_jpy,duration_min,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('komagatake_bus','chuo_alps_kanko','bus','駒ヶ根駅・菅の台〜しらび平','Komagane to Shirabidaira',NULL,'first_come',NULL,NULL,45,'マイカーはしらび平まで入れない。菅の台バスセンターで乗り換える','Private cars cannot reach Shirabidaira. Change to the bus at Sugadaira.','https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('komagatake_ropeway','chuo_alps_kanko','ropeway','駒ヶ岳ロープウェイ（しらび平〜千畳敷）','Komagatake Ropeway',NULL,NULL,NULL,NULL,7,'バスとロープウェイの通し運賃は往復4,640円・片道2,420円（大人）','Through fare for bus and ropeway: 4,640 yen return, 2,420 yen one way (adult).','https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('alpico_kamikochi','alpico','bus','松本・新島々〜上高地','Matsumoto / Shinshimashima to Kamikochi','recommended','first_come',NULL,1550,105,'予約優先制。予約が無くても空席があれば乗れる。上高地公園線はマイカー規制。2026年9月1日から上高地〜さわんど大橋の乗降ルールが変わった','Reservation-preferred: without one you can still board if seats remain. Private cars are banned on the Kamikochi park road.','https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('shinhotaka_ropeway','okuhida','ropeway','新穂高ロープウェイ','Shinhotaka Ropeway',NULL,NULL,NULL,2400,NULL,'通し片道2,400円・往復3,800円（大人）。6kgを超える荷物は別料金（片道200〜300円、往復400〜600円）','Through fare 2,400 yen one way, 3,800 yen return (adult). Luggage over 6 kg costs extra.','https://shinhotaka-ropeway.jp/price/','2026-09-22','reported');
+
+INSERT INTO transit_stops (id,name_ja,name_en,elevation_m,trailhead_id,is_origin,source_url,last_verified_at,confidence) VALUES
+('komagane_st','JR駒ヶ根駅','Komagane Station',NULL,NULL,1,'https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('sugadaira_bc','菅の台バスセンター','Sugadaira Bus Center',NULL,NULL,1,'https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('shirabidaira','しらび平','Shirabidaira',NULL,NULL,0,'https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('senjojiki_st','千畳敷駅','Senjojiki Station',NULL,'senjojiki',0,'https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('matsumoto_bt','松本バスターミナル','Matsumoto Bus Terminal',NULL,NULL,1,'https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('shinshimashima','新島々駅','Shinshimashima Station',NULL,NULL,1,'https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('kamikochi_bt','上高地バスターミナル','Kamikochi Bus Terminal',NULL,'kamikochi',0,'https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('shinhotaka_onsen_st','新穂高温泉駅','Shinhotaka Onsen Station',NULL,'shin_hotaka',1,'https://shinhotaka-ropeway.jp/price/','2026-09-22','reported'),
+('nishihotakaguchi','西穂高口駅','Nishi-Hotakaguchi Station',NULL,NULL,0,'https://shinhotaka-ropeway.jp/price/','2026-09-22','reported');
+
+INSERT INTO transit_periods (id,line_id,year,name_ja,name_en,start_date,end_date,service_days,status,coverage,headway_min,headway_note_ja,headway_note_en,first_up_time,last_up_time,first_down_time,last_down_time,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('alpico_kamikochi_2026','alpico_kamikochi',2026,'2026年シーズン','2026 season','2026-04-17','2026-11-15','daily','running','first_last_only',NULL,NULL,NULL,'05:30','15:30','07:50','17:55','上高地行きの始発は松本バスターミナル5:30発、最終は新島々駅15:30発。上高地発は7:50〜17:55','First bus to Kamikochi leaves Matsumoto at 05:30; the last from Shinshimashima is 15:30. Buses back from Kamikochi run 07:50 to 17:55.','https://www.alpico.co.jp/traffic/local/kamikochi/shinshimashima/','2026-09-22','reported'),
+('komagatake_bus_2026','komagatake_bus',2026,'2026年','2026','2026-01-01','2026-12-31','daily','running','first_last_only',30,'毎時00分・30分発（冬期は00分のみ）','Departures at :00 and :30 past the hour (:00 only in winter).',NULL,NULL,NULL,NULL,'始発・最終は公式の年間時刻表（PDF）を見ること','First and last departures are in the annual timetable PDF.','https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('komagatake_ropeway_2026','komagatake_ropeway',2026,'2026年','2026','2026-01-01','2026-12-31','daily','running','first_last_only',30,NULL,NULL,NULL,NULL,NULL,NULL,'始発・最終は公式の年間時刻表（PDF）を見ること','First and last departures are in the annual timetable PDF.','https://www.chuo-alps.com/timetable/','2026-09-22','reported'),
+('shinhotaka_ropeway_2026','shinhotaka_ropeway',2026,'2026年（通年）','2026 (year-round)','2026-01-01','2026-12-31','daily','running','first_last_only',30,'第1ロープウェイは毎時00分・30分発、第2は毎時15分・45分発。混雑時は臨時便あり','First ropeway at :00 and :30, second at :15 and :45. Extra cars run when busy.',NULL,NULL,NULL,NULL,'天候不良・定期点検で運休することがある。始発・最終は公式の営業時間表を見ること','Closed in bad weather and for maintenance. First and last departures are on the hours page.','https://shinhotaka-ropeway.jp/price/','2026-09-22','reported');
+
+INSERT INTO transit_connections (id,from_stop_id,to_stop_id,min_transfer_min,walk_min,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('shirabidaira_ropeway','shirabidaira','senjojiki_st',10,2,'バスを降りてロープウェイ乗り場まで徒歩すぐ。混雑期は乗車待ちが出る','The ropeway station is a short walk from the bus stop; expect a queue in high season.','https://www.chuo-alps.com/timetable/','2026-09-22','reported');
+
+INSERT INTO transit_line_stops (line_id,stop_id,seq) VALUES
+('komagatake_bus','komagane_st',1),
+('komagatake_bus','sugadaira_bc',2),
+('komagatake_bus','shirabidaira',3),
+('komagatake_ropeway','shirabidaira',1),
+('komagatake_ropeway','senjojiki_st',2),
+('alpico_kamikochi','matsumoto_bt',1),
+('alpico_kamikochi','shinshimashima',2),
+('alpico_kamikochi','kamikochi_bt',3),
+('shinhotaka_ropeway','shinhotaka_onsen_st',1),
+('shinhotaka_ropeway','nishihotakaguchi',2);

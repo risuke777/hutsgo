@@ -73,8 +73,8 @@ def make_fmt(lang):
             return ""
         h, mm = m // 60, m % 60
         if lang == "ja":
-            return f"{h}時間{mm:02d}分" if mm else f"{h}時間"
-        return f"{h}h{mm:02d}" if mm else f"{h}h"
+            return f"{mm}分" if not h else (f"{h}時間{mm:02d}分" if mm else f"{h}時間")
+        return f"{mm} min" if not h else (f"{h}h{mm:02d}" if mm else f"{h}h")
 
     def fmt_date(d):
         if not d:
@@ -523,6 +523,53 @@ def load_articles():
 ARTICLES = load_articles()
 
 
+# ---------------------------------------------------------------- transit
+# 登山口ごとの「行き方と帰りの最終便」。年1回の更新で維持できる粒度だけを持つ:
+# 運行期間・始発・最終・所要・運賃・間隔・注意フラグ。便ごとの時刻は公式時刻表へ送る。
+TRANSIT_YEAR = 2026
+
+
+def transit_model(lang):
+    ops = {o["id"]: o for o in rows("SELECT * FROM transit_operators")}
+    lines = {}
+    for ln in rows("SELECT * FROM transit_lines"):
+        ln["name"] = disp(ln, lang)
+        ln["note"] = pick(ln, "note", lang)
+        op = ops.get(ln["operator_id"])
+        ln["operator"] = dict(op, name=disp(op, lang, with_ja=False)) if op else None
+        ln["periods"] = []
+        lines[ln["id"]] = ln
+    for p in rows("SELECT * FROM transit_periods WHERE year=? ORDER BY start_date", TRANSIT_YEAR):
+        p["name"] = disp(p, lang, with_ja=False)
+        p["note"] = pick(p, "note", lang)
+        p["headway_note"] = pick(p, "headway_note", lang)
+        p["year_round"] = p["start_date"].endswith("-01-01") and p["end_date"].endswith("-12-31")
+        if p["line_id"] in lines:
+            lines[p["line_id"]]["periods"].append(p)
+
+    gateways = []
+    for st in rows("SELECT * FROM transit_stops WHERE trailhead_id IS NOT NULL"):
+        th = next(iter(rows("SELECT * FROM trailheads WHERE id=?", st["trailhead_id"])), None)
+        if not th:
+            continue
+        th["name"] = disp(th, lang)
+        th["parking"] = pick(th, "parking_note", lang)
+        # その登山口に着く停留所を通る路線。停留所を直接持たない路線も、乗継でつながるものを拾う
+        # 乗継でつながる停留所まで含めて「この登山口に来る路線」とする
+        conn = rows("SELECT * FROM transit_connections WHERE to_stop_id=? OR from_stop_id=?", st["id"], st["id"])
+        near = {st["id"]} | {c["from_stop_id"] for c in conn} | {c["to_stop_id"] for c in conn}
+        ls = []
+        for ln in lines.values():
+            stops = rows("SELECT s.*, ls.seq FROM transit_line_stops ls JOIN transit_stops s ON s.id=ls.stop_id"
+                         " WHERE ls.line_id=? ORDER BY ls.seq", ln["id"])
+            if ln["periods"] and any(s["id"] in near for s in stops):
+                ln = dict(ln, stops=[dict(s, name=disp(s, lang)) for s in stops])
+                ls.append(ln)
+        ls.sort(key=lambda l: l["mode"] != "bus")   # 里から順に読めるよう、バスを先に
+        gateways.append({"th": th, "stop": st, "lines": ls, "conn": conn})
+    return {"gateways": gateways, "lines": lines}
+
+
 # ---------------------------------------------------------------- render
 env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
@@ -572,6 +619,9 @@ for lang, prefix in LOCALES:
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
+    tr = transit_model(lang)
+    if tr["gateways"]:
+        write(f"{d}access/index.html", "access.html", page="/access/", gateways=tr["gateways"], **g)
     # データから作るまとめページ。手書き記事と違い seed.sql を直せば直る
     write(f"{d}booking/index.html", "booking.html", huts=huts_l, page="/booking/",
           known=sorted([h for h in huts_l if h["season"] and h["season"].get("opens")],
@@ -600,6 +650,7 @@ for lang, prefix in LOCALES:
         article_urls.append((f"{prefix}/articles/", alt_has_articles, TODAY))
 
     urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/"] \
+        + ([f"{prefix}/access/"] if tr["gateways"] else []) \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
         + [f"{prefix}/trails/{t['id']}/" for t in trails_l]
 

@@ -327,3 +327,11 @@ button.btn{font:inherit;cursor:pointer}
 .booking-table{min-width:30rem}
 .booking-table th[scope=row]{white-space:nowrap}
 .booking-table th[scope=row] small{display:block;font-weight:400;color:var(--ink-soft)}
+
+/* transit */
+.transit{margin-top:1.25rem;padding-top:1rem;border-top:1px dashed var(--line)}
+.transit:first-of-type{border-top:0;padding-top:0}
+.transit h3{margin:0 0 .2rem;font-size:1.05rem}
+.transit h3 small{display:block;font-weight:400;color:var(--ink-soft);font-size:.82rem}
+.transit-route{margin:.2rem 0 .6rem;color:var(--ink-soft);font-size:.92rem}
+.transit-route .arrow{color:var(--granite)}

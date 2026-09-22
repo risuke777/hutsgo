@@ -345,12 +345,29 @@ CREATE TABLE transit_periods (
   coverage      TEXT NOT NULL DEFAULT 'first_last_only'
                   CHECK (coverage IN ('all_trips','first_last_only')),
   headway_min   INTEGER,                   -- coverage='first_last_only' のときの目安間隔
+  headway_note_ja TEXT,                    -- 例: 毎時00分・30分（冬期は00分のみ）
+  headway_note_en TEXT,
+  -- 年1回の更新で維持できる最小の時刻。全便を持たなくても「間に合うか」はこれで答えられる。
+  -- up=山へ / down=里へ。HH:MM（JST）。未確認は NULL のままにし、公式時刻表へ誘導する
+  first_up_time   TEXT,
+  last_up_time    TEXT,
+  first_down_time TEXT,
+  last_down_time  TEXT,                    -- 最終便からの逆算の起点
   note_ja       TEXT,
   note_en       TEXT,
   source_url    TEXT,
   last_verified_at TEXT,
   confidence    TEXT NOT NULL DEFAULT 'unknown'
                   CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+-- 路線が通る停留所の並び。便の時刻と違って年をまたいでも変わりにくいので、ここだけで
+-- 「この登山口にどの路線が来るか」が引ける（年1更新の要）。
+CREATE TABLE transit_line_stops (
+  line_id       TEXT NOT NULL REFERENCES transit_lines(id),
+  stop_id       TEXT NOT NULL REFERENCES transit_stops(id),
+  seq           INTEGER NOT NULL,          -- 里 → 山 の順
+  PRIMARY KEY (line_id, seq)
 );
 
 CREATE TABLE transit_trips (
