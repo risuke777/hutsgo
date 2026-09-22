@@ -265,6 +265,132 @@ CREATE TABLE outbound_clicks (
   referrer    TEXT
 );
 
+-- ---------------------------------------------------------------
+-- Transit: getting to the trailhead and back before the last service.
+-- フェーズ1の中核。既存サイトは「山」か「小屋」の粒度で、乗継とダイヤ期間を
+-- 構造化して持っていない。小屋と同じ規律で持つ: 出典・確認日・確度を全テーブルに、
+-- null は未確認（運行なしではない）。
+--
+-- 全便を入れると1人では維持できない。period.coverage で「全便」か「始発と最終だけ」かを
+-- 明示し、持っていない範囲を持っているふりにしない。
+-- ---------------------------------------------------------------
+CREATE TABLE transit_operators (
+  id            TEXT PRIMARY KEY,
+  name_ja       TEXT NOT NULL,
+  name_en       TEXT,
+  website       TEXT,
+  timetable_url TEXT,                      -- 時刻表の掲載ページ（出典の実体）
+  booking_url   TEXT,                      -- 高速バス等の予約導線。アフィリエイトはここに差す
+  source_url    TEXT,
+  last_verified_at TEXT,
+  confidence    TEXT NOT NULL DEFAULT 'unknown'
+                  CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+CREATE TABLE transit_lines (
+  id            TEXT PRIMARY KEY,
+  operator_id   TEXT NOT NULL REFERENCES transit_operators(id),
+  mode          TEXT NOT NULL CHECK (mode IN ('bus','express_bus','ropeway','cable_car','train','shuttle','taxi')),
+  name_ja       TEXT NOT NULL,
+  name_en       TEXT,
+  -- 注意点の構造化。記事の注記に埋もれている情報をフラグにする（ここが差別化の実体）
+  reservation   TEXT CHECK (reservation IN ('none','recommended','required')),
+  seat_policy   TEXT CHECK (seat_policy IN ('first_come','reserved','standing_ok')),
+  ic_card       INTEGER,                   -- 1=使える 0=使えない NULL=未確認
+  cash_only     INTEGER,
+  luggage_fee_jpy INTEGER,                 -- ザック・スキー等の別料金
+  fare_jpy      INTEGER,                   -- 片道。区間で変わる路線は NULL のまま
+  duration_min  INTEGER,
+  note_ja       TEXT,
+  note_en       TEXT,
+  source_url    TEXT,
+  last_verified_at TEXT,
+  confidence    TEXT NOT NULL DEFAULT 'unknown'
+                  CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+CREATE TABLE transit_stops (
+  id            TEXT PRIMARY KEY,
+  name_ja       TEXT NOT NULL,
+  name_en       TEXT,
+  lat REAL, lon REAL,
+  elevation_m   INTEGER,
+  -- 登山口に着く停留所はここで trailheads と繋ぐ。これで「行程 → 交通」が引ける
+  trailhead_id  TEXT REFERENCES trailheads(id),
+  is_origin     INTEGER,                   -- 始発停留所（座れるかの判断材料）
+  signal_quality TEXT CHECK (signal_quality IN ('none','weak','ok')),
+  note_ja       TEXT,
+  note_en       TEXT,
+  source_url    TEXT,
+  last_verified_at TEXT,
+  confidence    TEXT NOT NULL DEFAULT 'unknown'
+                  CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+-- ダイヤ期間。夏ダイヤ・冬期運休・マイカー規制期間で別物になる。
+-- 「日付を入れると該当ダイヤが出る」の土台。
+CREATE TABLE transit_periods (
+  id            TEXT PRIMARY KEY,
+  line_id       TEXT NOT NULL REFERENCES transit_lines(id),
+  year          INTEGER NOT NULL,
+  name_ja       TEXT,                      -- 例: 夏期（7/15〜8/31）
+  name_en       TEXT,
+  start_date    TEXT NOT NULL,
+  end_date      TEXT NOT NULL,
+  service_days  TEXT NOT NULL DEFAULT 'daily'
+                  CHECK (service_days IN ('daily','weekday','weekend_holiday','specific_dates')),
+  status        TEXT NOT NULL DEFAULT 'running'
+                  CHECK (status IN ('running','suspended')),
+  -- 持っている範囲を正直に持つ。first_last_only なら乗継検索には出さず、逆算にだけ使う
+  coverage      TEXT NOT NULL DEFAULT 'first_last_only'
+                  CHECK (coverage IN ('all_trips','first_last_only')),
+  headway_min   INTEGER,                   -- coverage='first_last_only' のときの目安間隔
+  note_ja       TEXT,
+  note_en       TEXT,
+  source_url    TEXT,
+  last_verified_at TEXT,
+  confidence    TEXT NOT NULL DEFAULT 'unknown'
+                  CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+CREATE TABLE transit_trips (
+  id            TEXT PRIMARY KEY,
+  period_id     TEXT NOT NULL REFERENCES transit_periods(id),
+  direction     TEXT NOT NULL CHECK (direction IN ('inbound','outbound')),   -- inbound=山へ outbound=里へ
+  is_first      INTEGER DEFAULT 0,
+  is_last       INTEGER DEFAULT 0,         -- 最終便からの逆算はここを起点にする
+  note_ja       TEXT,
+  note_en       TEXT
+);
+
+CREATE TABLE transit_trip_stops (
+  trip_id       TEXT NOT NULL REFERENCES transit_trips(id),
+  stop_id       TEXT NOT NULL REFERENCES transit_stops(id),
+  seq           INTEGER NOT NULL,
+  arrival_time  TEXT,                      -- HH:MM（JST）。翌日にまたぐ便は 25:10 の形で持つ
+  departure_time TEXT,
+  PRIMARY KEY (trip_id, seq)
+);
+
+-- 乗継。徒歩移動や同一駅での乗換に必要な最低時間を持つ（「乗継を1枚に」の土台）
+CREATE TABLE transit_connections (
+  id            TEXT PRIMARY KEY,
+  from_stop_id  TEXT NOT NULL REFERENCES transit_stops(id),
+  to_stop_id    TEXT NOT NULL REFERENCES transit_stops(id),
+  min_transfer_min INTEGER NOT NULL,
+  walk_min      INTEGER,
+  note_ja       TEXT,
+  note_en       TEXT,
+  source_url    TEXT,
+  last_verified_at TEXT,
+  confidence    TEXT NOT NULL DEFAULT 'unknown'
+                  CHECK (confidence IN ('verified','reported','unknown'))
+);
+
+CREATE INDEX idx_tperiods_line  ON transit_periods(line_id, year, start_date);
+CREATE INDEX idx_ttrips_period  ON transit_trips(period_id, direction);
+CREATE INDEX idx_tstops_th      ON transit_stops(trailhead_id);
+
 CREATE INDEX idx_huts_area     ON huts(sub_area_id);
 CREATE INDEX idx_seasons_year  ON hut_seasons(year, status);
 CREATE INDEX idx_rates_year    ON hut_rates(year, plan_type);
