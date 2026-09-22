@@ -275,13 +275,16 @@ def build_model(lang):
                 seg = [x for x in pts if p["seq"] <= x["seq"] <= q["seq"]]
                 up = down = 0
                 est = any(x["elev"] is None for x in seg)
-                ys = [x["y"] for x in seg if x["y"] is not None]
+                # 時刻が無いルートは標高の内挿も当てにならない。登り下りは出さない
+                ys = [x["y"] for x in seg if x["y"] is not None] if t["times_known"] else []
                 for a, b in zip(ys, ys[1:]):
                     if b > a:
                         up += b - a
                     else:
                         down += a - b
-                out.append(dict(row="leg", minutes=q["t"] - p["t"], up=up, down=down, est=est,
+                # 時刻が未確認のルートは区間時間も出さない（0 分と書かない）
+                mins = q["t"] - p["t"] if t["times_known"] else None
+                out.append(dict(row="leg", minutes=mins, up=up, down=down, est=est,
                                 vias=[x for x in seg if x["kind"] == "peak"]))
         return out
 
@@ -431,15 +434,18 @@ def build_model(lang):
             s["trailhead"] = trailheads.get(s["trailhead_id"])
             if s["hut"]:
                 s["hut"]["trails"].append(t)
-        t["total_min"] = max(s["cumulative_time_min"] or 0 for s in t["stops"])
+        # コースタイムは区間ごとの公式記載が無いルートがある。断面図は横軸が累積時間なので、
+        # 1つでも欠けていれば描かない（0 で埋めると嘘の形になる）。行程の並びだけは出す。
+        t["times_known"] = all(s["cumulative_time_min"] is not None for s in t["stops"])
+        t["total_min"] = max(s["cumulative_time_min"] or 0 for s in t["stops"]) if t["times_known"] else None
         t["hut_count"] = sum(1 for s in t["stops"] if s["hut"] and s["is_overnight_candidate"])
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
-        t["profile"] = summarize(t["points"])
+        t["profile"] = summarize(t["points"]) if t["times_known"] else None
         t["rows"] = build_legs(t, t["points"])
-        t["svg_wide"] = profile_svg(t, t["points"], 720, 300)
-        t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)
-        t["svg_mini"] = profile_mini_svg(t, t["points"])
+        t["svg_wide"] = profile_svg(t, t["points"], 720, 300) if t["times_known"] else ""
+        t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True) if t["times_known"] else ""
+        t["svg_mini"] = profile_mini_svg(t, t["points"]) if t["times_known"] else ""
         trails.append(t)
 
     client = [{

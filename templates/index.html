@@ -31,7 +31,7 @@
       <span class="route-summary">{{ t.summary_t }}</span>
       <dl class="route-meta">
         <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</dd></div>
-        <div><dt>{{ T.l_walking }}</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
+        {% if t.times_known %}<div><dt>{{ T.l_walking }}</dt><dd>{{ t.total_min | fmt_time }}</dd></div>{% endif %}
         {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.elev | metres }}</dd></div>
         <div><dt>{{ T.l_gain }}</dt><dd>{{ T.approx }}{{ sm.gain | metres }}</dd></div>{% endif %}
         <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>

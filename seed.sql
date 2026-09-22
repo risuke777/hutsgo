@@ -422,3 +422,57 @@ INSERT INTO transit_line_stops (line_id,stop_id,seq) VALUES
 ('alpico_kamikochi','kamikochi_bt',3),
 ('shinhotaka_ropeway','shinhotaka_onsen_st',1),
 ('shinhotaka_ropeway','nishihotakaguchi',2);
+
+-- ---------------------------------------------------------------
+-- 追加ルート（2026-09-23）。小屋は既存のものを使い回す（同じ小屋が複数のルートに出てよい）。
+-- 区間ごとのコースタイムは公式に記載があるものだけ入れ、無い区間は NULL のままにする。
+-- 1つでも欠けているルートは断面図と合計所要を出さない（build.py の times_known）。
+-- 確認できた記載:
+--   槍沢ロッヂ→槍ヶ岳山荘 4〜5時間 (yarigatake.co.jp/yarisawa/)
+--   南岳小屋→北穂高小屋 3時間・大キレット経由 (yarigatake.co.jp/minamidake/)
+--   上高地→徳沢 120分 / 徳沢→横尾 60分 は既存の karasawa_base と同じ区間
+-- ---------------------------------------------------------------
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('yarisawa','槍沢ルート（上高地→槍ヶ岳）','Yarisawa: Kamikochi to Yarigatake',2,'moderate',
+ '上高地から梓川沿いに横尾、槍沢をつめて槍ヶ岳へ。北アルプスで最も歩かれている槍の登路',
+ 'The valley route to Yari: up the Azusa river to Yokoo, then the Yarisawa ravine to the spire itself.'),
+('daikiretto','大キレット縦走（槍ヶ岳→穂高）','Daikiretto: Yari to Hotaka',2,'expert',
+ '槍ヶ岳から南岳、大キレットを越えて北穂・奥穂へ。北アルプスで最も険しい稜線',
+ 'From Yari over the Daikiretto notch to Kita-Hotaka and Oku-Hotaka. The most exposed ridge in the range.'),
+('nishihotaka','西穂高岳（新穂高から）','Nishi-Hotaka from Shinhotaka',1,'hard',
+ '新穂高からロープウェイで上がり、西穂山荘に泊まって独標・西穂高岳へ',
+ 'Ride the ropeway from Shinhotaka, sleep at Nishiho Sanso and take the ridge to Nishi-Hotakadake.'),
+('jonen_cho','常念山脈縦走（中房温泉→蝶ヶ岳→上高地）','Jonen ridge: Nakabusa to Kamikochi',3,'hard',
+ '燕岳から大天井、常念岳、蝶ヶ岳と常念山脈をたどり、長塀尾根で徳沢へ下りる。槍・穂高を横から眺め続ける稜線',
+ 'The parallel ridge: Tsubakuro, Otensho, Jonen and Chogatake, facing Yari and Hotaka the whole way, then down to Tokusawa.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+-- 槍沢ルート
+('yarisawa', 1,NULL,'kamikochi',        0,0,NULL,NULL,NULL),
+('yarisawa', 2,'tokusawaen',NULL,     120,1,NULL,NULL,NULL),
+('yarisawa', 3,'yokoo_sanso',NULL,    180,1,NULL,NULL,NULL),
+('yarisawa', 4,'yarisawa_lodge',NULL, NULL,1,NULL,NULL,NULL),
+('yarisawa', 5,'sesshou_goya',NULL,   NULL,1,NULL,NULL,NULL),
+('yarisawa', 6,'yarigatake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('yarisawa', 7,NULL,NULL,             NULL,0,'槍ヶ岳','Yarigatake',3180),
+-- 大キレット縦走
+('daikiretto', 1,'yarigatake_sanso',NULL,  0,1,NULL,NULL,NULL),
+('daikiretto', 2,'minamidake_goya',NULL, NULL,1,NULL,NULL,NULL),
+('daikiretto', 3,'kitahotaka_goya',NULL, NULL,1,NULL,NULL,NULL),
+('daikiretto', 4,NULL,NULL,              NULL,0,'北穂高岳','Kita-Hotakadake',3106),
+('daikiretto', 5,'hotakadake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 6,NULL,NULL,              NULL,0,'奥穂高岳','Oku-Hotakadake',3190),
+('daikiretto', 7,'karasawa_goya',NULL,   NULL,1,NULL,NULL,NULL),
+('daikiretto', 8,'yokoo_sanso',NULL,     NULL,1,NULL,NULL,NULL),
+('daikiretto', 9,NULL,'kamikochi',       NULL,0,NULL,NULL,NULL),
+-- 西穂高岳
+('nishihotaka', 1,NULL,'shin_hotaka',   0,0,NULL,NULL,NULL),
+('nishihotaka', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),
+-- 常念山脈縦走
+('jonen_cho', 1,NULL,'nakabusa',      0,0,NULL,NULL,NULL),
+('jonen_cho', 2,'enzanso',NULL,     300,1,NULL,NULL,NULL),
+('jonen_cho', 3,'daitenso',NULL,    540,1,NULL,NULL,NULL),
+('jonen_cho', 4,'jonen_goya',NULL,  NULL,1,NULL,NULL,NULL),
+('jonen_cho', 5,'chougatake_hutte',NULL,NULL,1,NULL,NULL,NULL),
+('jonen_cho', 6,'tokusawaen',NULL,  NULL,1,NULL,NULL,NULL),
+('jonen_cho', 7,NULL,'kamikochi',   NULL,0,NULL,NULL,NULL);

@@ -126,7 +126,7 @@
   <section class="block" aria-labelledby="ontrail-h">
     <h2 id="ontrail-h">{{ T.h_ontrail }}</h2>
     <ul class="link-list">
-      {% for t in h.trails %}<li><a href="{{ LB }}/trails/{{ t.id }}/#stop-{{ (t.stops | selectattr('hut_id', 'equalto', h.id) | first).seq }}">{{ t.name }}</a> <span class="quiet">{{ T.see_on_profile }}</span></li>{% endfor %}
+      {% for t in h.trails %}<li><a href="{{ LB }}/trails/{{ t.id }}/#stop-{{ (t.stops | selectattr('hut_id', 'equalto', h.id) | first).seq }}">{{ t.name }}</a> {% if t.times_known %}<span class="quiet">{{ T.see_on_profile }}</span>{% endif %}</li>{% endfor %}
     </ul>
   </section>
   {% endif %}

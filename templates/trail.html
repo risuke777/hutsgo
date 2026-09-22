@@ -18,12 +18,13 @@
     <p class="lede">{{ t.summary_t }}</p>
     <dl class="facts-inline">
       <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</dd></div>
-      <div><dt>{{ T.l_walking_time }}</dt><dd>{{ t.total_min | fmt_time }}</dd></div>
+      <div><dt>{{ T.l_walking_time }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
       {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.short }} {{ sm.top.elev | metres }}</dd></div>{% endif %}
       <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>
     </dl>
   </header>
 
+  {% if t.svg_wide %}
   <figure class="profile" aria-label="{{ T.profile_aria }}">
     {{ t.svg_wide }}
     {{ t.svg_narrow }}
@@ -44,6 +45,9 @@
       <p class="quiet profile-note">{{ T.profile_note }}{% if sm and sm.unverified %} {{ T.profile_note_est.format(names=sm.unverified | join('・' if LANG == 'ja' else ', ')) }}{% endif %}</p>
     </figcaption>
   </figure>
+  {% else %}
+  <p class="note">{{ T.trail_times_unknown }}</p>
+  {% endif %}
 
   {% if t.photos %}
   <div class="photo-strip">
@@ -52,6 +56,17 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  <section class="block" aria-labelledby="huts-h">
+    <h2 id="huts-h">{{ T.trail_huts_h }}</h2>
+    <ul class="link-list">
+      {% for s in t.stops if s.hut %}
+      <li><a href="{{ LB }}/huts/{{ s.hut.id }}/">{{ s.hut.name }}</a>
+        <span class="quiet">{{ s.hut.type_label }}{% if s.hut.elevation_m %}{{ T.mid }}{{ s.hut.elevation_m | metres }}{% endif %}{% if s.hut.price_two %}{{ T.mid }}{{ T.plan_two_meals }} {{ s.hut.price_two.price_jpy | yen }}{{ '+' if s.hut.price_two.is_from_price }}{% endif %}</span></li>
+      {% endfor %}
+    </ul>
+    <p class="quiet">{{ T.trail_huts_note }}</p>
+  </section>
 
   <div class="plan-bar">
     <label for="plan-date">{{ T.plan_date }}</label>
@@ -67,7 +82,7 @@
         {% if se %}data-status="{{ se.status }}" data-open="{{ se.open_date or '' }}" data-close="{{ se.close_date or '' }}"{% endif %}>
       <div class="stop-card">
         <p class="stop-head">
-          <span class="stop-time">{% if p.t %}{{ p.t | fmt_time }}{% else %}{{ T.start }}{% endif %}</span>
+          <span class="stop-time">{% if not t.times_known %}{% elif p.t %}{{ p.t | fmt_time }}{% else %}{{ T.start }}{% endif %}</span>
           <span class="stop-elev{{ ' is-est' if p.est }}">{{ p.elev | metres }}{% if p.src == 'gsi' and p.elev %}<small>{{ T.src_gsi_short }}</small>{% endif %}</span>
         </p>
         {% if h %}
@@ -104,7 +119,7 @@
     </li>
     {% else %}
     <li class="leg">
-      <span class="leg-time">{{ r.minutes | fmt_time }}</span>
+      <span class="leg-time">{% if r.minutes is not none %}{{ r.minutes | fmt_time }}{% else %}—{% endif %}</span>
       <span class="leg-ud">
         {% if r.up %}<span class="up">{{ T.leg_up.format(v=r.up|metres) }}</span>{% endif %}
         {% if r.down %}<span class="down">{{ T.leg_down.format(v=r.down|metres) }}</span>{% endif %}
