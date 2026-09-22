@@ -52,9 +52,12 @@
   // ---- 日付と営業判定 -------------------------------------------------
   function dayDate(i) {
     if (!state.start) return null;
-    var d = new Date(state.start + "T00:00:00");
-    d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0, 10);
+    // toISOString は UTC に直すので日本時間だと1日ずれる。現地日付のまま組み立てる
+    var p = state.start.split("-");
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]) + i);
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var dd = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + mm + "-" + dd;
   }
   function openOn(h, date) {
     var se = h.season_2026;
