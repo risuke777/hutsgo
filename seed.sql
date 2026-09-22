@@ -429,7 +429,7 @@ INSERT INTO transit_line_stops (line_id,stop_id,seq) VALUES
 -- 1つでも欠けているルートは断面図と合計所要を出さない（build.py の times_known）。
 -- 確認できた記載:
 --   槍沢ロッヂ→槍ヶ岳山荘 4〜5時間 (yarigatake.co.jp/yarisawa/)
---   南岳小屋→北穂高小屋 3時間・大キレット経由 (yarigatake.co.jp/minamidake/)
+--   南岳小屋→北穂高小屋 3時間・大キレット経由、南岳 3,033m (yarigatake.co.jp/minamidake/)
 --   上高地→徳沢 120分 / 徳沢→横尾 60分 は既存の karasawa_base と同じ区間
 -- ---------------------------------------------------------------
 INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
@@ -457,14 +457,15 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('yarisawa', 7,NULL,NULL,             NULL,0,'槍ヶ岳','Yarigatake',3180),
 -- 大キレット縦走
 ('daikiretto', 1,'yarigatake_sanso',NULL,  0,1,NULL,NULL,NULL),
-('daikiretto', 2,'minamidake_goya',NULL, NULL,1,NULL,NULL,NULL),
-('daikiretto', 3,'kitahotaka_goya',NULL, NULL,1,NULL,NULL,NULL),
-('daikiretto', 4,NULL,NULL,              NULL,0,'北穂高岳','Kita-Hotakadake',3106),
-('daikiretto', 5,'hotakadake_sanso',NULL,NULL,1,NULL,NULL,NULL),
-('daikiretto', 6,NULL,NULL,              NULL,0,'奥穂高岳','Oku-Hotakadake',3190),
-('daikiretto', 7,'karasawa_goya',NULL,   NULL,1,NULL,NULL,NULL),
-('daikiretto', 8,'yokoo_sanso',NULL,     NULL,1,NULL,NULL,NULL),
-('daikiretto', 9,NULL,'kamikochi',       NULL,0,NULL,NULL,NULL),
+('daikiretto', 2,NULL,NULL,              NULL,0,'南岳','Minamidake',3033),
+('daikiretto', 3,'minamidake_goya',NULL, NULL,1,NULL,NULL,NULL),
+('daikiretto', 4,'kitahotaka_goya',NULL, NULL,1,NULL,NULL,NULL),
+('daikiretto', 5,NULL,NULL,              NULL,0,'北穂高岳','Kita-Hotakadake',3106),
+('daikiretto', 6,'hotakadake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 7,NULL,NULL,              NULL,0,'奥穂高岳','Oku-Hotakadake',3190),
+('daikiretto', 8,'karasawa_goya',NULL,   NULL,1,NULL,NULL,NULL),
+('daikiretto', 9,'yokoo_sanso',NULL,     NULL,1,NULL,NULL,NULL),
+('daikiretto',10,NULL,'kamikochi',       NULL,0,NULL,NULL,NULL),
 -- 西穂高岳
 ('nishihotaka', 1,NULL,'shin_hotaka',   0,0,NULL,NULL,NULL),
 ('nishihotaka', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),

@@ -234,6 +234,10 @@ def build_model(lang):
             p.update(seq=s["seq"], t=s["cumulative_time_min"] or 0,
                      overnight=bool(s["is_overnight_candidate"]))
             pts.append(p)
+        # 断面図の横軸。コースタイムが揃っていれば累積時間、欠けていれば行程順（等間隔）。
+        # 標高さえ分かれば形は描ける。描かない理由にはしない。
+        for i, p in enumerate(pts):
+            p["x"] = p["t"] if t["times_known"] else i
         known = [i for i, p in enumerate(pts) if p["elev"] is not None]
         for i, p in enumerate(pts):
             if p["elev"] is not None:
@@ -250,7 +254,7 @@ def build_model(lang):
                 p["y"] = pts[prev]["elev"]
             else:
                 a, b = pts[prev], pts[nxt]
-                f = (p["t"] - a["t"]) / (b["t"] - a["t"]) if b["t"] != a["t"] else 0
+                f = (p["x"] - a["x"]) / (b["x"] - a["x"]) if b["x"] != a["x"] else 0
                 p["y"] = round(a["elev"] + (b["elev"] - a["elev"]) * f)
         return pts
 
@@ -260,8 +264,12 @@ def build_model(lang):
             return None
         top = max(known, key=lambda p: p["elev"])
         gain = sum(b["elev"] - a["elev"] for a, b in zip(known, known[1:]) if b["elev"] > a["elev"])
-        start = next((p for p in pts if p["kind"] == "trailhead" and p["elev"] is not None), known[0])
-        return dict(top=top, gain=gain, start=start, climb=top["elev"] - start["elev"],
+        # 「◯◯から N m 登る」は、登山口から登り始めるルートにだけ意味がある。
+        # 稜線から始まって里に下りる縦走（大キレット等）では出さない。
+        first_th = next((p for p in pts if p["kind"] == "trailhead" and p["elev"] is not None), None)
+        start = first_th if first_th is pts[0] or (first_th and first_th["seq"] == pts[0]["seq"]) else None
+        return dict(top=top, gain=gain, start=start,
+                    climb=(top["elev"] - start["elev"]) if start else None,
                     unverified=[p["short"] for p in pts if p["kind"] == "hut" and p["est"]])
 
     def build_legs(t, pts):
@@ -310,16 +318,16 @@ def build_model(lang):
             labels.append(dict(p=p, text=txt, size=fs if p["kind"] == "hut" else fs_small,
                                w=_label_w(txt, fs if p["kind"] == "hut" else fs_small)))
         ml, mr, mb = (40 if compact else 52), 14, (20 if compact else 24)
-        xmax = max(p["t"] for p in pts) or 1
+        xmax = max(p["x"] for p in pts) or 1
         inner_w = width - ml - mr
 
         def X(tm):
             return ml + inner_w * tm / xmax
 
-        order = sorted(labels, key=lambda l: l["p"]["t"])
+        order = sorted(labels, key=lambda l: l["p"]["x"])
         tiers = []
         for l in order:
-            cx = X(l["p"]["t"])
+            cx = X(l["p"]["x"])
             x0, x1 = cx - l["w"] / 2, cx + l["w"] / 2
             if x0 < 2:
                 x1 += 2 - x0; x0 = 2
@@ -351,9 +359,10 @@ def build_model(lang):
             out.append(f'<line class="p-grid" x1="{ml}" x2="{width - mr}" y1="{y:.1f}" y2="{y:.1f}"/>')
             out.append(f'<text class="p-axis" x="{ml - 6}" y="{y + 3.5:.1f}" text-anchor="end" font-size="{fs_small}">{e:,}</text>')
             e += 500
-        xstep = 180 if compact else 120
+        # 横軸が行程順のときは時刻の目盛りを打たない（歩いた時間に見えてしまう）
+        xstep = (180 if compact else 120) if t["times_known"] else 0
         tm = 0
-        while tm <= xmax:
+        while xstep and tm <= xmax:
             x = X(tm)
             out.append(f'<line class="p-tick" x1="{x:.1f}" x2="{x:.1f}" y1="{height - mb}" y2="{height - mb + 4}"/>')
             lab = f"{tm // 60}h" if (compact or lang == "en") else (f"{tm // 60}時間" if tm else T.start)
@@ -363,13 +372,13 @@ def build_model(lang):
             out.append(f'<text class="p-axis" x="{x:.1f}" y="{height - mb + 14}" text-anchor="{anchor}" font-size="{fs_small}">{lab}</text>')
             tm += xstep
         out.append(f'<text class="p-axis" x="{ml - 6}" y="{mt - 4}" text-anchor="end" font-size="{fs_small}">m</text>')
-        d = " ".join(f"{X(p['t']):.1f},{Y(p['y']):.1f}" for p in pts)
+        d = " ".join(f"{X(p['x']):.1f},{Y(p['y']):.1f}" for p in pts)
         base = height - mb
-        out.append(f'<polygon class="p-area" points="{X(pts[0]["t"]):.1f},{base} {d} {X(pts[-1]["t"]):.1f},{base}"/>')
+        out.append(f'<polygon class="p-area" points="{X(pts[0]["x"]):.1f},{base} {d} {X(pts[-1]["x"]):.1f},{base}"/>')
         out.append(f'<polyline class="p-line" points="{d}"/>')
         for l in order:
             p = l["p"]
-            x, y = X(p["t"]), Y(p["y"])
+            x, y = X(p["x"]), Y(p["y"])
             ly = mt - 6 - l["tier"] * tier_h
             cls = {"hut": "pm pm-hut", "trailhead": "pm pm-th", "peak": "pm pm-peak"}[p["kind"]]
             if p["kind"] == "hut" and p["est"]:
@@ -405,18 +414,18 @@ def build_model(lang):
         pts = [p for p in pts if p["y"] is not None]
         if len(pts) < 2:
             return ""
-        xmax = max(p["t"] for p in pts) or 1
+        xmax = max(p["x"] for p in pts) or 1
         ys = [p["y"] for p in pts]
         ymin, ymax = min(ys) - 150, max(ys) + 120
         pad = 8
         X = lambda tm: pad + (width - 2 * pad) * tm / xmax
         Y = lambda e: pad + (height - 2 * pad) * (1 - (e - ymin) / (ymax - ymin))
-        d = " ".join(f"{X(p['t']):.1f},{Y(p['y']):.1f}" for p in pts)
+        d = " ".join(f"{X(p['x']):.1f},{Y(p['y']):.1f}" for p in pts)
         out = [f'<svg class="mini-profile" viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">',
-               f'<polygon class="p-area" points="{X(pts[0]["t"]):.1f},{height} {d} {X(pts[-1]["t"]):.1f},{height}"/>',
+               f'<polygon class="p-area" points="{X(pts[0]["x"]):.1f},{height} {d} {X(pts[-1]["x"]):.1f},{height}"/>',
                f'<polyline class="p-line" points="{d}"/>']
         for p in pts:
-            x, y = X(p["t"]), Y(p["y"])
+            x, y = X(p["x"]), Y(p["y"])
             if p["kind"] == "hut" and p["overnight"]:
                 out.append(f'<circle class="p-dot{" pm-est" if p["est"] else ""}" cx="{x:.1f}" cy="{y:.1f}" r="4.5"/>')
             elif p["kind"] == "trailhead":
@@ -441,11 +450,12 @@ def build_model(lang):
         t["hut_count"] = sum(1 for s in t["stops"] if s["hut"] and s["is_overnight_candidate"])
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
-        t["profile"] = summarize(t["points"]) if t["times_known"] else None
+        # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする
+        t["profile"] = summarize(t["points"])
         t["rows"] = build_legs(t, t["points"])
-        t["svg_wide"] = profile_svg(t, t["points"], 720, 300) if t["times_known"] else ""
-        t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True) if t["times_known"] else ""
-        t["svg_mini"] = profile_mini_svg(t, t["points"]) if t["times_known"] else ""
+        t["svg_wide"] = profile_svg(t, t["points"], 720, 300)
+        t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)
+        t["svg_mini"] = profile_mini_svg(t, t["points"])
         trails.append(t)
 
     client = [{

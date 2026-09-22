@@ -24,7 +24,6 @@
     </dl>
   </header>
 
-  {% if t.svg_wide %}
   <figure class="profile" aria-label="{{ T.profile_aria }}">
     {{ t.svg_wide }}
     {{ t.svg_narrow }}
@@ -33,7 +32,7 @@
       <p class="profile-summary">
         {{ T.sum_top }} <b>{{ sm.top.elev | metres }}</b>
         <span class="sep">／</span> {{ T.sum_gain }} <b>{{ T.approx }}{{ sm.gain | metres }}</b>
-        <span class="sep">／</span> {{ T.sum_climb.format(start=sm.start.short, elev=sm.start.elev|metres, climb=sm.climb|metres) }}
+        {% if sm.start %}<span class="sep">／</span> {{ T.sum_climb.format(start=sm.start.short, elev=sm.start.elev|metres, climb=sm.climb|metres) }}{% endif %}
       </p>
       {% endif %}
       <p class="profile-legend">
@@ -42,12 +41,9 @@
         <span><i class="lg lg-peak"></i>{{ T.legend_peak }}</span>
         <span><i class="lg lg-est"></i>{{ T.legend_est }}</span>
       </p>
-      <p class="quiet profile-note">{{ T.profile_note }}{% if sm and sm.unverified %} {{ T.profile_note_est.format(names=sm.unverified | join('・' if LANG == 'ja' else ', ')) }}{% endif %}</p>
+      <p class="quiet profile-note">{% if t.times_known %}{{ T.profile_note }}{% else %}{{ T.profile_note_seq }}{% endif %} {{ T.profile_note_rest }}{% if sm and sm.unverified %} {{ T.profile_note_est.format(names=sm.unverified | join('・' if LANG == 'ja' else ', ')) }}{% endif %}</p>
     </figcaption>
   </figure>
-  {% else %}
-  <p class="note">{{ T.trail_times_unknown }}</p>
-  {% endif %}
 
   {% if t.photos %}
   <div class="photo-strip">
