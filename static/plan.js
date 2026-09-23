@@ -46,7 +46,9 @@
       return d ? d.split(",").filter(Boolean) : [];
     });
     var dm = /[#&]d=([0-9-]{10})/.exec(location.hash);
-    return { start: dm ? dm[1] : "", nights: Math.max(1, days.length - 1), days: days };
+    // days の長さがそのまま泊数。ここを 1 ずらすと ensureDays が最終日を前の日に畳んでしまい、
+    // 共有した行程が全部横並びになる（2026-09-23 の事故）。
+    return { start: dm ? dm[1] : "", nights: Math.max(1, days.length), days: days };
   }
 
   // ---- 日付と営業判定 -------------------------------------------------
@@ -279,6 +281,9 @@
   // ---- 起動 -----------------------------------------------------------
   function start(data) {
     data.forEach(function (h) { huts[h.id] = h; });
+    // 小屋ページからの #add= は load/render より先に読む。
+    // render() が hash を #p=... に書き換えるので、後から読むと消えている
+    var addId = (/[#&]add=([a-z0-9_]+)/.exec(location.hash) || [])[1];
     load();
     var root = $("#plan");
     root.hidden = false;
@@ -306,9 +311,7 @@
     drawList($("#plan-list"));
     wireDrag($("#plan-days"));
     render();
-    // 小屋ページからの「行程に追加」
-    var add = /[#&]add=([a-z0-9_]+)/.exec(location.hash);
-    if (add) addHut(add[1]);
+    if (addId) addHut(addId);
   }
 
   var url = meta("hutsgo-data");

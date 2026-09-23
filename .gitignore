@@ -11,3 +11,4 @@ xserver/README.md
 xserver/.ftp.env
 xserver/.kpi.env
 tools/kpi/
+node_modules/
