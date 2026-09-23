@@ -394,7 +394,8 @@ def build_model(lang):
                 {"hut": (T.legend_hut.split("（")[0] if p["overnight"] else ""),
                  "trailhead": T.trailhead, "peak": T.legend_peak}[p["kind"]],
             ]))
-            out.append(f'<a class="{cls}" href="#stop-{p["seq"]}" data-seq="{p["seq"]}"><title>{escape(title)}</title>')
+            hut_attr = f' data-hut="{p["hut"]["id"]}"' if p["kind"] == "hut" and p.get("hut") else ""
+            out.append(f'<a class="{cls}" href="#stop-{p["seq"]}" data-seq="{p["seq"]}"{hut_attr}><title>{escape(title)}</title>')
             out.append(f'<circle class="p-hit" cx="{x:.1f}" cy="{y:.1f}" r="16"/>')
             out.append(f'<rect class="p-hit" x="{l["x0"] - 4:.1f}" y="{ly - l["size"] - 2:.1f}" width="{l["x1"] - l["x0"] + 8:.1f}" height="{l["size"] + 6:.1f}"/>')
             out.append(f'<line class="p-leader" x1="{x:.1f}" x2="{x:.1f}" y1="{ly + 2:.1f}" y2="{y - 6:.1f}"/>')
@@ -639,7 +640,8 @@ for lang, prefix in LOCALES:
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
     # 行程ボードは JS 側にも文言が要る。i18n を唯一の出どころにするため、ここで渡す
     plan_strings = {k[len("plan_js_"):]: v for k, v in m["T"].items() if k.startswith("plan_js_")}
-    write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings, **g)
+    write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings,
+          trails=m["trails"], **g)
 
     tr = transit_model(lang)
     if tr["gateways"]:

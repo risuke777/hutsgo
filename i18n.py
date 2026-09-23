@@ -119,6 +119,17 @@ STRINGS = {
     "plan_clear":       ("行程を空にする", "Clear"),
     "plan_picker_h":    ("小屋を選ぶ", "Pick the huts"),
     "plan_nights_n":    ("{n}泊", "{n} nights"),
+    "plan_view_profile": ("断面図から", "By profile"),
+    "plan_route":       ("ルート", "Route"),
+    "plan_profile_note": ("小屋の丸印を押すと行程に入ります。", "Tap a hut marker to add it."),
+    "plan_search_ph":   ("小屋の名前で探す", "Find a hut by name"),
+    "plan_js_search_none": ("見つかりません", "No match"),
+    "plan_share_copy":  ("リンクをコピー", "Copy link"),
+    "plan_share_native": ("他のアプリで共有", "Share with an app"),
+    "plan_share_mail":  ("メール", "Email"),
+    "plan_share_qr":    ("QRコード", "QR code"),
+    "plan_js_share_text": ("山小屋の行程", "My hut itinerary"),
+    "plan_js_qr_note":  ("スマホのカメラで読むと、この行程が開きます。", "Scan it to open this plan on a phone."),
     "plan_nearby_h":    ("この範囲の小屋", "Huts in view"),
     "plan_help_aria":   ("このページについて", "About this page"),
 
@@ -166,8 +177,8 @@ STRINGS = {
                          "Everything here comes from each hut's official source, but dates and prices change without notice. Always confirm with the hut before you go."),
     "foot_about":       ("出典と更新方針", "Sources and how we check"),
     "foot_data":        ("データ提供", "Data"),
-    "foot_meta":        ("対象山域：北アルプス（表銀座・槍・穂高） ／ 2026年シーズン",
-                         "Northern Japan Alps (Omote-Ginza, Yari, Hotaka) / 2026 season"),
+    "foot_meta":        ("対象山域：北アルプス・南アルプス（北岳）・中央アルプス（千畳敷の交通） ／ 2026年シーズン",
+                         "Northern and Southern Japan Alps, plus access to Senjojiki / 2026 season"),
 
     # ---- shared labels ------------------------------------------------
     "nights":           ("{n}泊{m}日", "{n} nights / {m} days"),

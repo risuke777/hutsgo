@@ -136,3 +136,35 @@
   .plan-bar{gap:.4rem .7rem}
   .plan-field{font-size:.72rem}
 }
+
+/* 名前で探す */
+.plan-search{position:absolute;left:.5rem;right:.5rem;top:3.1rem;z-index:4}
+.plan-search input{width:min(22rem,100%);font:inherit;font-size:.9rem;padding:.4rem .7rem;
+  border:1px solid var(--line-strong);border-radius:999px;background:rgba(255,255,255,.96);color:var(--ink)}
+.plan-search input:focus-visible{outline:2px solid var(--moss);outline-offset:1px}
+.plan-search-results{margin-top:.35rem;display:flex;flex-wrap:wrap;gap:.3rem;max-width:min(26rem,100%);
+  padding:.4rem;border:1px solid var(--line-strong);border-radius:6px;background:#fff}
+.plan-search-results[hidden]{display:none}
+.plan-search-hit{font-size:.85rem}
+
+/* 断面図から選ぶ */
+#plan-profile-view{padding:3.2rem .9rem 1rem;overflow:auto}
+.plan-routepick{margin-bottom:.6rem}
+.plan-profile{margin:0}
+.plan-profile figcaption{margin-top:.4rem;font-size:.85rem}
+.plan-profile .pm{cursor:pointer}
+
+/* 共有メニュー */
+.plan-sharemenu{position:relative}
+.plan-sharemenu summary{list-style:none;cursor:pointer;white-space:nowrap}
+.plan-sharemenu summary::-webkit-details-marker{display:none}
+.plan-sharemenu-body{position:absolute;right:0;top:2.6rem;z-index:10;width:max-content;min-width:11rem;
+  display:flex;flex-direction:column;gap:.15rem;padding:.4rem;
+  border:1px solid var(--line-strong);border-radius:6px;background:#fff}
+.plan-sharebtn{font:inherit;font-size:.88rem;text-align:left;cursor:pointer;color:var(--ink);
+  padding:.4rem .6rem;border:0;border-radius:4px;background:none;text-decoration:none}
+.plan-sharebtn:hover{background:var(--moss-tint);color:var(--moss-deep)}
+.plan-qr{padding:.5rem .6rem;border-top:1px solid var(--line);margin-top:.2rem}
+.plan-qr[hidden]{display:none}
+.plan-qr-img svg{width:min(11rem,45vw);height:auto;display:block}
+.plan-qr p{margin:.4rem 0 0;font-size:.78rem;max-width:11rem}

@@ -116,22 +116,90 @@
     });
   }
 
-  function drawList(box) {
+  function hutButton(h, cls) {
+    var b = el("button", cls || "plan-chip");
+    b.type = "button";
+    b.dataset.hut = h.id;
+    b.appendChild(el("span", null, hutName(h)));
+    var e = h.location && h.location.elevation_m;
+    if (e) b.appendChild(el("span", "plan-chip-elev", e.toLocaleString() + "m"));
+    return b;
+  }
+
+  function drawList(box, filter) {
     box.innerHTML = "";
+    var q = (filter || "").trim().toLowerCase();
     var ul = el("ul", "plan-hutlist");
-    Object.keys(huts).sort().forEach(function (id) {
-      var h = huts[id];
+    var hits = Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) {
+      if (!q) return true;
+      var n = h.name || {};
+      return ((n.ja || "") + " " + (n.en || "") + " " + h.id).toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return hutName(a).localeCompare(hutName(b), LANG); });
+    hits.forEach(function (h) {
       var li = el("li");
-      var b = el("button", "btn btn-ghost", t("add") + " " + hutName(h));
-      b.type = "button";
-      b.dataset.hut = id;
-      li.appendChild(b);
+      li.appendChild(hutButton(h));
       ul.appendChild(li);
     });
+    if (!hits.length) ul.appendChild(el("li", "quiet", t("search_none")));
     box.appendChild(ul);
-    box.addEventListener("click", function (ev) {
+    if (!box.dataset.wired) {
+      box.dataset.wired = "1";
+      box.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-hut]");
+        if (b) addHut(b.dataset.hut);
+      });
+    }
+  }
+
+  // ---- 名前で探す -------------------------------------------------------
+  function setupSearch() {
+    var input = $("#plan-search"), out = $("#plan-search-results");
+    if (!input) return;
+    function results() {
+      var q = input.value.trim().toLowerCase();
+      out.innerHTML = "";
+      if (!q) { out.hidden = true; return; }
+      var hits = Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) {
+        var n = h.name || {};
+        return ((n.ja || "") + " " + (n.en || "") + " " + h.id).toLowerCase().indexOf(q) >= 0;
+      }).slice(0, 8);
+      hits.forEach(function (h) { out.appendChild(hutButton(h, "plan-chip plan-search-hit")); });
+      if (!hits.length) out.appendChild(el("p", "quiet", t("search_none")));
+      out.hidden = false;
+      drawList($("#plan-list"), input.value);
+    }
+    input.addEventListener("input", results);
+    input.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      var first = out.querySelector("[data-hut]");
+      if (first) first.click();
+    });
+    out.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-hut]");
-      if (b) addHut(b.dataset.hut);
+      if (!b) return;
+      addHut(b.dataset.hut);
+      if (mapApi) mapApi.focus(b.dataset.hut);   // 押した小屋が地図のどこかを見せる
+      input.value = "";
+      out.hidden = true;
+      drawList($("#plan-list"), "");
+    });
+  }
+
+  // ---- 断面図から選ぶ ---------------------------------------------------
+  function setupProfile() {
+    var view = $("#plan-profile-view");
+    if (!view) return;
+    var sel = $("#plan-route");
+    function show(id) {
+      view.querySelectorAll(".plan-profile").forEach(function (f) { f.hidden = f.dataset.trail !== id; });
+    }
+    if (sel) sel.addEventListener("change", function () { show(sel.value); });
+    view.addEventListener("click", function (ev) {
+      var a = ev.target.closest("[data-hut]");
+      if (!a) return;
+      ev.preventDefault();          // 断面図のマーカーは小屋ページ用のリンク。ここでは行程に入れる
+      addHut(a.dataset.hut);
     });
   }
 
@@ -332,7 +400,8 @@
   function setupViews(data) {
     var tabs = document.querySelectorAll(".plan-tab");
     var views = {
-      map: $("#plan-map-view"), ridge: $("#plan-ridge-view"), list: $("#plan-list-view")
+      map: $("#plan-map-view"), profile: $("#plan-profile-view"),
+      ridge: $("#plan-ridge-view"), list: $("#plan-list-view")
     };
     function show(name) {
       Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
@@ -361,6 +430,65 @@
     show(views[saved] ? saved : "map");
   }
 
+  // ---- 共有（コピー・SNS・QR）-------------------------------------------
+  // 行程は URL に入っている。QR はこの端末の中で作る（外のサービスに行程を渡さない）
+  function setupShare() {
+    var menu = $(".plan-sharemenu");
+    if (!menu) return;
+    var qrBox = $("#plan-qr");
+
+    function shareUrl() { writeHash(); return location.href; }
+    function shareText() { return t("share_text"); }
+
+    function refreshLinks() {
+      var u = encodeURIComponent(shareUrl());
+      var tx = encodeURIComponent(shareText());
+      var set = function (id, href) { var a = $(id); if (a) a.href = href; };
+      set("#plan-share-line", "https://line.me/R/msg/text/?" + tx + "%0A" + u);
+      set("#plan-share-x", "https://twitter.com/intent/tweet?text=" + tx + "&url=" + u);
+      set("#plan-share-fb", "https://www.facebook.com/sharer/sharer.php?u=" + u);
+      set("#plan-share-mail", "mailto:?subject=" + tx + "&body=" + u);
+    }
+    menu.addEventListener("toggle", function () { if (menu.open) refreshLinks(); });
+
+    $("#plan-share-copy").addEventListener("click", function () {
+      var u = shareUrl();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(u).then(function () { toast(t("copied")); }, function () { toast(u); });
+      } else {
+        toast(u);
+      }
+      menu.open = false;
+    });
+
+    var nativeBtn = $("#plan-share-native");
+    if (navigator.share && nativeBtn) {
+      nativeBtn.hidden = false;
+      nativeBtn.addEventListener("click", function () {
+        navigator.share({ title: "HutsGo", text: shareText(), url: shareUrl() }).catch(function () { /* 取り消しただけ */ });
+        menu.open = false;
+      });
+    }
+
+    $("#plan-share-qr").addEventListener("click", function () {
+      if (!qrBox.hidden) { qrBox.hidden = true; return; }
+      qrBox.innerHTML = "";
+      if (typeof qrcode !== "function") { toast(t("load_failed")); return; }
+      try {
+        var q = qrcode(0, "M");
+        q.addData(shareUrl());
+        q.make();
+        var wrap = el("div", "plan-qr-img");
+        wrap.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+        qrBox.appendChild(wrap);
+        qrBox.appendChild(el("p", "quiet", t("qr_note")));
+        qrBox.hidden = false;
+      } catch (e) {
+        toast(t("load_failed"));
+      }
+    });
+  }
+
   // ---- 起動 -----------------------------------------------------------
   function start(data) {
     data.forEach(function (h) { huts[h.id] = h; });
@@ -380,18 +508,11 @@
       render();
       toast(t("cleared"));
     });
-    $("#plan-share").addEventListener("click", function () {
-      writeHash();
-      var url = location.href;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(function () { toast(t("copied")); },
-                                                function () { toast(url); });
-      } else {
-        toast(url);
-      }
-    });
+    setupShare();
     drawRidge($("#plan-ridge"));
-    drawList($("#plan-list"));
+    drawList($("#plan-list"), "");
+    setupSearch();
+    setupProfile();
     setupViews(data);
     wireDrag($("#plan-days"));
     render();

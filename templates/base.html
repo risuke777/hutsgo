@@ -34,7 +34,7 @@
   <nav aria-label="{{ T.nav_aria }}">
     <a href="{{ LB }}/">{{ T.nav_routes }}</a>
     <a href="{{ LB }}/huts/">{{ T.nav_filter }}</a>
-    <a href="{{ LB }}/about/">{{ T.nav_about }}</a>
+    <a href="{{ LB }}/plan/">{{ T.plan_link }}</a>
     <a class="lang" href="{{ ALT }}{{ alt_page or page }}" hreflang="{{ ALT_LANG }}" lang="{{ ALT_LANG }}"
        aria-label="{{ T.lang_switch_aria }}" data-track="lang_switch">{{ T.lang_switch }}</a>
   </nav>
@@ -44,7 +44,7 @@
 </main>
 <footer class="site-foot">
   <p>{{ T.foot_disclaimer }}</p>
-  <p><a href="{{ LB }}/plan/">{{ T.plan_link }}</a>{{ T.mid }}<a href="{{ LB }}/access/">{{ T.access_link }}</a>{{ T.mid }}<a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}{% if HAS_ARTICLES %}<a href="{{ LB }}/articles/">{{ T.nav_articles }}</a>{{ T.mid }}{% endif %}<a href="{{ LB }}/about/">{{ T.foot_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
+  <p><a href="{{ LB }}/access/">{{ T.access_link }}</a>{{ T.mid }}<a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}{% if HAS_ARTICLES %}<a href="{{ LB }}/articles/">{{ T.nav_articles }}</a>{{ T.mid }}{% endif %}<a href="{{ LB }}/about/">{{ T.nav_about }}</a>{{ T.mid }}<a href="{{ BASE }}/api/">{{ T.foot_data }}</a>{{ T.mid }}{{ T.foot_meta }}</p>
 </footer>
 <script src="{{ BASE }}/static/site.js" defer></script>
 {% block scripts %}{% endblock %}

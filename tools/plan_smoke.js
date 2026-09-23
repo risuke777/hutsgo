@@ -12,6 +12,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 
 const DIST = path.join(__dirname, "..", "dist");
 const hutsJson = fs.readFileSync(path.join(DIST, "data/huts.json"), "utf8");
+const qrJs = fs.readFileSync(path.join(DIST, "static/qrcode.js"), "utf8");
 const mapJs = fs.readFileSync(path.join(DIST, "static/map.js"), "utf8");
 const planJs = fs.readFileSync(path.join(DIST, "static/plan.js"), "utf8");
 const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
@@ -46,7 +47,7 @@ function boot(url) {
       });
     },
   });
-  [mapJs, planJs].forEach(function (code) {
+  [qrJs, mapJs, planJs].forEach(function (code) {
     const sc = dom.window.document.createElement("script");
     sc.textContent = code;
     dom.window.document.body.appendChild(sc);
@@ -217,7 +218,64 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("寄ると名前が出る", labelsAt(g.d) > 0, `${labelsAt(g.d)}`);
   ok("その小屋のピンが選択済み", !!g.d.querySelector(".hgmap-pin.is-chosen"));
 
-    report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors]);
+  // ---- 7. 名前で探す・断面図から選ぶ・共有 ------------------------------
+  const h = boot("https://hutsgo.com/plan/");
+  await wait(200);
+
+  // 名前の一覧に「追加」の文字を付けない
+  const firstName = h.d.querySelector("#plan-list .plan-chip");
+  ok("一覧は小屋名だけ", firstName && !/追加|^Add /.test(firstName.textContent), firstName && firstName.textContent);
+
+  // 検索
+  const search = h.d.getElementById("plan-search");
+  search.value = "北岳";
+  search.dispatchEvent(new h.w.Event("input"));
+  const hits = h.d.querySelectorAll("#plan-search-results [data-hut]");
+  ok("名前で絞り込める", hits.length >= 2 && hits.length <= 8, `${hits.length}件`);
+  ok("一覧も同じ語で絞られる", h.d.querySelectorAll("#plan-list [data-hut]").length === hits.length,
+     `${h.d.querySelectorAll("#plan-list [data-hut]").length}`);
+  hits[0].click();
+  ok("検索結果から行程に入る", h.d.querySelectorAll(".plan-card").length === 1,
+     `${h.d.querySelectorAll(".plan-card").length}`);
+  ok("選んだら検索欄が空になる", search.value === "" && h.d.getElementById("plan-search-results").hidden);
+
+  search.value = "存在しない小屋";
+  search.dispatchEvent(new h.w.Event("input"));
+  ok("見つからないときは知らせる", /見つかりません|No match/.test(h.d.getElementById("plan-search-results").textContent));
+
+  // 断面図から選ぶ
+  h.d.querySelector('.plan-tab[data-view="profile"]').click();
+  ok("断面図タブが開く", !h.d.getElementById("plan-profile-view").hidden);
+  const shown = [...h.d.querySelectorAll(".plan-profile")].filter((f) => !f.hidden);
+  ok("ルートは1本だけ表示", shown.length === 1, `${shown.length}`);
+  const route = h.d.getElementById("plan-route");
+  route.value = "kitadake";
+  route.dispatchEvent(new h.w.Event("change"));
+  ok("ルートを切り替えられる",
+     h.d.querySelector('.plan-profile[data-trail="kitadake"]').hidden === false
+     && h.d.querySelector('.plan-profile:not([data-trail="kitadake"])').hidden === true);
+  const before7 = h.d.querySelectorAll(".plan-card").length;
+  h.d.querySelector('.plan-profile[data-trail="kitadake"] [data-hut]')
+     .dispatchEvent(new h.w.Event("click", { bubbles: true, cancelable: true }));
+  ok("断面図の小屋を押すと入る", h.d.querySelectorAll(".plan-card").length === before7 + 1,
+     `${before7} → ${h.d.querySelectorAll(".plan-card").length}`);
+
+  // 共有メニュー
+  const menu = h.d.querySelector(".plan-sharemenu");
+  menu.open = true;
+  menu.dispatchEvent(new h.w.Event("toggle"));
+  const href = (id) => h.d.getElementById(id).getAttribute("href");
+  ok("LINEに飛べる", /line\.me\/R\/msg\/text\/\?[\s\S]*hutsgo/.test(decodeURIComponent(href("plan-share-line"))),
+     href("plan-share-line").slice(0, 60));
+  ok("Xに飛べる", /twitter\.com\/intent\/tweet/.test(href("plan-share-x")));
+  ok("Facebookに飛べる", /facebook\.com\/sharer/.test(href("plan-share-fb")));
+  ok("メールで送れる", /^mailto:/.test(href("plan-share-mail")));
+  h.d.getElementById("plan-share-qr").click();
+  const qr = h.d.querySelector("#plan-qr svg");
+  ok("QRを端末内で作る", !!qr && !h.d.getElementById("plan-qr").hidden);
+  ok("QRは外部サービスを呼ばない", !!qr && !/http/.test(qr.outerHTML.replace(/xmlns="[^"]*"/g, "")));
+
+    report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors]);
   } catch (e) {
     results.push({ label: "テスト実行中に落ちた: " + e.message, pass: false });
     report([]);

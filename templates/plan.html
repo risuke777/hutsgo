@@ -24,7 +24,19 @@
       </select>
     </label>
     <div class="plan-bar-end">
-      <button type="button" class="btn btn-ghost plan-share" id="plan-share">{{ T.plan_share }}</button>
+      <details class="plan-sharemenu">
+        <summary class="btn btn-ghost plan-share">{{ T.plan_share }}</summary>
+        <div class="plan-sharemenu-body">
+          <button type="button" class="plan-sharebtn" id="plan-share-copy">{{ T.plan_share_copy }}</button>
+          <button type="button" class="plan-sharebtn" id="plan-share-native" hidden>{{ T.plan_share_native }}</button>
+          <a class="plan-sharebtn" id="plan-share-line" href="#" target="_blank" rel="noopener">LINE</a>
+          <a class="plan-sharebtn" id="plan-share-x" href="#" target="_blank" rel="noopener">X</a>
+          <a class="plan-sharebtn" id="plan-share-fb" href="#" target="_blank" rel="noopener">Facebook</a>
+          <a class="plan-sharebtn" id="plan-share-mail" href="#">{{ T.plan_share_mail }}</a>
+          <button type="button" class="plan-sharebtn" id="plan-share-qr">{{ T.plan_share_qr }}</button>
+          <div id="plan-qr" class="plan-qr" hidden></div>
+        </div>
+      </details>
       <details class="plan-help">
         <summary title="{{ T.plan_help_aria }}"><span class="visually-hidden">{{ T.plan_help_aria }}</span><span aria-hidden="true">?</span></summary>
         <div class="plan-help-body">
@@ -39,12 +51,32 @@
     <h2 id="picker-h" class="visually-hidden">{{ T.plan_picker_h }}</h2>
     <div class="plan-mapwrap">
       <div class="plan-view" id="plan-map-view"><div id="plan-map"></div></div>
+      <div class="plan-view" id="plan-profile-view" hidden>
+        <label class="plan-field plan-routepick">{{ T.plan_route }}
+          <select id="plan-route">
+            {% for t in trails %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+          </select>
+        </label>
+        {% for t in trails %}
+        <figure class="plan-profile" data-trail="{{ t.id }}"{{ ' hidden' if not loop.first }}>
+          {{ t.svg_wide }}
+          {{ t.svg_narrow }}
+          <figcaption class="quiet">{{ T.plan_profile_note }}</figcaption>
+        </figure>
+        {% endfor %}
+      </div>
       <div class="plan-view" id="plan-ridge-view" hidden><div class="plan-ridge" id="plan-ridge"></div></div>
       <div class="plan-view" id="plan-list-view" hidden><div id="plan-list"></div></div>
       <div class="plan-tabs" role="tablist" aria-label="{{ T.plan_picker_h }}">
         <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="profile" aria-selected="false">{{ T.plan_view_profile }}</button>
         <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
         <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
+      </div>
+      <div class="plan-search">
+        <input type="search" id="plan-search" placeholder="{{ T.plan_search_ph }}" aria-label="{{ T.plan_search_ph }}"
+               autocomplete="off" enterkeyhint="search">
+        <div id="plan-search-results" class="plan-search-results" hidden></div>
       </div>
     </div>
     <div class="plan-nearby" id="plan-nearby" hidden>
@@ -61,5 +93,6 @@
   <output id="plan-msg" class="plan-toast" aria-live="polite" hidden></output>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ BASE }}/static/map.js" defer></script>
+{% block scripts %}<script src="{{ BASE }}/static/qrcode.js" defer></script>
+<script src="{{ BASE }}/static/map.js" defer></script>
 <script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}
