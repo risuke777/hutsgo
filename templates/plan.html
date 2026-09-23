@@ -35,11 +35,21 @@
   <section class="plan-picker" aria-labelledby="picker-h">
     <h2 id="picker-h">{{ T.plan_picker_h }}</h2>
     <p class="quiet">{{ T.plan_picker_note }}</p>
-    <div class="plan-ridge" id="plan-ridge"></div>
-    <details class="plan-list">
-      <summary>{{ T.plan_list_summary }}</summary>
+    <div class="plan-tabs" role="tablist">
+      <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
+      <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
+      <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
+    </div>
+    <div class="plan-view" id="plan-map-view">
+      <div id="plan-map"></div>
+      <p class="quiet">{{ T.plan_map_note }}</p>
+    </div>
+    <div class="plan-view" id="plan-ridge-view" hidden>
+      <div class="plan-ridge" id="plan-ridge"></div>
+    </div>
+    <div class="plan-view" id="plan-list-view" hidden>
       <div id="plan-list"></div>
-    </details>
+    </div>
   </section>
 
   <section class="plan-board" aria-labelledby="board-h">
@@ -49,4 +59,5 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/map.js" defer></script>
+<script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}

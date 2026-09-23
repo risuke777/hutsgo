@@ -12,6 +12,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 
 const DIST = path.join(__dirname, "..", "dist");
 const hutsJson = fs.readFileSync(path.join(DIST, "data/huts.json"), "utf8");
+const mapJs = fs.readFileSync(path.join(DIST, "static/map.js"), "utf8");
 const planJs = fs.readFileSync(path.join(DIST, "static/plan.js"), "utf8");
 const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
 
@@ -43,9 +44,11 @@ function boot(url) {
       });
     },
   });
-  const s = dom.window.document.createElement("script");
-  s.textContent = planJs;
-  dom.window.document.body.appendChild(s);
+  [mapJs, planJs].forEach(function (code) {
+    const sc = dom.window.document.createElement("script");
+    sc.textContent = code;
+    dom.window.document.body.appendChild(sc);
+  });
   return { dom, w: dom.window, d: dom.window.document, errors };
 }
 
@@ -126,7 +129,25 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("小屋ページからの追加が効く", c.d.querySelectorAll(".plan-card").length === 1,
      `${c.d.querySelectorAll(".plan-card").length}`);
 
-    report([...a.errors, ...b.errors, ...c.errors]);
+  // ---- 5. 地図から選ぶ -----------------------------------------------
+  const e = boot("https://hutsgo.com/plan/");
+  await wait(200);
+  ok("既定は地図", !e.d.getElementById("plan-map-view").hidden);
+  const pinCount = e.d.querySelectorAll(".hgmap-pin").length;
+  ok("地図に小屋が出る", pinCount > 0 && pinCount <= 21, `${pinCount}`);
+  const tile = e.d.querySelector(".hgmap-tile");
+  ok("タイルは地理院のURL", !!tile && /cyberjapandata[.]gsi[.]go[.]jp\/xyz\/std\/\d+\/\d+\/\d+[.]png$/.test(tile.src),
+     tile && tile.src);
+  ok("出典が出ている", /地理院タイル/.test(e.d.querySelector(".hgmap-attr").textContent));
+  ok("拡大縮小と全体表示のボタン", e.d.querySelectorAll(".hgmap-btn").length === 3);
+  e.d.querySelector(".hgmap-pin").click();
+  ok("地図から行程に入る", e.d.querySelectorAll(".plan-card").length === 1,
+     `${e.d.querySelectorAll(".plan-card").length}`);
+  e.d.querySelector('.plan-tab[data-view="ridge"]').click();
+  ok("稜線タブに切り替わる",
+     !e.d.getElementById("plan-ridge-view").hidden && e.d.getElementById("plan-map-view").hidden);
+
+    report([...a.errors, ...b.errors, ...c.errors, ...e.errors]);
   } catch (e) {
     results.push({ label: "テスト実行中に落ちた: " + e.message, pass: false });
     report([]);

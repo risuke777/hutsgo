@@ -47,3 +47,30 @@
   .plan-card{flex-basis:15rem}
   .plan-top{gap:.5rem}
 }
+
+/* 選択の見せ方（タブ） */
+.plan-tabs{display:flex;gap:.3rem;margin:.6rem 0}
+.plan-tab{font:inherit;cursor:pointer;padding:.3rem .8rem;border:1px solid var(--line);
+  border-radius:999px;background:#fff;color:var(--ink-soft)}
+.plan-tab[aria-selected="true"]{background:var(--moss-tint);border-color:var(--moss);color:var(--moss-deep)}
+
+/* タイル地図 */
+.hgmap{position:relative;height:420px;border:1px solid var(--line);border-radius:6px;
+  overflow:hidden;background:var(--card);touch-action:none;cursor:grab}
+.hgmap.is-panning{cursor:grabbing}
+.hgmap:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
+.hgmap-tiles,.hgmap-pins{position:absolute;inset:0}
+.hgmap-tile{position:absolute;width:256px;height:256px;user-select:none;pointer-events:none}
+.hgmap-pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.25rem;
+  font:inherit;background:none;border:0;padding:0;cursor:pointer}
+.hgmap-dot{width:11px;height:11px;border-radius:50%;background:var(--moss);border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--moss-deep)}
+.hgmap-label{font-size:.75rem;background:rgba(255,255,255,.88);border:1px solid var(--line);
+  border-radius:3px;padding:0 .25rem;white-space:nowrap}
+.hgmap-pin:hover .hgmap-dot,.hgmap-pin:focus-visible .hgmap-dot{background:var(--moss-deep);transform:scale(1.2)}
+.hgmap-ui{position:absolute;right:.5rem;top:.5rem;display:flex;flex-direction:column;gap:.25rem}
+.hgmap-btn{width:2rem;height:2rem;font:inherit;line-height:1;cursor:pointer;
+  border:1px solid var(--line);border-radius:4px;background:rgba(255,255,255,.92)}
+.hgmap-attr{position:absolute;left:0;right:0;bottom:0;margin:0;padding:.1rem .4rem;
+  font-size:.7rem;background:rgba(255,255,255,.85);color:var(--ink-soft)}
+@media (max-width:480px){ .hgmap{height:320px} .hgmap-label{display:none} }

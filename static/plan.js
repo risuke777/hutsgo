@@ -278,6 +278,39 @@
     });
   }
 
+  // ---- 選択の見せ方（地図 / 稜線 / 一覧）--------------------------------
+  // 人は「行きたい山の周り」から選ぶので、既定は地図。
+  // 山域をまたぐロング縦走では縮小すれば全部入る。地図が重い端末のために他の2つも残す。
+  var mapApi = null;
+  function setupViews(data) {
+    var tabs = document.querySelectorAll(".plan-tab");
+    var views = {
+      map: $("#plan-map-view"), ridge: $("#plan-ridge-view"), list: $("#plan-list-view")
+    };
+    function show(name) {
+      Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
+      tabs.forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === name)); });
+      try { localStorage.setItem(KEY + "-view", name); } catch (e) { /* 保存できなくても動く */ }
+      if (name === "map") {
+        if (!mapApi && window.HutsGoMap) {
+          mapApi = window.HutsGoMap.create($("#plan-map"), {
+            huts: data,
+            source: "gsi",
+            strings: T,
+            nameOf: hutName,
+            onPick: addHut
+          });
+        } else if (mapApi) {
+          mapApi.redraw();
+        }
+      }
+    }
+    tabs.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.view); }); });
+    var saved = null;
+    try { saved = localStorage.getItem(KEY + "-view"); } catch (e) { /* 読めなくても既定で動く */ }
+    show(views[saved] ? saved : "map");
+  }
+
   // ---- 起動 -----------------------------------------------------------
   function start(data) {
     data.forEach(function (h) { huts[h.id] = h; });
@@ -309,6 +342,7 @@
     });
     drawRidge($("#plan-ridge"));
     drawList($("#plan-list"));
+    setupViews(data);
     wireDrag($("#plan-days"));
     render();
     if (addId) addHut(addId);
