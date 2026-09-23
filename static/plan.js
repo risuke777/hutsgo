@@ -395,7 +395,10 @@
     setupViews(data);
     wireDrag($("#plan-days"));
     render();
-    if (addId) addHut(addId);
+    if (addId) {
+      addHut(addId);
+      if (mapApi) mapApi.focus(addId);   // どこの山かを地図で見せる
+    }
   }
 
   var url = meta("hutsgo-data");

@@ -67,12 +67,24 @@
     button("−", t("zoom_out"), function () { zoomBy(-1); });
     button("⤢", t("fit"), function () { fit(); });
 
-    function zoomBy(d) {
+    function zoomBy(d, anchorX, anchorY) {
       var nz = Math.max(src.min, Math.min(src.max, z + d));
       if (nz === z) return;
+      measure();
+      // 押さえている点を動かさずに拡大縮小する。中心基準だと指の下の山が逃げる
+      var ax = anchorX == null ? w / 2 : anchorX;
+      var ay = anchorY == null ? h / 2 : anchorY;
+      var worldX = cx - w / 2 + ax, worldY = cy - h / 2 + ay;
       var f = Math.pow(2, nz - z);
-      cx *= f; cy *= f; z = nz;
+      cx = worldX * f - ax + w / 2;
+      cy = worldY * f - ay + h / 2;
+      z = nz;
       draw();
+    }
+
+    function local(e) {
+      var r = box.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
     }
 
     function fit() {
@@ -129,6 +141,12 @@
 
     function drawPins(left, top) {
       pins.innerHTML = "";
+      // 名前を出すかどうかは密度で決める。拡大したのに名前が消えるのは逆
+      var inView = huts.filter(function (hut) {
+        var px = lonToX(hut.location.lon, z) - left, py = latToY(hut.location.lat, z) - top;
+        return px > -40 && py > -40 && px < w + 40 && py < h + 40;
+      });
+      var roomy = inView.length <= Math.max(4, Math.floor(w * h / 26000));
       huts.forEach(function (hut) {
         var px = lonToX(hut.location.lon, z) - left;
         var py = latToY(hut.location.lat, z) - top;
@@ -147,6 +165,7 @@
         dot.className = "hgmap-dot";
         var lab = document.createElement("span");
         lab.className = "hgmap-label";
+        if (!roomy && !chosen[hut.id]) lab.classList.add("is-crowded");
         lab.textContent = name;
         b.appendChild(dot);
         b.appendChild(lab);
@@ -158,26 +177,66 @@
       });
     }
 
-    // ---- 移動（ドラッグ）------------------------------------------------
+    // ---- 指とマウスの操作 -------------------------------------------------
+    // 1本 = 移動、2本 = ピンチ。タイルは整数ズームなので、間隔が一定倍を超えたところで
+    // 1段動かし、そこから測り直す。指の中点は動かさない。
     var drag = null;
+    var pointers = {};        // pointerId -> {x, y}
+    var pinch = null;         // {dist, midX, midY}
+
+    function pointerList() {
+      return Object.keys(pointers).map(function (k) { return pointers[k]; });
+    }
+    function startPinch() {
+      var p = pointerList();
+      if (p.length < 2) { pinch = null; return; }
+      var dx = p[0].x - p[1].x, dy = p[0].y - p[1].y;
+      pinch = { dist: Math.hypot(dx, dy) || 1, midX: (p[0].x + p[1].x) / 2, midY: (p[0].y + p[1].y) / 2 };
+      drag = null;
+      box.classList.remove("is-panning");
+    }
+
     box.addEventListener("pointerdown", function (e) {
       if (e.target.closest(".hgmap-pin,.hgmap-btn,.hgmap-attr")) return;
-      drag = { x: e.clientX, y: e.clientY, cx: cx, cy: cy };
-      box.setPointerCapture(e.pointerId);
-      box.classList.add("is-panning");
+      var l = local(e);
+      pointers[e.pointerId] = l;
+      if (Object.keys(pointers).length >= 2) {
+        startPinch();
+      } else {
+        drag = { x: e.clientX, y: e.clientY, cx: cx, cy: cy };
+        box.classList.add("is-panning");
+      }
+      if (box.setPointerCapture) { try { box.setPointerCapture(e.pointerId); } catch (err) { /* 古い実装 */ } }
     });
     box.addEventListener("pointermove", function (e) {
+      if (pointers[e.pointerId]) pointers[e.pointerId] = local(e);
+      if (pinch) {
+        var p = pointerList();
+        if (p.length < 2) return;
+        var dx = p[0].x - p[1].x, dy = p[0].y - p[1].y;
+        var d = Math.hypot(dx, dy) || 1;
+        var midX = (p[0].x + p[1].x) / 2, midY = (p[0].y + p[1].y) / 2;
+        var ratio = d / pinch.dist;
+        if (ratio > 1.5) { zoomBy(1, midX, midY); startPinch(); }
+        else if (ratio < 0.667) { zoomBy(-1, midX, midY); startPinch(); }
+        return;
+      }
       if (!drag) return;
       cx = drag.cx - (e.clientX - drag.x);
       cy = drag.cy - (e.clientY - drag.y);
       draw();
     });
-    ["pointerup", "pointercancel"].forEach(function (ev) {
-      box.addEventListener(ev, function () { drag = null; box.classList.remove("is-panning"); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+      box.addEventListener(ev, function (e) {
+        delete pointers[e.pointerId];
+        if (Object.keys(pointers).length < 2) pinch = null;
+        if (!Object.keys(pointers).length) { drag = null; box.classList.remove("is-panning"); }
+      });
     });
     box.addEventListener("wheel", function (e) {
       e.preventDefault();
-      zoomBy(e.deltaY < 0 ? 1 : -1);
+      var l = local(e);
+      zoomBy(e.deltaY < 0 ? 1 : -1, l.x, l.y);
     }, { passive: false });
     box.tabIndex = 0;
     box.addEventListener("keydown", function (e) {
@@ -187,12 +246,27 @@
       if (e.key === "+" || e.key === "=") { zoomBy(1); }
       if (e.key === "-") { zoomBy(-1); }
     });
+    box.addEventListener("dblclick", function (e) {
+      if (e.target.closest(".hgmap-pin,.hgmap-btn,.hgmap-attr")) return;
+      var l = local(e);
+      zoomBy(1, l.x, l.y);
+    });
     window.addEventListener("resize", draw);
 
     fit();
     return {
       fit: fit,
       redraw: draw,
+      // 小屋を中心に寄せる。小屋ページから「行程に追加」で来たとき、その山がどこかを見せる
+      focus: function (id, zoom) {
+        var hut = huts.filter(function (x) { return x.id === id; })[0];
+        if (!hut) return;
+        measure();
+        z = Math.max(src.min, Math.min(src.max, zoom || Math.max(z, 13)));
+        cx = lonToX(hut.location.lon, z);
+        cy = latToY(hut.location.lat, z);
+        draw();
+      },
       setChosen: function (ids) {
         chosen = {};
         (ids || []).forEach(function (id) { chosen[id] = true; });

@@ -111,8 +111,10 @@
   font:inherit;background:none;border:0;padding:.4rem;margin:-.4rem;cursor:pointer}
 .hgmap-dot{width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--moss);
   box-shadow:0 1px 3px rgba(23,37,31,.35);transition:transform 150ms ease-out}
-.hgmap-label{font-size:.75rem;background:rgba(255,255,255,.9);border:1px solid var(--line);
-  border-radius:3px;padding:0 .25rem;white-space:nowrap;color:var(--ink)}
+.hgmap-label{font-size:.75rem;background:rgba(255,255,255,.92);border:1px solid var(--line);
+  border-radius:3px;padding:0 .25rem;white-space:nowrap;color:var(--ink);max-width:9rem;
+  overflow:hidden;text-overflow:ellipsis}
+.hgmap-label.is-crowded{display:none}
 .hgmap-pin:hover .hgmap-dot,.hgmap-pin:focus-visible .hgmap-dot{transform:scale(1.25)}
 .hgmap-pin:focus-visible{outline:2px solid var(--moss-deep);outline-offset:0;border-radius:4px}
 .hgmap-pin.is-chosen .hgmap-dot{background:var(--moss);border-color:#fff;
@@ -130,8 +132,7 @@
 @media (max-width:480px){
   .plan-view,.hgmap{min-height:52vh}
   .plan-card{flex-basis:15.5rem}
-  .hgmap-label{display:none}
-  .hgmap-pin.is-chosen .hgmap-label{display:inline}
+  .hgmap-label{max-width:7rem}
   .plan-bar{gap:.4rem .7rem}
   .plan-field{font-size:.72rem}
 }

@@ -477,3 +477,85 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('jonen_cho', 5,'chougatake_hutte',NULL,NULL,1,NULL,NULL,NULL),
 ('jonen_cho', 6,'tokusawaen',NULL,  NULL,1,NULL,NULL,NULL),
 ('jonen_cho', 7,NULL,'kamikochi',   NULL,0,NULL,NULL,NULL);
+
+-- ---------------------------------------------------------------
+-- 南アルプス（北岳周辺）。2026-09-23 に各公式ページで確認。
+-- 出典: 南アルプス市観光協会（各小屋ページ）/ 白根御池小屋公式 / 山梨交通（広河原山荘）/ 南アルプス市（市営山小屋の予約）
+-- confidence='reported': 公式ページの記載だが人の目での再確認がまだ。再確認したら 'verified' に上げる。
+-- 記載の無い項目は NULL のまま（未確認であって「無い」ではない）。
+-- ---------------------------------------------------------------
+INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES
+  ('minami_alps', '南アルプス', 'Southern Japan Alps');
+
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
+  ('kitadake', 'minami_alps', '北岳・白峰三山', 'Kitadake and the Shirane Three');
+
+INSERT INTO operators (id, name_ja, website) VALUES
+  ('minamialps_city', '南アルプス市営（芦安ファンクラブ・南アルプスゲートウェイ）', 'https://www.minamialps-yoyaku.jp/'),
+  ('yamanashi_kotsu', '山梨交通', 'https://ykbus.jp/hirogawarasansou/');
+
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
+('hirogawara_sanso','広河原山荘','Hirogawara Sanso','lodge','minami_alps','kitadake','yamanashi_kotsu',
+ 35.658889,138.232222,NULL,NULL,'https://ykbus.jp/hirogawarasansou/','https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('shirane_oike','白根御池小屋','Shirane-Oike Goya','mountain_hut','minami_alps','kitadake','minamialps_city',
+ 35.669722,138.245556,2236,'official','https://shiraneoike.ashiyasu.com/','https://shiraneoike.ashiyasu.com/','2026-09-23','reported'),
+('kitadake_kata','北岳肩の小屋','Kitadake Kata-no-Koya','mountain_hut','minami_alps','kitadake',NULL,
+ 35.674722,138.236944,3000,'official','https://minami-alpskankou.jp/?page_id=5666','https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_sanso','北岳山荘','Kitadake Sanso','mountain_hut','minami_alps','kitadake','minamialps_city',
+ 35.665000,138.239722,2900,'official','https://minami-alpskankou.jp/?page_id=5611','https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
+
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES
+('hirogawara_sanso',2026,'open','2026-06-26','2026-11-03',NULL,1,'https://www.minamialps-yoyaku.jp/','090-2677-0828',
+ '4月1日 10:00から（南ぷすリザーブ）。個室は山梨交通 055-222-1300',
+ 'From 1 April, 10:00 JST on Minapusu Reserve; private rooms by phone to Yamanashi Kotsu (055-222-1300).',
+ 101,NULL,'https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('shirane_oike',2026,'open','2026-06-15',NULL,'令和8年度は6月15日より営業',1,'https://www.minamialps-yoyaku.jp/','090-3201-7683',
+ '4月1日 10:00から（南ぷすリザーブ）','From 1 April, 10:00 JST on Minapusu Reserve.',
+ NULL,NULL,'https://shiraneoike.ashiyasu.com/','2026-09-23','reported'),
+('kitadake_kata',2026,'open','2026-06-15','2026-11-05','公式の表記は「6月中旬〜11月上旬」。日付は目安',1,NULL,'090-4606-0068',
+ NULL,NULL,80,50,'https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_sanso',2026,'open','2026-06-15','2026-11-05','公式の表記は「6月中旬〜11月初旬」。日付は目安',1,'https://www.minamialps-yoyaku.jp/','090-4529-4947',
+ '4月1日 10:00から（南ぷすリザーブ）','From 1 April, 10:00 JST on Minapusu Reserve.',
+ 80,NULL,'https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
+
+INSERT INTO hut_rates (hut_id,year,plan_type,price_jpy,is_from_price,source_url,last_verified_at,confidence) VALUES
+('hirogawara_sanso',2026,'no_meal',9000,1,'https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('hirogawara_sanso',2026,'two_meals',12900,1,'https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('hirogawara_sanso',2026,'tent',900,0,'https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('shirane_oike',2026,'two_meals',11900,0,'https://shiraneoike.ashiyasu.com/stay/','2026-09-23','reported'),
+('shirane_oike',2026,'no_meal',8000,0,'https://shiraneoike.ashiyasu.com/stay/','2026-09-23','reported'),
+('shirane_oike',2026,'tent',1000,0,'https://shiraneoike.ashiyasu.com/stay/','2026-09-23','reported'),
+('kitadake_kata',2026,'two_meals',13000,0,'https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_kata',2026,'no_meal',9000,0,'https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_kata',2026,'tent',2000,0,'https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_sanso',2026,'no_meal',9000,0,'https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported'),
+('kitadake_sanso',2026,'tent',1100,0,'https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
+
+-- 設備は公式に書かれているものだけ。書かれていない欄は NULL のまま
+INSERT INTO hut_facilities (hut_id,water_available,shower,drying_room,source_url,last_verified_at,confidence) VALUES
+('hirogawara_sanso',NULL,1,1,'https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+('shirane_oike',NULL,NULL,1,'https://shiraneoike.ashiyasu.com/','2026-09-23','reported'),
+('kitadake_kata','free',NULL,NULL,'https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+('kitadake_sanso','free',NULL,NULL,'https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
+
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('hirogawara','広河原','Hirogawara',35.658889,138.232222,NULL,0,
+ 'マイカー規制。芦安・奈良田からの乗合バス／タクシーで入る',
+ 'Closed to private cars: come by bus or share taxi from Ashiyasu or Naradagawa.');
+
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES
+('shirane_oike','hirogawara',NULL),
+('kitadake_kata','hirogawara',NULL),
+('kitadake_sanso','hirogawara',NULL);
+
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('kitadake','北岳（広河原から）','Kitadake from Hirogawara',1,'hard',
+ '広河原から白根御池を経て肩の小屋へ。日本第2位の標高3,193mの北岳を越えて北岳山荘まで',
+ 'Up from Hirogawara past Shirane-Oike to the shoulder hut, over Kitadake — Japan''s second-highest summit at 3,193 m — to Kitadake Sanso.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('kitadake', 1,NULL,'hirogawara',       NULL,0,NULL,NULL,NULL),
+('kitadake', 2,'shirane_oike',NULL,     NULL,1,NULL,NULL,NULL),
+('kitadake', 3,'kitadake_kata',NULL,    NULL,1,NULL,NULL,NULL),
+('kitadake', 4,NULL,NULL,               NULL,0,'北岳','Kitadake',3193),
+('kitadake', 5,'kitadake_sanso',NULL,   NULL,1,NULL,NULL,NULL);

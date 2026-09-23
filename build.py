@@ -309,7 +309,9 @@ def build_model(lang):
         tier_h = fs + 3
         labels = []
         for p in pts:
-            if p["kind"] == "hut" and p["est"]:
+            # 標高が未確認なのは小屋とは限らない（登山口・通過点もある）。
+            # ここで kind を絞ると、その行を数値として書式化しようとして落ちる
+            if p["elev"] is None or p["est"]:
                 txt = f"{p['short']} {T.unknown}"
             elif compact:
                 txt = p["short"]

@@ -16,6 +16,8 @@ const mapJs = fs.readFileSync(path.join(DIST, "static/map.js"), "utf8");
 const planJs = fs.readFileSync(path.join(DIST, "static/plan.js"), "utf8");
 const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
 
+const HUT_COUNT = JSON.parse(hutsJson).length;   // データが増えても落ちないよう実数から取る
+
 const results = [];
 const ok = (label, cond, extra) => {
   results.push({ label, pass: !!cond, extra });
@@ -67,8 +69,8 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   // ---- 1. 素の状態で組み立てる -------------------------------------
   const a = boot("https://hutsgo.com/plan/");
   await wait(200);
-  ok("選択盤が出る", a.d.querySelectorAll(".ridge-hut").length === 21,
-     `${a.d.querySelectorAll(".ridge-hut").length}軒`);
+  ok("選択盤が出る", a.d.querySelectorAll(".ridge-hut").length === HUT_COUNT,
+     `${a.d.querySelectorAll(".ridge-hut").length}/${HUT_COUNT}軒`);
 
   const start = a.d.getElementById("plan-start");
   start.value = "2026-07-20";
@@ -134,7 +136,7 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   await wait(200);
   ok("既定は地図", !e.d.getElementById("plan-map-view").hidden);
   const pinCount = e.d.querySelectorAll(".hgmap-pin").length;
-  ok("地図に小屋が出る", pinCount > 0 && pinCount <= 21, `${pinCount}`);
+  ok("地図に小屋が出る", pinCount > 0 && pinCount <= HUT_COUNT, `${pinCount}/${HUT_COUNT}`);
   const tile = e.d.querySelector(".hgmap-tile");
   ok("タイルは地理院のURL", !!tile && /cyberjapandata[.]gsi[.]go[.]jp\/xyz\/std\/\d+\/\d+\/\d+[.]png$/.test(tile.src),
      tile && tile.src);
@@ -158,7 +160,64 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
      !e.d.getElementById("plan-ridge-view").hidden && e.d.getElementById("plan-map-view").hidden);
   ok("地図以外では範囲の小屋を隠す", e.d.getElementById("plan-nearby").hidden);
 
-    report([...a.errors, ...b.errors, ...c.errors, ...e.errors]);
+  // ---- 6. 地図の操作: ピンチ・ホイール・ラベル -------------------------
+  const f = boot("https://hutsgo.com/plan/");
+  await wait(200);
+  const map = f.d.getElementById("plan-map");
+  const zoomOf = (doc) => {
+    const t = doc.querySelector(".hgmap-tile");
+    const m = t && /\/xyz\/std\/(\d+)\//.exec(t.src);
+    return m ? Number(m[1]) : null;
+  };
+  const pointer = (type, id, x, y) => {
+    const ev = new f.w.Event(type, { bubbles: true, cancelable: true });
+    Object.assign(ev, { pointerId: id, clientX: x, clientY: y });
+    map.dispatchEvent(ev);
+  };
+  const z0 = zoomOf(f.d);
+  ok("最初の縮尺が全体に合っている", z0 !== null && z0 >= 5 && z0 <= 16, `z=${z0}`);
+
+  // 2本指を1.6倍に広げる → 1段寄る
+  pointer("pointerdown", 1, 100, 200);
+  pointer("pointerdown", 2, 200, 200);
+  pointer("pointermove", 2, 260, 200);
+  const zIn = zoomOf(f.d);
+  ok("ピンチで拡大する", zIn === z0 + 1, `${z0} → ${zIn}`);
+
+  // 指を狭める → 1段戻る
+  pointer("pointermove", 2, 150, 200);
+  const zOut = zoomOf(f.d);
+  ok("ピンチで縮小する", zOut === zIn - 1, `${zIn} → ${zOut}`);
+
+  // 大きく広げれば2段動く（ゆっくり広げたときに1段ずつ動くのと同じ計算）
+  pointer("pointermove", 2, 400, 200);
+  ok("大きく広げると段数も増える", zoomOf(f.d) >= zOut + 1, `${zOut} → ${zoomOf(f.d)}`);
+  while (zoomOf(f.d) > z0) f.d.querySelectorAll(".hgmap-btn")[1].click();
+  pointer("pointerup", 1, 150, 200);
+  pointer("pointerup", 2, 160, 200);
+
+  // 指を離した後にドラッグしても飛ばない
+  const zSteady = zoomOf(f.d);
+  pointer("pointerdown", 3, 100, 100);
+  pointer("pointermove", 3, 120, 130);
+  pointer("pointerup", 3, 120, 130);
+  ok("ピンチの後のドラッグで縮尺が変わらない", zoomOf(f.d) === zSteady, `${zoomOf(f.d)}`);
+
+  // 全体表示では名前が詰まって隠れ、寄せると出る
+  const labelsAt = (doc) => doc.querySelectorAll(".hgmap-label:not(.is-crowded)").length;
+  const wide = labelsAt(f.d);
+  ok("全体表示では名前を隠す", wide === 0, `${wide}`);
+  ok("全体表示に戻せる", (f.d.querySelectorAll(".hgmap-btn")[2].click(), zoomOf(f.d) === zSteady),
+     `${zoomOf(f.d)}`);
+
+  // 小屋ページから来たら、その山に寄って名前が見える
+  const g = boot("https://hutsgo.com/plan/#add=enzanso");
+  await wait(200);
+  ok("小屋ページから来ると寄る", zoomOf(g.d) >= 13, `z=${zoomOf(g.d)}`);
+  ok("寄ると名前が出る", labelsAt(g.d) > 0, `${labelsAt(g.d)}`);
+  ok("その小屋のピンが選択済み", !!g.d.querySelector(".hgmap-pin.is-chosen"));
+
+    report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors]);
   } catch (e) {
     results.push({ label: "テスト実行中に落ちた: " + e.message, pass: false });
     report([]);
