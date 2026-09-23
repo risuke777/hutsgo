@@ -7,56 +7,58 @@
 <script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};</script>
 {% endblock %}
 {% block body %}
-<section class="page-head">
-  <h1>{{ T.plan_h1 }}</h1>
-  <p class="lede">{{ T.plan_lede }}</p>
-  <p class="quiet">{{ T.plan_privacy }}</p>
-</section>
+<h1 class="plan-h1">{{ T.plan_h1 }}</h1>
 
 <noscript>
   <p class="note">{{ T.plan_noscript }} <a href="{{ LB }}/huts/">{{ T.nav_filter }}</a></p>
 </noscript>
 
 <div id="plan" hidden>
-  <div class="plan-top">
-    <label class="plan-start">{{ T.plan_start_date }}
+  <div class="plan-bar">
+    <label class="plan-field">{{ T.plan_start_date }}
       <input type="date" id="plan-start" min="2026-01-01" max="2026-12-31">
     </label>
-    <label class="plan-nights">{{ T.plan_nights }}
+    <label class="plan-field">{{ T.plan_nights }}
       <select id="plan-nights">
-        {% for n in [1, 2, 3, 4, 5] %}<option value="{{ n }}"{{ ' selected' if n == 2 }}>{{ T.nights.format(n=n, m=n + 1) }}</option>{% endfor %}
+        {% for n in [1, 2, 3, 4, 5] %}<option value="{{ n }}"{{ ' selected' if n == 2 }}>{{ T.plan_nights_n.format(n=n) }}</option>{% endfor %}
       </select>
     </label>
-    <button type="button" class="btn" id="plan-share">{{ T.plan_share }}</button>
-    <button type="button" class="btn btn-ghost" id="plan-clear">{{ T.plan_clear }}</button>
-    <output id="plan-msg" aria-live="polite"></output>
+    <div class="plan-bar-end">
+      <button type="button" class="btn btn-ghost plan-share" id="plan-share">{{ T.plan_share }}</button>
+      <details class="plan-help">
+        <summary title="{{ T.plan_help_aria }}"><span class="visually-hidden">{{ T.plan_help_aria }}</span><span aria-hidden="true">?</span></summary>
+        <div class="plan-help-body">
+          <p>{{ T.plan_privacy }}</p>
+          <p><button type="button" class="linklike" id="plan-clear">{{ T.plan_clear }}</button></p>
+        </div>
+      </details>
+    </div>
   </div>
 
   <section class="plan-picker" aria-labelledby="picker-h">
-    <h2 id="picker-h">{{ T.plan_picker_h }}</h2>
-    <p class="quiet">{{ T.plan_picker_note }}</p>
-    <div class="plan-tabs" role="tablist">
-      <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
-      <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
-      <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
+    <h2 id="picker-h" class="visually-hidden">{{ T.plan_picker_h }}</h2>
+    <div class="plan-mapwrap">
+      <div class="plan-view" id="plan-map-view"><div id="plan-map"></div></div>
+      <div class="plan-view" id="plan-ridge-view" hidden><div class="plan-ridge" id="plan-ridge"></div></div>
+      <div class="plan-view" id="plan-list-view" hidden><div id="plan-list"></div></div>
+      <div class="plan-tabs" role="tablist" aria-label="{{ T.plan_picker_h }}">
+        <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
+      </div>
     </div>
-    <div class="plan-view" id="plan-map-view">
-      <div id="plan-map"></div>
-      <p class="quiet">{{ T.plan_map_note }}</p>
-    </div>
-    <div class="plan-view" id="plan-ridge-view" hidden>
-      <div class="plan-ridge" id="plan-ridge"></div>
-    </div>
-    <div class="plan-view" id="plan-list-view" hidden>
-      <div id="plan-list"></div>
+    <div class="plan-nearby" id="plan-nearby" hidden>
+      <h3>{{ T.plan_nearby_h }}</h3>
+      <div class="plan-nearby-row" id="plan-nearby-row"></div>
     </div>
   </section>
 
   <section class="plan-board" aria-labelledby="board-h">
     <h2 id="board-h">{{ T.plan_board_h }}</h2>
-    <p class="quiet">{{ T.plan_board_note }}</p>
     <div id="plan-days"></div>
   </section>
+
+  <output id="plan-msg" class="plan-toast" aria-live="polite" hidden></output>
 </div>
 {% endblock %}
 {% block scripts %}<script src="{{ BASE }}/static/map.js" defer></script>

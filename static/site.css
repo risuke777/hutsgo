@@ -1,6 +1,6 @@
 :root{
   --paper:#F4F6F3; --card:#FFFFFF; --ink:#17251F; --ink-soft:#3B4A43;
-  --granite:#6F7B74; --line:#D5DBD6; --line-strong:#B8C2BB;
+  --granite:#68736C; --line:#D5DBD6; --line-strong:#B8C2BB;
   --moss:#2E6B4A; --moss-deep:#22513A; --moss-tint:#E3EEE7;
   --yellow:#E4B63A; --yellow-tint:#FBF3DC;
   --sky:#4A7DB0; --ochre:#C4842D; --rust:#B0452F;
@@ -22,7 +22,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{ou
 /* type scale: serif heads, wide gap between h1 and h2 */
 h1,h2,h3{font-family:var(--serif);font-weight:800;line-height:1.25;letter-spacing:.01em;margin:0}
 h1{font-size:clamp(1.9rem,6vw,2.9rem);letter-spacing:.005em}
-h2{font-size:1.3rem;margin-bottom:.75rem}
+h2{font-size:1.35rem;margin-bottom:.75rem}
 h3{font-size:1.05rem;font-weight:600}
 p{margin:0 0 1rem}
 small{color:var(--granite);font-size:.85em;display:block;margin-top:.15rem}
@@ -215,7 +215,7 @@ a.pm.is-current .p-label{fill:var(--moss-deep);font-weight:700}
 .routes li{padding:.45rem 0;border-bottom:1px dashed var(--line);font-size:.95rem}
 .routes li:last-child{border-bottom:0}
 .flag{display:inline-block;margin-left:.4rem;padding:.05rem .5rem;border-radius:4px;background:var(--yellow-tint);color:#7A5A12;font-size:.78rem;font-weight:500;vertical-align:middle}
-.flag-soft{background:#EEF1EF;color:var(--granite)}
+.flag-soft{background:#EEF1EF;color:var(--ink-soft)}
 .link-list{padding-left:1.1rem;margin:0}
 .review{margin:0 0 1rem;padding:.9rem 1.1rem;background:var(--card);border-left:4px solid var(--yellow);border-radius:0 6px 6px 0}
 .review footer{font-size:.8rem;color:var(--granite)}
@@ -329,8 +329,8 @@ button.btn{font:inherit;cursor:pointer}
 .booking-table th[scope=row] small{display:block;font-weight:400;color:var(--ink-soft)}
 
 /* transit */
-.transit{margin-top:1.25rem;padding-top:1rem;border-top:1px dashed var(--line)}
-.transit:first-of-type{border-top:0;padding-top:0}
+.transit{margin-top:1.5rem;padding-top:1.25rem;border-top:1px dashed var(--line)}
+.transit:first-of-type{border-top:0;margin-top:.75rem;padding-top:.25rem}
 .transit h3{margin:0 0 .2rem;font-size:1.05rem}
 .transit h3 small{display:block;font-weight:400;color:var(--ink-soft);font-size:.82rem}
 .transit-route{margin:.2rem 0 .6rem;color:var(--ink-soft);font-size:.92rem}

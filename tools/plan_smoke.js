@@ -143,9 +143,20 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   e.d.querySelector(".hgmap-pin").click();
   ok("地図から行程に入る", e.d.querySelectorAll(".plan-card").length === 1,
      `${e.d.querySelectorAll(".plan-card").length}`);
+  const toastBox = e.d.getElementById("plan-msg");
+  ok("入れたことを知らせる", !toastBox.hidden && /入れました|added/.test(toastBox.textContent),
+     toastBox.textContent);
+  ok("選んだ小屋のピンが変わる", !!e.d.querySelector(".hgmap-pin.is-chosen"));
+  ok("この範囲の小屋が出る", e.d.querySelectorAll("#plan-nearby-row .plan-chip").length > 0,
+     `${e.d.querySelectorAll("#plan-nearby-row .plan-chip").length}`);
+  [...toastBox.querySelectorAll("button")].forEach((b) => b.click());
+  ok("取り消せる", e.d.querySelectorAll(".plan-card").length === 0,
+     `${e.d.querySelectorAll(".plan-card").length}`);
+
   e.d.querySelector('.plan-tab[data-view="ridge"]').click();
   ok("稜線タブに切り替わる",
      !e.d.getElementById("plan-ridge-view").hidden && e.d.getElementById("plan-map-view").hidden);
+  ok("地図以外では範囲の小屋を隠す", e.d.getElementById("plan-nearby").hidden);
 
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors]);
   } catch (e) {

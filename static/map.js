@@ -34,6 +34,7 @@
     var src = SOURCES[opts.source || "gsi"] || SOURCES.gsi;
     var z = 11, cx = 0, cy = 0;          // 中心（world pixel、現在の z で）
     var w = 0, h = 0;
+    var chosen = {};                     // 行程に入っている小屋。ピンの見た目で分かるようにする
 
     box.classList.add("hgmap");
     box.innerHTML = "";
@@ -123,6 +124,7 @@
       tiles.innerHTML = "";
       tiles.appendChild(frag);
       drawPins(left, top);
+      if (opts.onMove) opts.onMove();
     }
 
     function drawPins(left, top) {
@@ -133,13 +135,14 @@
         if (px < -40 || py < -40 || px > w + 40 || py > h + 40) return;
         var b = document.createElement("button");
         b.type = "button";
-        b.className = "hgmap-pin";
+        b.className = "hgmap-pin" + (chosen[hut.id] ? " is-chosen" : "");
+        b.setAttribute("aria-pressed", chosen[hut.id] ? "true" : "false");
         b.style.left = px + "px";
         b.style.top = py + "px";
         b.dataset.hut = hut.id;
         var name = opts.nameOf ? opts.nameOf(hut) : hut.id;
         b.title = name;
-        b.setAttribute("aria-label", t("add_to_plan") + "：" + name);
+        b.setAttribute("aria-label", (chosen[hut.id] ? t("in_plan") : t("add_to_plan")) + "：" + name);
         var dot = document.createElement("span");
         dot.className = "hgmap-dot";
         var lab = document.createElement("span");
@@ -190,6 +193,11 @@
     return {
       fit: fit,
       redraw: draw,
+      setChosen: function (ids) {
+        chosen = {};
+        (ids || []).forEach(function (id) { chosen[id] = true; });
+        draw();
+      },
       visibleHuts: function () {
         var left = cx - w / 2, top = cy - h / 2;
         return huts.filter(function (hut) {

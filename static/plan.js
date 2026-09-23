@@ -145,13 +145,35 @@
     }
   }
 
+  var toastTimer = null;
+  function toast(text, undo) {
+    var box = $("#plan-msg");
+    box.innerHTML = "";
+    box.appendChild(document.createTextNode(text));
+    if (undo) {
+      var b = el("button", "linklike", t("undo"));
+      b.type = "button";
+      b.addEventListener("click", function () { undo(); box.hidden = true; });
+      box.appendChild(b);
+    }
+    box.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { box.hidden = true; }, 6000);
+  }
+
   function addHut(id) {
     if (!huts[id]) return;
     ensureDays();
     // 空いている最初の日に入れる。全部埋まっていれば最終日の候補として足す
     var target = state.days.findIndex(function (d) { return d.length === 0; });
     if (target < 0) target = state.days.length - 1;
-    if (state.days[target].indexOf(id) < 0) state.days[target].push(id);
+    if (state.days[target].indexOf(id) < 0) {
+      state.days[target].push(id);
+      toast(t("added").replace("{name}", hutName(huts[id])).replace("{n}", target + 1),
+            function () { removeHut(target, id); });
+    } else {
+      toast(t("already_in").replace("{name}", hutName(huts[id])));
+    }
     render();
   }
   function removeHut(day, id) {
@@ -247,6 +269,31 @@
     });
     save();
     writeHash();
+    if (mapApi) mapApi.setChosen(chosenIds());
+  }
+
+  function chosenIds() {
+    return state.days.reduce(function (acc, d) { return acc.concat(d); }, []);
+  }
+
+  // 地図を動かすたび、いま見えている小屋を押せる形で下に出す（YAMAP の「この範囲の山」に相当）
+  function drawNearby() {
+    if (!mapApi) return;
+    var box = $("#plan-nearby-row"), wrap = $("#plan-nearby");
+    var list = mapApi.visibleHuts();
+    wrap.hidden = !list.length;
+    box.innerHTML = "";
+    var chosen = chosenIds();
+    list.slice(0, 12).forEach(function (hut) {
+      var b = el("button", "plan-chip" + (chosen.indexOf(hut.id) >= 0 ? " is-chosen" : ""));
+      b.type = "button";
+      b.dataset.hut = hut.id;
+      b.appendChild(el("span", null, hutName(hut)));
+      var e = hut.location.elevation_m;
+      if (e) b.appendChild(el("span", "plan-chip-elev", e.toLocaleString() + "m"));
+      b.addEventListener("click", function () { addHut(hut.id); });
+      box.appendChild(b);
+    });
   }
 
   // ---- ドラッグ（補助。ボタンで同じことができる）-------------------------
@@ -291,6 +338,7 @@
       Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
       tabs.forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === name)); });
       try { localStorage.setItem(KEY + "-view", name); } catch (e) { /* 保存できなくても動く */ }
+      $("#plan-nearby").hidden = name !== "map";
       if (name === "map") {
         if (!mapApi && window.HutsGoMap) {
           mapApi = window.HutsGoMap.create($("#plan-map"), {
@@ -298,8 +346,10 @@
             source: "gsi",
             strings: T,
             nameOf: hutName,
-            onPick: addHut
+            onPick: addHut,
+            onMove: drawNearby
           });
+          mapApi.setChosen(chosenIds());
         } else if (mapApi) {
           mapApi.redraw();
         }
@@ -328,16 +378,16 @@
     $("#plan-clear").addEventListener("click", function () {
       state = { start: sd.value, nights: Number(nn.value), days: [] };
       render();
-      $("#plan-msg").textContent = t("cleared");
+      toast(t("cleared"));
     });
     $("#plan-share").addEventListener("click", function () {
       writeHash();
       var url = location.href;
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(function () { $("#plan-msg").textContent = t("copied"); },
-                                                function () { $("#plan-msg").textContent = url; });
+        navigator.clipboard.writeText(url).then(function () { toast(t("copied")); },
+                                                function () { toast(url); });
       } else {
-        $("#plan-msg").textContent = url;
+        toast(url);
       }
     });
     drawRidge($("#plan-ridge"));
@@ -352,6 +402,6 @@
   if (!url) return;
   fetch(url).then(function (r) { return r.json(); }).then(start).catch(function () {
     var m = $("#plan-msg");
-    if (m) m.textContent = t("load_failed");
+    if (m) { m.textContent = t("load_failed"); m.hidden = false; }
   });
 })();
