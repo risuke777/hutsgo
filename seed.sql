@@ -559,3 +559,53 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('kitadake', 3,'kitadake_kata',NULL,    NULL,1,NULL,NULL,NULL),
 ('kitadake', 4,NULL,NULL,               NULL,0,'北岳','Kitadake',3193),
 ('kitadake', 5,'kitadake_sanso',NULL,   NULL,1,NULL,NULL,NULL);
+
+-- ---------------------------------------------------------------
+-- 広河原（南アルプス）への交通。2026-09-24 に確認。
+-- 出典: 山梨交通「広河原」ページ / 南アルプスNET（芦安山岳館）のバス時刻表 / 南アルプス市観光協会
+-- 所要時間は出典によって食い違う（「約2時間」と「約4時間」）ため入れない。
+-- ---------------------------------------------------------------
+INSERT INTO transit_operators (id,name_ja,name_en,website,timetable_url,booking_url,source_url,last_verified_at,confidence) VALUES
+('ykbus','山梨交通','Yamanashi Kotsu','https://ykbus.jp/','https://ykbus.jp/route_bus/route_sp_info/hirogawara/',NULL,
+ 'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported');
+
+INSERT INTO transit_lines (id,operator_id,mode,name_ja,name_en,reservation,seat_policy,ic_card,fare_jpy,duration_min,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('kofu_hirogawara','ykbus','bus','甲府駅・芦安〜広河原','Kofu and Ashiyasu to Hirogawara',NULL,'first_come',NULL,2400,NULL,
+ '運行期間中はマイカー規制。夜叉神ゲート〜広河原は利用者協力金が片道300円（中学生以上・現金）。甲府駅〜夜叉神峠登山口は1,760円、芦安〜広河原は1,450円',
+ 'Private cars are banned while the buses run. A 300 yen per-person contribution applies between the Yashajin gate and Hirogawara (cash, junior-high age and up).',
+ 'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('narada_hirogawara','ykbus','bus','奈良田〜広河原','Narada to Hirogawara',NULL,'first_come',NULL,NULL,NULL,
+ '期間と曜日でダイヤが変わる。利用者協力金が片道300円（中学生以上）',
+ 'The timetable changes with the date and the day of the week. The same 300 yen contribution applies.',
+ 'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported');
+
+INSERT INTO transit_stops (id,name_ja,name_en,elevation_m,trailhead_id,is_origin,source_url,last_verified_at,confidence) VALUES
+('kofu_st','甲府駅南口','Kofu Station (south exit)',NULL,NULL,1,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('ryuo','竜王','Ryuo',NULL,NULL,0,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('ashiyasu_p','市営芦安駐車場','Ashiyasu municipal car park',NULL,NULL,1,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('yashajin','夜叉神峠登山口','Yashajin Pass trailhead',NULL,NULL,0,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('hirogawara_bs','広河原','Hirogawara',NULL,'hirogawara',0,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported'),
+('narada','奈良田','Narada',NULL,NULL,1,'https://ykbus.jp/route_bus/route_sp_info/hirogawara/','2026-09-24','reported');
+
+INSERT INTO transit_line_stops (line_id,stop_id,seq) VALUES
+('kofu_hirogawara','kofu_st',1),
+('kofu_hirogawara','ryuo',2),
+('kofu_hirogawara','ashiyasu_p',3),
+('kofu_hirogawara','yashajin',4),
+('kofu_hirogawara','hirogawara_bs',5),
+('narada_hirogawara','narada',1),
+('narada_hirogawara','hirogawara_bs',2);
+
+INSERT INTO transit_periods (id,line_id,year,name_ja,name_en,start_date,end_date,service_days,status,coverage,headway_min,headway_note_ja,headway_note_en,first_up_time,last_up_time,first_down_time,last_down_time,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('kofu_hirogawara_2026','kofu_hirogawara',2026,'2026年シーズン','2026 season','2026-06-26','2026-11-03','daily','running','first_last_only',NULL,
+ '甲府駅発8便・広河原発6便。一部の便は7月18日〜8月23日の毎日と、8月24日〜11月3日の土休日のみ',
+ 'Eight departures from Kofu and six back from Hirogawara; some run only daily 18 Jul–23 Aug and at weekends 24 Aug–3 Nov.',
+ '04:35','14:05','10:00','16:35',
+ '時刻は甲府駅発と広河原発のもの。芦安駐車場・夜叉神峠登山口はこの間に入る',
+ 'The times are from Kofu and from Hirogawara; Ashiyasu and Yashajin fall between them.',
+ 'https://www.minamialps-net.jp/access/bus-1-1','2026-09-24','reported'),
+('narada_hirogawara_2026','narada_hirogawara',2026,'2026年シーズン','2026 season','2026-06-26','2026-11-03','daily','running','first_last_only',NULL,
+ '期間と曜日でダイヤが変わる','The timetable changes with the date and the day of the week.',
+ NULL,NULL,NULL,NULL,
+ '始発・最終は公式の時刻表（PDF）を見ること','First and last departures are in the operator''s timetable PDF.',
+ 'https://minami-alpskankou.jp/?page_id=6542','2026-09-24','reported');
