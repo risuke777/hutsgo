@@ -492,9 +492,10 @@
   // ---- 起動 -----------------------------------------------------------
   function start(data) {
     data.forEach(function (h) { huts[h.id] = h; });
-    // 小屋ページからの #add= は load/render より先に読む。
+    // 小屋ページ・ルートページからの #add= / #addroute= は load/render より先に読む。
     // render() が hash を #p=... に書き換えるので、後から読むと消えている
     var addId = (/[#&]add=([a-z0-9_]+)/.exec(location.hash) || [])[1];
+    var addRoute = (/[#&]addroute=([a-z0-9_]+)/.exec(location.hash) || [])[1];
     load();
     var root = $("#plan");
     root.hidden = false;
@@ -520,6 +521,36 @@
       addHut(addId);
       if (mapApi) mapApi.focus(addId);   // どこの山かを地図で見せる
     }
+    if (addRoute) addTrail(addRoute);
+  }
+
+  // ルートページの「このルートを行程に入れる」。泊まれる小屋を行程順に、1泊ずつ置く
+  function addTrail(trailId) {
+    fetch((meta("hutsgo-data") || "").replace(/huts\.json$/, "trails.json"))
+      .then(function (r) { return r.json(); })
+      .then(function (trails) {
+        var tr = trails.filter(function (x) { return x.id === trailId; })[0];
+        if (!tr) return;
+        var ids = tr.stops.filter(function (st) { return st.hut_id && st.overnight_candidate; })
+                          .map(function (st) { return st.hut_id; })
+                          .filter(function (id) { return huts[id]; });
+        if (!ids.length) return;
+        // ルート上の小屋は「その日の候補」。泊数はルートの目安に合わせ、行程順に振り分ける。
+        // 1軒1泊にすると、実際には通過するだけの小屋まで泊まることになってしまう
+        var nights = Math.max(1, Math.min(5, tr.nights_typical || Math.min(3, ids.length)));
+        var per = Math.ceil(ids.length / nights);
+        state.days = [];
+        for (var i = 0; i < nights; i++) state.days.push(ids.slice(i * per, (i + 1) * per));
+        state.days = state.days.filter(function (d, i) { return d.length || i === 0; });
+        state.nights = state.days.length;
+        var nn = $("#plan-nights");
+        if (nn) nn.value = String(state.days.length);
+        render();
+        var name = LANG === "en" ? (tr.name.en || tr.name.ja) : (tr.name.ja || tr.name.en);
+        toast(t("route_added").replace("{name}", name).replace("{n}", ids.length));
+        if (mapApi) mapApi.focus(ids[0], 12);
+      })
+      .catch(function () { toast(t("load_failed")); });
   }
 
   var url = meta("hutsgo-data");

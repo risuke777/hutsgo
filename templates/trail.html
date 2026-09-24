@@ -5,6 +5,7 @@
 {% block title %}{{ T.trail_title.format(name=t.name) }}{% endblock %}
 {% block desc %}{{ T.trail_desc.format(name=t.name, n=t.hut_count) }}{{ t.summary_t }}{% endblock %}
 {% block head %}
+<link rel="stylesheet" href="{{ BASE }}/static/plan.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ItemList","name":"{{ t.name }}","itemListOrder":"https://schema.org/ItemListOrderAscending",
  "itemListElement":[{% for s in t.stops if s.hut %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/huts/{{ s.hut.id }}/","name":"{{ s.hut.name }}"}{{ "," if not loop.last }}{% endfor %}]}
@@ -23,6 +24,19 @@
       <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>
     </dl>
   </header>
+
+  <div class="trail-actions">
+    <div class="viewswitch" role="tablist" aria-label="{{ T.trail_view_switch }}">
+      <button type="button" class="viewswitch-btn" role="tab" data-trailview="profile" aria-selected="true">{{ T.trail_view_profile }}</button>
+      <button type="button" class="viewswitch-btn" role="tab" data-trailview="map" aria-selected="false">{{ T.trail_view_map }}</button>
+    </div>
+    <a class="btn btn-primary" href="{{ LB }}/plan/#addroute={{ t.id }}" data-track="plan_add" data-trail="{{ t.id }}">{{ T.trail_add_plan }}</a>
+  </div>
+
+  <div class="trail-map" id="trail-map" hidden
+       data-huts="{{ t.stops | selectattr('hut') | map(attribute='hut.id') | join(',') }}"
+       data-line="{{ t.map_line }}"></div>
+  <p class="quiet trail-map-note" id="trail-map-note" hidden>{{ T.trail_map_note }}</p>
 
   <figure class="profile" aria-label="{{ T.profile_aria }}">
     {{ t.svg_wide }}
@@ -141,4 +155,9 @@
     <p>{{ T.trail_note }}</p>
   </aside>
 </article>
+{% endblock %}
+{% block scripts %}
+<script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};</script>
+<script src="{{ BASE }}/static/map.js" defer></script>
+<script src="{{ BASE }}/static/trailmap.js" defer></script>
 {% endblock %}

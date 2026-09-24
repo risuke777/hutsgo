@@ -49,6 +49,19 @@
 
   <section class="plan-picker" aria-labelledby="picker-h">
     <h2 id="picker-h" class="visually-hidden">{{ T.plan_picker_h }}</h2>
+    <div class="plan-toolbar">
+      <div class="plan-tabs" role="tablist" aria-label="{{ T.plan_picker_h }}">
+        <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="profile" aria-selected="false">{{ T.plan_view_profile }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
+        <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
+      </div>
+      <div class="plan-search">
+        <input type="search" id="plan-search" placeholder="{{ T.plan_search_ph }}" aria-label="{{ T.plan_search_ph }}"
+               autocomplete="off" enterkeyhint="search">
+        <div id="plan-search-results" class="plan-search-results" hidden></div>
+      </div>
+    </div>
     <div class="plan-mapwrap">
       <div class="plan-view" id="plan-map-view"><div id="plan-map"></div></div>
       <div class="plan-view" id="plan-profile-view" hidden>
@@ -67,17 +80,6 @@
       </div>
       <div class="plan-view" id="plan-ridge-view" hidden><div class="plan-ridge" id="plan-ridge"></div></div>
       <div class="plan-view" id="plan-list-view" hidden><div id="plan-list"></div></div>
-      <div class="plan-tabs" role="tablist" aria-label="{{ T.plan_picker_h }}">
-        <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
-        <button type="button" class="plan-tab" role="tab" data-view="profile" aria-selected="false">{{ T.plan_view_profile }}</button>
-        <button type="button" class="plan-tab" role="tab" data-view="ridge" aria-selected="false">{{ T.plan_view_ridge }}</button>
-        <button type="button" class="plan-tab" role="tab" data-view="list" aria-selected="false">{{ T.plan_view_list }}</button>
-      </div>
-      <div class="plan-search">
-        <input type="search" id="plan-search" placeholder="{{ T.plan_search_ph }}" aria-label="{{ T.plan_search_ph }}"
-               autocomplete="off" enterkeyhint="search">
-        <div id="plan-search-results" class="plan-search-results" hidden></div>
-      </div>
     </div>
     <div class="plan-nearby" id="plan-nearby" hidden>
       <h3>{{ T.plan_nearby_h }}</h3>

@@ -459,6 +459,11 @@ def build_model(lang):
         t["svg_wide"] = profile_svg(t, t["points"], 720, 300)
         t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)
         t["svg_mini"] = profile_mini_svg(t, t["points"])
+        # 地図に引く線。小屋・登山口の座標を行程順に結んだだけのもので、登山道そのものではない
+        t["map_line"] = ";".join(
+            f"{p['lat']},{p['lon']}" for p in
+            [s["hut"] or s["trailhead"] for s in t["stops"] if s["hut"] or s["trailhead"]]
+            if p and p.get("lat") and p.get("lon"))
         trails.append(t)
 
     client = [{
@@ -654,7 +659,8 @@ for lang, prefix in LOCALES:
     for h in huts_l:
         write(f"{d}huts/{h['id']}/index.html", "hut.html", h=h, page=f"/huts/{h['id']}/", **g)
     for t in trails_l:
-        write(f"{d}trails/{t['id']}/index.html", "trail.html", t=t, page=f"/trails/{t['id']}/", **g)
+        write(f"{d}trails/{t['id']}/index.html", "trail.html", t=t, page=f"/trails/{t['id']}/",
+              plan_strings=plan_strings, **g)
 
     if arts:
         hut_names = {h["id"]: h["name"] for h in huts_l}

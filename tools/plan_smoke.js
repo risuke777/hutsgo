@@ -16,6 +16,9 @@ const qrJs = fs.readFileSync(path.join(DIST, "static/qrcode.js"), "utf8");
 const mapJs = fs.readFileSync(path.join(DIST, "static/map.js"), "utf8");
 const planJs = fs.readFileSync(path.join(DIST, "static/plan.js"), "utf8");
 const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
+const trailsJson = fs.readFileSync(path.join(DIST, "data/trails.json"), "utf8");
+const trailHtml = fs.readFileSync(path.join(DIST, "trails/omote_ginza/index.html"), "utf8");
+const trailMapJs = fs.readFileSync(path.join(DIST, "static/trailmap.js"), "utf8");
 
 const HUT_COUNT = JSON.parse(hutsJson).length;   // データが増えても落ちないよう実数から取る
 
@@ -35,7 +38,9 @@ function boot(url) {
     url,
     virtualConsole: vc,
     beforeParse(w) {
-      w.fetch = () => Promise.resolve({ json: () => Promise.resolve(JSON.parse(hutsJson)) });
+      w.fetch = (u) => Promise.resolve({
+        json: () => Promise.resolve(JSON.parse(String(u).includes("trails.json") ? trailsJson : hutsJson)),
+      });
       w.navigator.clipboard = { writeText: () => Promise.resolve() };
       const store = {};
       Object.defineProperty(w, "localStorage", {
@@ -48,6 +53,26 @@ function boot(url) {
     },
   });
   [qrJs, mapJs, planJs].forEach(function (code) {
+    const sc = dom.window.document.createElement("script");
+    sc.textContent = code;
+    dom.window.document.body.appendChild(sc);
+  });
+  return { dom, w: dom.window, d: dom.window.document, errors };
+}
+
+function bootTrail() {
+  const errors = [];
+  const vc = new VirtualConsole();
+  vc.on("jsdomError", (e) => errors.push("jsdomError: " + e.message));
+  const dom = new JSDOM(trailHtml, {
+    runScripts: "dangerously",
+    url: "https://hutsgo.com/trails/omote_ginza/",
+    virtualConsole: vc,
+    beforeParse(w) {
+      w.fetch = () => Promise.resolve({ json: () => Promise.resolve(JSON.parse(hutsJson)) });
+    },
+  });
+  [mapJs, trailMapJs].forEach(function (code) {
     const sc = dom.window.document.createElement("script");
     sc.textContent = code;
     dom.window.document.body.appendChild(sc);
@@ -275,7 +300,43 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("QRを端末内で作る", !!qr && !h.d.getElementById("plan-qr").hidden);
   ok("QRは外部サービスを呼ばない", !!qr && !/http/.test(qr.outerHTML.replace(/xmlns="[^"]*"/g, "")));
 
-    report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors]);
+  // ---- 8. ルートページ: 断面図 ⇄ 地図、行程に入れる ----------------------
+  const k = bootTrail();
+  await wait(150);
+  ok("ルートページに切り替えがある", k.d.querySelectorAll("[data-trailview]").length === 2);
+  ok("最初は断面図", k.d.getElementById("trail-map").hidden
+     && !k.d.querySelector("figure.profile").hidden);
+  k.d.querySelector('[data-trailview="map"]').click();
+  await wait(150);
+  ok("地図に切り替わる", !k.d.getElementById("trail-map").hidden
+     && k.d.querySelector("figure.profile").hidden);
+  ok("そのルートの小屋だけ出る", k.d.querySelectorAll("#trail-map .hgmap-pin").length === 6,
+     `${k.d.querySelectorAll("#trail-map .hgmap-pin").length}軒`);
+  ok("ルートの線を引く", !!k.d.querySelector("#trail-map .hgmap-route"),
+     (k.d.querySelector("#trail-map .hgmap-route") || {}).getAttribute
+       ? k.d.querySelector("#trail-map .hgmap-route").getAttribute("points").slice(0, 30) : "");
+  ok("線は目安だと書いてある", !k.d.getElementById("trail-map-note").hidden
+     && /登山道ではありません|not the path/.test(k.d.getElementById("trail-map-note").textContent));
+  const planLink = k.d.querySelector('a[href*="addroute="]');
+  ok("行程に入れるボタンがある", !!planLink, planLink && planLink.getAttribute("href"));
+
+  // ルートまるごと行程へ
+  const j = boot("https://hutsgo.com/plan/#addroute=omote_ginza");
+  await wait(250);
+  ok("ルートの目安の泊数に収める", j.d.querySelectorAll(".plan-day").length === 2,
+     `${j.d.querySelectorAll(".plan-day").length}泊 / ${j.d.querySelectorAll(".plan-card").length}軒`);
+  ok("同じ日の候補として横に並ぶ",
+     j.d.querySelectorAll('.plan-day[data-day="0"] .plan-card').length > 1,
+     `${j.d.querySelectorAll('.plan-day[data-day="0"] .plan-card').length}`);
+  ok("入れたことを知らせる", /候補に入れました|as candidates/.test(j.d.getElementById("plan-msg").textContent),
+     j.d.getElementById("plan-msg").textContent);
+
+  // 検索欄とタブが地図に重なっていない（構造として外に出ている）
+  ok("検索欄は地図の外にある", !!j.d.querySelector(".plan-toolbar .plan-search")
+     && !j.d.querySelector(".plan-mapwrap .plan-search"));
+
+    report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
+            ...k.errors, ...j.errors]);
   } catch (e) {
     results.push({ label: "テスト実行中に落ちた: " + e.message, pass: false });
     report([]);

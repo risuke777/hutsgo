@@ -11,6 +11,9 @@
   var SOURCES = {
     gsi: {
       url: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
+      // 地理院の英語版地図。z11 までしか無いので、それより寄ったら通常版に戻す
+      enUrl: "https://cyberjapandata.gsi.go.jp/xyz/english/{z}/{x}/{y}.png",
+      enMax: 11,
       attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
       min: 5, max: 16
     },
@@ -40,6 +43,9 @@
     box.innerHTML = "";
     var tiles = document.createElement("div");
     tiles.className = "hgmap-tiles";
+    var lines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    lines.setAttribute("class", "hgmap-lines");
+    lines.setAttribute("aria-hidden", "true");
     var pins = document.createElement("div");
     pins.className = "hgmap-pins";
     var ui = document.createElement("div");
@@ -48,6 +54,7 @@
     attr.className = "hgmap-attr";
     attr.innerHTML = src.attribution;
     box.appendChild(tiles);
+    box.appendChild(lines);
     box.appendChild(pins);
     box.appendChild(ui);
     box.appendChild(attr);
@@ -127,7 +134,8 @@
           img.alt = "";
           img.loading = "lazy";
           img.decoding = "async";
-          img.src = src.url.replace("{z}", z).replace("{x}", tx).replace("{y}", y);
+          var tpl = (opts.lang === "en" && src.enUrl && z <= (src.enMax || 0)) ? src.enUrl : src.url;
+          img.src = tpl.replace("{z}", z).replace("{x}", tx).replace("{y}", y);
           img.style.left = (x * TILE - left) + "px";
           img.style.top = (y * TILE - top) + "px";
           frag.appendChild(img);
@@ -135,8 +143,28 @@
       }
       tiles.innerHTML = "";
       tiles.appendChild(frag);
+      drawLines(left, top);
       drawPins(left, top);
       if (opts.onMove) opts.onMove();
+    }
+
+    function drawLines(left, top) {
+      lines.innerHTML = "";
+      if (!opts.lines || !opts.lines.length) { lines.style.display = "none"; return; }
+      lines.style.display = "";
+      lines.setAttribute("viewBox", "0 0 " + w + " " + h);
+      lines.setAttribute("width", w);
+      lines.setAttribute("height", h);
+      opts.lines.forEach(function (pts) {
+        var d = pts.filter(function (p) { return p && p.lat; }).map(function (p) {
+          return (lonToX(p.lon, z) - left).toFixed(1) + "," + (latToY(p.lat, z) - top).toFixed(1);
+        }).join(" ");
+        if (!d) return;
+        var el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        el.setAttribute("class", "hgmap-route");
+        el.setAttribute("points", d);
+        lines.appendChild(el);
+      });
     }
 
     function drawPins(left, top) {
