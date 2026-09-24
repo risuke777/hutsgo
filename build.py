@@ -481,6 +481,7 @@ def build_model(lang):
     } for h in huts.values()]
 
     return dict(T=T, huts=huts, trails=trails, areas=areas, photos=photos, client=client,
+                trailheads=trailheads,
                 fmt_time=fmt_time, fmt_date=fmt_date, metres=metres_t, conf_text=conf_text)
 
 
@@ -605,7 +606,12 @@ for p in DIST.iterdir():
 shutil.copytree(ROOT / "static", DIST / "static")
 
 urls = []
+th_urls = []        # 登山口ページ
 article_urls = []   # (url, 相手言語版があるか, 更新日)
+
+
+def th_urls_for(prefix):
+    return [u for u in th_urls if u.startswith(prefix + "/trailheads/") or (not prefix and u.startswith("/trailheads/"))]
 
 
 def write(path, tpl, **ctx):
@@ -651,6 +657,25 @@ for lang, prefix in LOCALES:
     tr = transit_model(lang)
     if tr["gateways"]:
         write(f"{d}access/index.html", "access.html", page="/access/", gateways=tr["gateways"], **g)
+    # 登山口ページ。行程・小屋・交通が集まる場所なので、カードから飛ぶ先として要る
+    by_th = {gw["th"]["id"]: gw for gw in tr["gateways"]}
+    for th in m["trailheads"].values():
+        gw = by_th.get(th["id"])
+        th_huts = []
+        for r in rows("SELECT * FROM hut_trailheads WHERE trailhead_id=?", th["id"]):
+            hut = m["huts"].get(r["hut_id"])
+            if hut:
+                th_huts.append(dict(hut, walk_up=r["walk_time_up_min"]))
+        th_trails = [t for t in m["trails"]
+                     if any(s["trailhead_id"] == th["id"] for s in t["stops"])]
+        if not (gw or th_huts or th_trails):
+            continue
+        ctx = dict(th, lines=(gw or {}).get("lines", []), conn=(gw or {}).get("conn", []),
+                   huts=sorted(th_huts, key=lambda h: h["elevation_m"] or 0),
+                   trails=th_trails)
+        write(f"{d}trailheads/{th['id']}/index.html", "trailhead.html", th=ctx,
+              page=f"/trailheads/{th['id']}/", **g)
+        th_urls.append(f"{prefix}/trailheads/{th['id']}/")
     # データから作るまとめページ。手書き記事と違い seed.sql を直せば直る
     write(f"{d}booking/index.html", "booking.html", huts=huts_l, page="/booking/",
           known=sorted([h for h in huts_l if h["season"] and h["season"].get("opens")],
@@ -679,7 +704,7 @@ for lang, prefix in LOCALES:
             article_urls.append((f"{prefix}{pg}", a["has_alt"], a["date"]))
         article_urls.append((f"{prefix}/articles/", alt_has_articles, TODAY))
 
-    urls += [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/", f"{prefix}/plan/"] \
+    urls += th_urls_for(prefix)         + [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/", f"{prefix}/plan/"] \
         + ([f"{prefix}/access/"] if tr["gateways"] else []) \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
         + [f"{prefix}/trails/{t['id']}/" for t in trails_l]

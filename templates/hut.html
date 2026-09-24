@@ -104,7 +104,7 @@
     {% if h.access %}
     {% for th in h.access %}
     <div class="access">
-      <h3>{{ th.name }} <small>{{ th.elevation_m | metres }}{% if th.walk_up %}{{ T.mid }}{{ T.walk_about.format(v=th.walk_up | fmt_time) }}{% endif %}</small></h3>
+      <h3><a href="{{ LB }}/trailheads/{{ th.id }}/">{{ th.name }}</a> <small>{{ th.elevation_m | metres }}{% if th.walk_up %}{{ T.mid }}{{ T.walk_about.format(v=th.walk_up | fmt_time) }}{% endif %}</small></h3>
       {% if th.parking %}<p>{{ th.parking }}</p>{% endif %}
       <ul class="routes">
       {% for r in th.routes %}

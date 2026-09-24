@@ -317,8 +317,11 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
        ? k.d.querySelector("#trail-map .hgmap-route").getAttribute("points").slice(0, 30) : "");
   ok("線は目安だと書いてある", !k.d.getElementById("trail-map-note").hidden
      && /登山道ではありません|not the path/.test(k.d.getElementById("trail-map-note").textContent));
-  const planLink = k.d.querySelector('a[href*="addroute="]');
-  ok("行程に入れるボタンがある", !!planLink, planLink && planLink.getAttribute("href"));
+  const addBtns = k.d.querySelectorAll('.stop-actions a[href*="/plan/#add="]');
+  ok("小屋カードごとに行程へ入れる", addBtns.length === 6, `${addBtns.length}個`);
+  const thLink = k.d.querySelector('.stop-th a[href*="/trailheads/"]');
+  ok("登山口カードから詳細へ飛べる", !!thLink, thLink && thLink.getAttribute("href"));
+  ok("ルート一括のボタンは置かない", !k.d.querySelector('a[href*="addroute="]'));
 
   // ルートまるごと行程へ
   const j = boot("https://hutsgo.com/plan/#addroute=omote_ginza");

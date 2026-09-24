@@ -30,7 +30,6 @@
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="profile" aria-selected="true">{{ T.trail_view_profile }}</button>
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="map" aria-selected="false">{{ T.trail_view_map }}</button>
     </div>
-    <a class="btn btn-primary" href="{{ LB }}/plan/#addroute={{ t.id }}" data-track="plan_add" data-trail="{{ t.id }}">{{ T.trail_add_plan }}</a>
   </div>
 
   <div class="trail-map" id="trail-map" hidden
@@ -120,10 +119,14 @@
           {% if h.book_url %}<a class="btn btn-primary" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.btn_book }}</a>{% endif %}
           {% if se and se.reservation_phone %}<a class="btn" href="tel:{{ se.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ T.btn_phone.format(n=se.reservation_phone) }}</a>{% endif %}
           <a class="btn btn-ghost" href="{{ LB }}/huts/{{ h.id }}/">{{ T.btn_detail }}</a>
+          <a class="btn btn-ghost" href="{{ LB }}/plan/#add={{ h.id }}" data-track="plan_add" data-hut="{{ h.id }}">{{ T.plan_add_btn }}</a>
         </div>
         {% else %}
-        <h2>{{ s.trailhead.name }}<small>{{ T.trailhead }}</small></h2>
+        <h2><a href="{{ LB }}/trailheads/{{ s.trailhead.id }}/">{{ s.trailhead.name }}</a><small>{{ T.trailhead }}</small></h2>
         {% if s.trailhead.parking %}<p class="stop-line">{{ s.trailhead.parking }}</p>{% endif %}
+        <div class="stop-actions">
+          <a class="btn btn-ghost" href="{{ LB }}/trailheads/{{ s.trailhead.id }}/">{{ T.th_detail_btn }}</a>
+        </div>
         {% endif %}
       </div>
     </li>

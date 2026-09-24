@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_transit.html" import transit_block %}
+{% block title %}{{ T.th_title.format(name=th.name) }}{% endblock %}
+{% block desc %}{{ T.th_desc.format(name=th.name) }}{% endblock %}
+{% block body %}
+<article class="prose">
+  <header class="page-head">
+    <p class="crumb"><a href="{{ LB }}/access/">{{ T.access_h1 }}</a></p>
+    <h1>{{ th.name }}</h1>
+    <dl class="facts-inline">
+      <div><dt>{{ T.l_elevation }}</dt><dd>{{ th.elevation_m | metres }}</dd></div>
+      {% if th.parking_spaces is not none %}<div><dt>{{ T.th_parking }}</dt><dd>{% if th.parking_spaces %}{{ T.th_parking_n.format(n=th.parking_spaces) }}{% else %}{{ T.th_no_parking }}{% endif %}</dd></div>{% endif %}
+      {% if th.trails %}<div><dt>{{ T.th_routes }}</dt><dd>{{ T.th_routes_n.format(n=th.trails | length) }}</dd></div>{% endif %}
+    </dl>
+    {% if th.parking %}<p class="lede">{{ th.parking }}</p>{% endif %}
+  </header>
+
+  {% if th.lines %}
+  <section class="block" aria-labelledby="th-transit">
+    <h2 id="th-transit">{{ T.th_how_h }}</h2>
+    {% for ln in th.lines %}{{ transit_block(ln, T, LANG) }}{% endfor %}
+    {% for c in th.conn %}
+    <p class="quiet">{{ T.access_transfer.format(n=c.min_transfer_min) }}{% if c.note_ja or c.note_en %}{{ T.sep }}{{ c.note_en if LANG == 'en' and c.note_en else c.note_ja }}{% endif %}</p>
+    {% endfor %}
+    <p class="quiet"><a href="{{ LB }}/access/">{{ T.th_all_access }}</a></p>
+  </section>
+  {% else %}
+  <section class="block">
+    <h2>{{ T.th_how_h }}</h2>
+    <p class="empty">{{ T.th_no_transit }}</p>
+  </section>
+  {% endif %}
+
+  {% if th.trails %}
+  <section class="block" aria-labelledby="th-routes">
+    <h2 id="th-routes">{{ T.th_routes_h }}</h2>
+    <ul class="link-list">
+      {% for t in th.trails %}<li><a href="{{ LB }}/trails/{{ t.id }}/">{{ t.name }}</a>
+        <span class="quiet">{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</span></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if th.huts %}
+  <section class="block" aria-labelledby="th-huts">
+    <h2 id="th-huts">{{ T.th_huts_h }}</h2>
+    <ul class="link-list">
+      {% for h in th.huts %}
+      <li><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.name }}</a>
+        <span class="quiet">{{ h.elevation_m | metres }}{% if h.walk_up %}{{ T.mid }}{{ T.walk_about.format(v=h.walk_up | fmt_time) }}{% endif %}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

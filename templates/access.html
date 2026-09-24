@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_transit.html" import transit_block %}
 {% block title %}{{ T.access_title }}{% endblock %}
 {% block desc %}{{ T.access_lede }}{% endblock %}
 {% block body %}
@@ -10,50 +11,10 @@
 
 {% for g in gateways %}
 <section class="block" aria-labelledby="gw-{{ g.th.id }}">
-  <h2 id="gw-{{ g.th.id }}">{{ g.th.name }}</h2>
+  <h2 id="gw-{{ g.th.id }}"><a href="{{ LB }}/trailheads/{{ g.th.id }}/">{{ g.th.name }}</a></h2>
   {% if g.th.parking %}<p class="quiet">{{ g.th.parking }}</p>{% endif %}
 
-  {% for ln in g.lines %}{% set p = ln.periods[0] %}
-  <div class="transit">
-    <h3>{{ ln.name }}<small>{{ ln.operator.name }}</small></h3>
-    <p class="transit-route">{% for s in ln.stops %}{{ s.name }}{% if not loop.last %} <span class="arrow">→</span> {% endif %}{% endfor %}</p>
-
-    <dl class="facts">
-      <div><dt>{{ T.access_period }}</dt><dd>
-        {% if p.status == 'suspended' %}{{ T.access_suspended }}
-        {% elif p.year_round %}{{ T.access_year_round }}
-        {% else %}{{ p.start_date | fmt_ymd }}{{ T.range }}{{ p.end_date | fmt_ymd }}{% endif %}
-        <small class="conf"><span class="dot dot-{{ p.confidence }}" aria-hidden="true"></span>{{ p | conf_text }}</small></dd></div>
-
-      <div><dt>{{ T.access_to_mountain }}</dt><dd>
-        {% if p.first_up_time or p.last_up_time %}{{ T.access_first }} {{ p.first_up_time or T.unknown }}{{ T.mid }}{{ T.access_last }} {{ p.last_up_time or T.unknown }}
-        {% else %}<span class="quiet">{{ T.access_see_timetable }}</span>{% endif %}</dd></div>
-
-      <div><dt>{{ T.access_to_town }}</dt><dd>
-        {% if p.last_down_time %}<b>{{ T.access_last }} {{ p.last_down_time }}</b>{% if p.first_down_time %}<small>{{ T.access_first }} {{ p.first_down_time }}</small>{% endif %}
-        {% else %}<span class="quiet">{{ T.access_see_timetable }}</span>{% endif %}</dd></div>
-
-      {% if ln.duration_min %}<div><dt>{{ T.access_duration }}</dt><dd>{{ ln.duration_min | fmt_time }}</dd></div>{% endif %}
-      {% if ln.fare_jpy %}<div><dt>{{ T.access_fare }}</dt><dd>{{ ln.fare_jpy | yen }}<small>{{ T.access_fare_one_way }}</small></dd></div>{% endif %}
-      {% if p.headway_note or p.headway_min %}<div><dt>{{ T.access_headway }}</dt><dd>{{ p.headway_note or T.access_headway_min.format(n=p.headway_min) }}</dd></div>{% endif %}
-    </dl>
-
-    <ul class="fac-chips" aria-label="{{ T.access_flags }}">
-      {% if ln.reservation == 'required' %}<li>{{ T.access_flag_reserve_required }}</li>
-      {% elif ln.reservation == 'recommended' %}<li>{{ T.access_flag_reserve_pref }}</li>{% endif %}
-      {% if ln.seat_policy == 'first_come' %}<li>{{ T.access_flag_first_come }}</li>{% endif %}
-      {% if ln.ic_card == 0 %}<li>{{ T.access_flag_no_ic }}</li>{% endif %}
-      {% if ln.luggage_fee_jpy %}<li>{{ T.access_flag_luggage }}</li>{% endif %}
-      {% for s in ln.stops if s.is_origin %}{% if loop.first %}<li>{{ T.access_flag_origin.format(name=s.name) }}</li>{% endif %}{% endfor %}
-    </ul>
-
-    {% if ln.note %}<p>{{ ln.note }}</p>{% endif %}
-    {% if p.note %}<p class="quiet">{{ p.note }}</p>{% endif %}
-
-    <p><a class="btn" href="{{ ln.operator.timetable_url or ln.operator.website }}" target="_blank" rel="noopener"
-          data-track="transit_timetable">{{ T.access_timetable_btn }}</a></p>
-  </div>
-  {% endfor %}
+  {% for ln in g.lines %}{{ transit_block(ln, T, LANG) }}{% endfor %}
 
   {% for c in g.conn %}
   <p class="quiet">{{ T.access_transfer.format(n=c.min_transfer_min) }}{% if c.note_ja or c.note_en %}{{ T.sep }}{{ c.note_en if LANG == 'en' and c.note_en else c.note_ja }}{% endif %}</p>
