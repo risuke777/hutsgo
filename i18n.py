@@ -133,6 +133,12 @@ STRINGS = {
     "th_how_h":         ("ここまでの交通", "Getting here"),
     "th_no_transit":    ("この登山口までの交通はまだ調べていません。", "We have not yet worked out the transit to this trailhead."),
     "th_all_access":    ("ほかの登山口も見る", "All trailheads"),
+    # 装備レンタルのゼロ円需要テスト（英語版のみ表示）。提携も手数料も無し。
+    # 需要が読めたら初めて提携先を選ぶ（今は実在する事業者への素のリンク）
+    "gear_link_h":      ("必要な装備が無ければ", "Don't have the gear?"),
+    "gear_link_body":   ("テント・レインウェア・登山靴などをレンタルできます（外部サイト・提携なし）。",
+                         "Tents, rain gear and boots can be rented (external site, no partnership)."),
+    "gear_link_cta":    ("レンタル会社を見る", "See a rental company"),
     "th_routes_h":      ("ここから始まるルート", "Routes from here"),
     "th_huts_h":        ("ここから登れる小屋", "Huts you can reach"),
     "trail_view_switch": ("表示の切り替え", "View"),

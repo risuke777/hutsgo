@@ -19,7 +19,10 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                // 外部記事（Emospot 等）へのクリック。outbound_ で始めない: 小屋への送客率に混ぜないため
                'article_click',
                // 行程ボード。小屋ページからの追加と、ボード上の操作
-               'plan_add', 'plan_share', 'transit_timetable'];
+               'plan_add', 'plan_share', 'transit_timetable',
+               // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。
+               // outbound_ で始めない: 小屋への送客率（主KPI）に混ぜないため
+               'gear_link'];
 $ev = (string)($in['ev'] ?? '');
 if (!in_array($ev, $allowed_ev, true)) { http_response_code(400); echo '{"ok":false}'; exit; }
 if (!hg_rate_limit($cfg, 'track', 120)) { http_response_code(429); echo '{"ok":false}'; exit; }

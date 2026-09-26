@@ -52,5 +52,13 @@
     </ul>
   </section>
   {% endif %}
+
+  {% if LANG == 'en' %}
+  <aside class="note">
+    <h2>{{ T.gear_link_h }}</h2>
+    <p>{{ T.gear_link_body }}</p>
+    <p><a href="https://www.yamarent.com/en" target="_blank" rel="noopener" data-track="gear_link">{{ T.gear_link_cta }}</a></p>
+  </aside>
+  {% endif %}
 </article>
 {% endblock %}

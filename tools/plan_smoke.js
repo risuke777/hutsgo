@@ -20,6 +20,9 @@ const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
 const trailsJson = fs.readFileSync(path.join(DIST, "data/trails.json"), "utf8");
 const trailHtml = fs.readFileSync(path.join(DIST, "trails/omote_ginza/index.html"), "utf8");
 const trailMapJs = fs.readFileSync(path.join(DIST, "static/trailmap.js"), "utf8");
+const planHtmlEn = fs.readFileSync(path.join(DIST, "en/plan/index.html"), "utf8");
+const thHtmlEn = fs.readFileSync(path.join(DIST, "en/trailheads/kamikochi/index.html"), "utf8");
+const thHtmlJa = fs.readFileSync(path.join(DIST, "trailheads/kamikochi/index.html"), "utf8");
 
 const HUT_COUNT = JSON.parse(hutsJson).length;   // データが増えても落ちないよう実数から取る
 
@@ -432,6 +435,16 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   o.d.querySelector('.ridge-hut[data-hut="yarigatake_sanso"]').click();
   await wait(50);
   ok("入山日が無ければまとめてボタンは隠れる", o.d.getElementById("plan-ics-all").hidden);
+
+  // ---- 12. 装備レンタルのゼロ円需要テスト（英語版のみ）--------------------
+  ok("日本語版の行程ボードには装備リンクを出さない", !planHtml.includes("yamarent.com"));
+  ok("英語版の行程ボードには装備リンクを出す", planHtmlEn.includes("yamarent.com")
+     && planHtmlEn.includes('data-track="gear_link"'));
+  ok("日本語版の登山口ページには装備リンクを出さない", !thHtmlJa.includes("yamarent.com"));
+  ok("英語版の登山口ページには装備リンクを出す", thHtmlEn.includes("yamarent.com")
+     && thHtmlEn.includes('data-track="gear_link"'));
+  ok("装備リンクは新しいタブで開き rel=noopener を付ける",
+     /href="https:\/\/www\.yamarent\.com\/en"[^>]*target="_blank"[^>]*rel="noopener"/.test(thHtmlEn));
 
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
