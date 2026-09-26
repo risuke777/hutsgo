@@ -173,3 +173,20 @@
 .plan-qr[hidden]{display:none}
 .plan-qr-img svg{width:min(11rem,45vw);height:auto;display:block}
 .plan-qr p{margin:.4rem 0 0;font-size:.78rem;max-width:11rem}
+
+/* 連絡の準備パネル */
+.plan-contact{margin-top:.6rem;padding-top:.6rem;border-top:1px dashed var(--line);
+  display:flex;flex-direction:column;gap:.6rem}
+.plan-contact[hidden]{display:none}
+.plan-contact-h{margin:0;font-size:.88rem;font-weight:600;color:var(--ink)}
+.plan-contact-stay{margin:0;font-variant-numeric:tabular-nums}
+.contact-script{list-style:decimal;margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.5rem}
+.contact-script li{padding-left:.15rem}
+.contact-ja{margin:0;font-weight:600;font-size:.95rem}
+.contact-gloss{margin:.1rem 0 0;font-size:.8rem;color:var(--ink-soft)}
+.plan-contact-glossary{font-size:.85rem}
+.plan-contact-glossary summary{cursor:pointer;font-weight:600;color:var(--moss-deep)}
+.plan-contact-glossary .rates{margin-top:.5rem;max-width:none;font-size:.82rem}
+.plan-contact-glossary .rates th,.plan-contact-glossary .rates td{padding:.4rem .6rem}
+.plan-contact-ics{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
+.plan-contact-ics .btn{font-size:.85rem}

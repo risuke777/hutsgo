@@ -69,9 +69,18 @@ CREATE TABLE hut_seasons (
   reservation_required INTEGER,        -- 0/1/NULL
   reservation_url TEXT,
   reservation_phone TEXT,
-  booking_opens_at TEXT,               -- 予約解禁日時。競争の激しい小屋で価値が高い
+  booking_opens_at TEXT,               -- 予約解禁日時（自由文）。競争の激しい小屋で価値が高い
   -- 英語版の中核。訪日ハイカーは電話が使えず、受付開始を逃すと泊まれない
   booking_opens_at_en TEXT,
+  -- 上の自由文を、カレンダーに入れられる日時として持てる範囲だけ構造化する。
+  -- 「1ヶ月前」のような複合条件（期間限定・電話とWebで別条件 等）は無理に当てはめず unknown のままにする。
+  -- unknown でもページの表示（自由文）は変わらない。増えるのは「カレンダーに追加」ボタンの有無だけ。
+  booking_opens_rule TEXT DEFAULT 'unknown'
+                   CHECK (booking_opens_rule IN ('fixed_date','months_before_stay','unknown')),
+  booking_opens_month INTEGER,         -- fixed_date: 月（1-12）
+  booking_opens_day   INTEGER,         -- fixed_date: 日
+  booking_opens_offset_months INTEGER, -- months_before_stay: 宿泊日の何ヶ月前か
+  booking_opens_time  TEXT,            -- 'HH:MM'（JST）。両ルールで使う。時刻が不明なら rule も unknown にする
   capacity_beds  INTEGER,
   capacity_tents INTEGER,
   source_url     TEXT,

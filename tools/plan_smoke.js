@@ -14,6 +14,7 @@ const DIST = path.join(__dirname, "..", "dist");
 const hutsJson = fs.readFileSync(path.join(DIST, "data/huts.json"), "utf8");
 const qrJs = fs.readFileSync(path.join(DIST, "static/qrcode.js"), "utf8");
 const mapJs = fs.readFileSync(path.join(DIST, "static/map.js"), "utf8");
+const contactJs = fs.readFileSync(path.join(DIST, "static/contact.js"), "utf8");
 const planJs = fs.readFileSync(path.join(DIST, "static/plan.js"), "utf8");
 const planHtml = fs.readFileSync(path.join(DIST, "plan/index.html"), "utf8");
 const trailsJson = fs.readFileSync(path.join(DIST, "data/trails.json"), "utf8");
@@ -50,9 +51,18 @@ function boot(url) {
           removeItem: (k) => { delete store[k]; },
         },
       });
+      // .ics ダウンロードは端末内で完結する機能なので、テストでは Blob/URL をスタブして中身だけ検査する
+      w.downloadedIcs = null;
+      w.Blob = function (parts) { return { text: parts.join("") }; };
+      w.URL.createObjectURL = (blob) => { w.downloadedIcs = blob.text; return "blob:stub"; };
+      w.URL.revokeObjectURL = () => {};
+      // <a download> の実ダウンロードは jsdom が実装していない（クリックで「別ドキュメントへの
+      // ナビゲーション」を試みてエラーになる）。中身は createObjectURL の時点で既に取れているので、
+      // クリックそのものは無視してよい（本番のブラウザでは何もしない安全なスタブ）。
+      w.HTMLAnchorElement.prototype.click = function () {};
     },
   });
-  [qrJs, mapJs, planJs].forEach(function (code) {
+  [qrJs, mapJs, contactJs, planJs].forEach(function (code) {
     const sc = dom.window.document.createElement("script");
     sc.textContent = code;
     dom.window.document.body.appendChild(sc);
@@ -338,8 +348,93 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("検索欄は地図の外にある", !!j.d.querySelector(".plan-toolbar .plan-search")
      && !j.d.querySelector(".plan-mapwrap .plan-search"));
 
+  // ---- 9. 人数欄 ---------------------------------------------------------
+  const l = boot("https://hutsgo.com/plan/");
+  await wait(200);
+  const peopleInput = l.d.getElementById("plan-people");
+  ok("人数欄がある", !!peopleInput && peopleInput.value === "1", peopleInput && peopleInput.value);
+  peopleInput.value = "3";
+  peopleInput.dispatchEvent(new l.w.Event("change"));
+  ok("人数を変えると共有URLに乗る", /[#&]n=3/.test(l.w.location.hash), l.w.location.hash);
+  const l2 = boot("https://hutsgo.com/plan/" + l.w.location.hash);
+  await wait(200);
+  ok("人数が共有URLから復元される", l2.d.getElementById("plan-people").value === "3",
+     l2.d.getElementById("plan-people").value);
+  ok("人数1のときは共有URLに乗らない（短く保つ）", (() => {
+    const m0 = boot("https://hutsgo.com/plan/");
+    m0.d.getElementById("plan-start").value = "2026-07-20";
+    m0.d.getElementById("plan-start").dispatchEvent(new m0.w.Event("change"));
+    return !/[#&]n=/.test(m0.w.location.hash);
+  })());
+
+  // ---- 10. 連絡の準備パネル：電話の台本・対訳・カレンダー登録 -----------------
+  // 受付開始（宿泊日の1ヶ月前）が必ず未来になるよう、今日から十分先の宿泊日を使う。
+  // 固定の日付を書くと、時間が経ってテストだけが「過去」判定になって落ちる（日付を書いたテストが腐る典型例）。
+  const futureStay = new Date(Date.now() + 400 * 86400000);
+  const futureIso = futureStay.toISOString().slice(0, 10);
+  const futureMonth = futureStay.getUTCMonth() + 1, futureDay = futureStay.getUTCDate();
+  const n = boot("https://hutsgo.com/plan/");
+  await wait(200);
+  n.d.getElementById("plan-start").value = futureIso;
+  n.d.getElementById("plan-start").dispatchEvent(new n.w.Event("change"));
+  n.d.getElementById("plan-people").value = "2";
+  n.d.getElementById("plan-people").dispatchEvent(new n.w.Event("change"));
+  n.d.querySelector('.ridge-hut[data-hut="yarigatake_sanso"]').click();
+  await wait(50);
+  const contactBtn = n.d.querySelector(".plan-card button.btn-ghost:not(.plan-move-btn)");
+  ok("連絡の準備ボタンが出る", !!contactBtn, contactBtn && contactBtn.textContent);
+  contactBtn.dispatchEvent(new n.w.Event("click", { bubbles: true }));
+  const panel = n.d.querySelector(".plan-contact");
+  ok("パネルが開く", panel && !panel.hidden);
+  const scriptLines = n.d.querySelectorAll(".contact-script li");
+  ok("電話台本が複数行ある", scriptLines.length >= 5, `${scriptLines.length}行`);
+  ok(`日付入りの行がある（${futureMonth}月${futureDay}日）`,
+     [...scriptLines].some((li) => li.textContent.includes(`${futureMonth}月${futureDay}日`)));
+  ok("人数入りの行がある（2名）", [...scriptLines].some((li) => /2名/.test(li.textContent)));
+  ok("英語を話せますかが先頭付近にある",
+     /英語を話せる/.test(scriptLines[1] ? scriptLines[1].textContent : ""),
+     scriptLines[1] && scriptLines[1].textContent);
+  const glossary = n.d.querySelector(".plan-contact-glossary table tr");
+  ok("Web予約フォームの対訳がある", !!glossary);
+  const icsBtn = [...n.d.querySelectorAll(".plan-contact-ics button")][0];
+  ok("カレンダー追加ボタンが出る（受付開始が未来なので）", !!icsBtn, icsBtn && icsBtn.textContent);
+  icsBtn.dispatchEvent(new n.w.Event("click", { bubbles: true }));
+  ok(".ics がこの端末の中で作られる", typeof n.w.downloadedIcs === "string" && n.w.downloadedIcs.includes("BEGIN:VCALENDAR"));
+  ok(".ics に槍ヶ岳山荘が入っている", n.w.downloadedIcs.includes("槍ヶ岳山荘") || /yarigatake_sanso/.test(n.w.downloadedIcs));
+  ok(".ics にVALARMが入っている（前日通知）", n.w.downloadedIcs.includes("TRIGGER:-P1D"));
+
+  // 受付開始日時が計算できない小屋（対訳・台本は出るが、カレンダー登録は出ない）
+  n.d.querySelector('.ridge-hut[data-hut="ariakeso"]').click();
+  await wait(50);
+  const cards = n.d.querySelectorAll(".plan-card");
+  const ariakesoCard = [...cards].find((c) => c.dataset.hut === "ariakeso");
+  const ariakesoBtn = ariakesoCard && ariakesoCard.querySelector("button.btn-ghost:not(.plan-move-btn)");
+  if (ariakesoBtn) {
+    ariakesoBtn.dispatchEvent(new n.w.Event("click", { bubbles: true }));
+    const ariPanel = ariakesoCard.querySelector(".plan-contact");
+    ok("受付日不明の小屋にはカレンダーの注記が出る", !ariPanel.querySelector(".plan-contact-ics button")
+       && /確定できない|can't pin down/.test(ariPanel.querySelector(".plan-contact-ics").textContent));
+  } else {
+    ok("受付日不明の小屋も連絡ボタンは出ない想定（電話・Web予約とも無い）", true);
+  }
+
+  // ---- 11. 行程ぜんぶの受付開始カレンダー ---------------------------------
+  const icsAllBtn = n.d.getElementById("plan-ics-all");
+  ok("行程にまとめてカレンダーのボタンが出る", !icsAllBtn.hidden);
+  n.w.downloadedIcs = null;
+  icsAllBtn.dispatchEvent(new n.w.Event("click", { bubbles: true }));
+  ok("まとめてカレンダーも端末内で作られる",
+     typeof n.w.downloadedIcs === "string" && n.w.downloadedIcs.includes("BEGIN:VCALENDAR"));
+
+  // 入山日が無いと計算できないので、ボタンは隠れる
+  const o = boot("https://hutsgo.com/plan/");
+  await wait(200);
+  o.d.querySelector('.ridge-hut[data-hut="yarigatake_sanso"]').click();
+  await wait(50);
+  ok("入山日が無ければまとめてボタンは隠れる", o.d.getElementById("plan-ics-all").hidden);
+
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
-            ...k.errors, ...j.errors]);
+            ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
   } catch (e) {
     results.push({ label: "テスト実行中に落ちた: " + e.message, pass: false });
     report([]);

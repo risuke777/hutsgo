@@ -793,6 +793,14 @@ def export_dataset():
                     "phone": se["reservation_phone"],
                     # 訪日ハイカーに最も価値のある項目。英語圏のどこにも構造化されていない
                     "opens_at": _bi(se, "booking_opens_at"),
+                    # 上の自由文のうち、カレンダーに正確な日時を入れられる範囲だけの構造化版。
+                    # rule='unknown' は「間に合う日を計算できない」の意味で、確度とは別（M1 参照）
+                    "opens_rule": {
+                        "rule": se["booking_opens_rule"] or "unknown",
+                        "month": se["booking_opens_month"], "day": se["booking_opens_day"],
+                        "offset_months": se["booking_opens_offset_months"],
+                        "time": se["booking_opens_time"],
+                    } if se["booking_opens_rule"] and se["booking_opens_rule"] != "unknown" else None,
                 },
                 "capacity": {"beds": se["capacity_beds"], "tents": se["capacity_tents"]},
                 "provenance": _prov(se),

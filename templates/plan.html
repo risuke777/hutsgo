@@ -23,6 +23,9 @@
         {% for n in [1, 2, 3, 4, 5] %}<option value="{{ n }}"{{ ' selected' if n == 2 }}>{{ T.plan_nights_n.format(n=n) }}</option>{% endfor %}
       </select>
     </label>
+    <label class="plan-field">{{ T.plan_people }}
+      <input type="number" id="plan-people" min="1" max="20" step="1" value="1" inputmode="numeric">
+    </label>
     <div class="plan-bar-end">
       <details class="plan-sharemenu">
         <summary class="btn btn-ghost plan-share">{{ T.plan_share }}</summary>
@@ -37,6 +40,7 @@
           <div id="plan-qr" class="plan-qr" hidden></div>
         </div>
       </details>
+      <button type="button" class="btn btn-ghost" id="plan-ics-all" hidden>{{ T.plan_ics_all_btn }}</button>
       <details class="plan-help">
         <summary title="{{ T.plan_help_aria }}"><span class="visually-hidden">{{ T.plan_help_aria }}</span><span aria-hidden="true">?</span></summary>
         <div class="plan-help-body">
@@ -97,4 +101,5 @@
 {% endblock %}
 {% block scripts %}<script src="{{ BASE }}/static/qrcode.js" defer></script>
 <script src="{{ BASE }}/static/map.js" defer></script>
+<script src="{{ BASE }}/static/contact.js" defer></script>
 <script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}

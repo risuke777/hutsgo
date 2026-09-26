@@ -20,7 +20,7 @@
 
   var KEY = "hutsgo-plan-v1";
   var huts = {};                       // id -> hut (data/huts.json)
-  var state = { start: "", nights: 2, days: [] };   // days[i] = [hutId, ...] 同じ日の候補
+  var state = { start: "", nights: 2, people: 1, days: [] };   // days[i] = [hutId, ...] 同じ日の候補
 
   // ---- 保存と共有 ---------------------------------------------------
   function save() {
@@ -28,15 +28,19 @@
   }
   function load() {
     var fromHash = readHash();
-    if (fromHash) { state = fromHash; return; }
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (raw) { var s = JSON.parse(raw); if (s && s.days) state = s; }
-    } catch (e) { /* 壊れていたら初期状態 */ }
+    if (fromHash) { state = fromHash; }
+    else {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (raw) { var s = JSON.parse(raw); if (s && s.days) state = s; }
+      } catch (e) { /* 壊れていたら初期状態 */ }
+    }
+    if (!state.people) state.people = 1;   // people 欄より前に保存された行程との互換
   }
   function writeHash() {
     var parts = state.days.map(function (d) { return d.join(","); }).join("|");
-    var h = "#p=" + encodeURIComponent(parts) + (state.start ? "&d=" + state.start : "");
+    var h = "#p=" + encodeURIComponent(parts) + (state.start ? "&d=" + state.start : "")
+          + (state.people && state.people !== 1 ? "&n=" + state.people : "");
     history.replaceState(null, "", location.pathname + h);
   }
   function readHash() {
@@ -46,9 +50,11 @@
       return d ? d.split(",").filter(Boolean) : [];
     });
     var dm = /[#&]d=([0-9-]{10})/.exec(location.hash);
+    var nm = /[#&]n=([0-9]{1,2})/.exec(location.hash);
     // days の長さがそのまま泊数。ここを 1 ずらすと ensureDays が最終日を前の日に畳んでしまい、
     // 共有した行程が全部横並びになる（2026-09-23 の事故）。
-    return { start: dm ? dm[1] : "", nights: Math.max(1, days.length), days: days };
+    return { start: dm ? dm[1] : "", nights: Math.max(1, days.length),
+             people: nm ? Math.max(1, Number(nm[1])) : 1, days: days };
   }
 
   // ---- 日付と営業判定 -------------------------------------------------
@@ -300,7 +306,26 @@
       ph.dataset.track = "phone"; ph.dataset.hut = h.id;
       acts.appendChild(ph);
     }
+    if ((res.phone || res.url) && window.HutsGoContact) {
+      var cbtn = el("button", "btn btn-ghost", t("contact_btn"));
+      cbtn.type = "button";
+      var panelId = "contact-" + h.id + "-" + day;
+      cbtn.setAttribute("aria-expanded", "false");
+      cbtn.addEventListener("click", function () {
+        var panel = card.querySelector(".plan-contact");
+        var open = !panel.hidden;
+        panel.hidden = open;
+        cbtn.setAttribute("aria-expanded", String(!open));
+        if (!open && !panel.dataset.built) { panel.dataset.built = "1"; fillContactPanel(panel, h, date); }
+      });
+      acts.appendChild(cbtn);
+    }
     card.appendChild(acts);
+    if ((res.phone || res.url) && window.HutsGoContact) {
+      var contactPanel = el("div", "plan-contact");
+      contactPanel.hidden = true;
+      card.appendChild(contactPanel);
+    }
 
     var nav = el("div", "plan-move");
     [["↑", function () { moveHut(day, h.id, -1); }, t("move_prev_day")],
@@ -317,6 +342,109 @@
     });
     card.appendChild(nav);
     return card;
+  }
+
+  var MONTH_EN = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"];
+
+  // 連絡の準備パネル。開いたときに一度だけ組み立てる（押すたびに毎回作り直さない）
+  function fillContactPanel(panel, h, dateIso) {
+    var C = window.HutsGoContact;
+    var se = h.season_2026 || {}, res = se.reservation || {};
+    var p = dateIso ? dateIso.split("-").map(Number) : null;
+
+    if (p) {
+      panel.appendChild(el("p", "quiet plan-contact-stay",
+        t("your_stay") + "：" + p[0] + "-" + String(p[1]).padStart(2, "0") + "-" + String(p[2]).padStart(2, "0")
+        + "（" + (state.people || 1) + (LANG === "en" ? (state.people === 1 ? " person" : " people") : "名") + "）"));
+    }
+
+    // --- 電話の台本 ---
+    if (res.phone) {
+      panel.appendChild(el("h4", "plan-contact-h", t("phone_h")));
+      panel.appendChild(el("p", "quiet", t("phone_note")));
+      var twoMeals = (h.rates_2026 || []).some(function (r) { return r.plan === "two_meals"; });
+      var script = C.phoneScript({
+        month: p ? p[1] : null, day: p ? p[2] : null,
+        dateEn: p ? (MONTH_EN[p[1] - 1] + " " + p[2]) : null,
+        people: state.people || 1, twoMeals: twoMeals
+      });
+      var ol = el("ol", "contact-script");
+      script.forEach(function (line) {
+        var li = el("li");
+        li.appendChild(el("p", "contact-ja", line.ja));
+        li.appendChild(el("p", "contact-gloss", line.romaji + " — " + line.en));
+        ol.appendChild(li);
+      });
+      panel.appendChild(ol);
+    }
+
+    // --- Web予約フォームの対訳 ---
+    if (res.url) {
+      var det = el("details", "plan-contact-glossary");
+      var sum = el("summary", null, t("web_h"));
+      det.appendChild(sum);
+      det.appendChild(el("p", "quiet", t("web_note")));
+      var table = el("table", "rates");
+      var tbody = el("tbody");
+      C.formGlossary().forEach(function (pair) {
+        var tr = el("tr");
+        var th = el("th"); th.setAttribute("scope", "row"); th.textContent = pair[0];
+        var td = el("td", null, pair[1]);
+        tr.appendChild(th); tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      det.appendChild(table);
+      panel.appendChild(det);
+    }
+
+    // --- 受付開始のカレンダー登録 ---
+    var rule = res.opens_rule;
+    var icsWrap = el("div", "plan-contact-ics");
+    if (!rule) {
+      icsWrap.appendChild(el("p", "quiet", t("ics_unknown")));
+    } else if (rule.rule === "months_before_stay" && !dateIso) {
+      icsWrap.appendChild(el("p", "quiet", t("need_date")));
+    } else {
+      var opens = C.computeOpensUtc(rule, dateIso, 2026);
+      if (!opens || opens.getTime() < Date.now()) {
+        icsWrap.appendChild(el("p", "quiet", t("ics_past")));
+      } else {
+        var icsBtn = el("button", "btn btn-primary", t("ics_btn"));
+        icsBtn.type = "button";
+        icsBtn.addEventListener("click", function () {
+          var ics = C.buildIcsForEntries([{ hut: h, stayIso: dateIso, seasonYear: 2026,
+                                            hutName: hutName(h), lang: LANG }]);
+          if (!ics) { toast(t("ics_unknown")); return; }
+          C.downloadIcs("hutsgo-" + h.id + ".ics", ics);
+          toast(t("ics_downloaded"));
+        });
+        icsWrap.appendChild(icsBtn);
+        icsWrap.appendChild(el("p", "quiet", t("ics_note")));
+      }
+    }
+    panel.appendChild(icsWrap);
+  }
+
+  // 行程ぜんぶの受付開始をまとめて .ics に。計算できる小屋がある泊だけ拾う
+  function setupIcsAll() {
+    var btn = $("#plan-ics-all");
+    if (!btn || !window.HutsGoContact) return;
+    btn.addEventListener("click", function () {
+      var entries = [];
+      state.days.forEach(function (ids, day) {
+        var date = dayDate(day);
+        ids.forEach(function (id) {
+          var h = huts[id];
+          if (h) entries.push({ hut: h, stayIso: date, seasonYear: 2026, hutName: hutName(h), lang: LANG });
+        });
+      });
+      var ics = window.HutsGoContact.buildIcsForEntries(entries);
+      if (!ics) { toast(t("ics_all_none")); return; }
+      window.HutsGoContact.downloadIcs("hutsgo-plan.ics", ics);
+      toast(t("ics_downloaded"));
+    });
   }
 
   function render() {
@@ -338,6 +466,18 @@
     save();
     writeHash();
     if (mapApi) mapApi.setChosen(chosenIds());
+    refreshIcsAllButton();
+  }
+
+  function refreshIcsAllButton() {
+    var btn = $("#plan-ics-all");
+    if (!btn || !window.HutsGoContact) return;
+    var entries = [];
+    state.days.forEach(function (ids, day) {
+      var date = dayDate(day);
+      ids.forEach(function (id) { if (huts[id]) entries.push({ hut: huts[id], stayIso: date }); });
+    });
+    btn.hidden = !window.HutsGoContact.hasComputable(entries);
   }
 
   function chosenIds() {
@@ -499,16 +639,23 @@
     load();
     var root = $("#plan");
     root.hidden = false;
-    var sd = $("#plan-start"), nn = $("#plan-nights");
+    var sd = $("#plan-start"), nn = $("#plan-nights"), pp = $("#plan-people");
     if (state.start) sd.value = state.start;
     nn.value = String(Math.max(1, state.days.length || state.nights));
+    pp.value = String(state.people || 1);
     sd.addEventListener("change", function () { state.start = sd.value; render(); });
     nn.addEventListener("change", function () { state.nights = Number(nn.value); render(); });
+    pp.addEventListener("change", function () {
+      state.people = Math.max(1, Math.min(20, Number(pp.value) || 1));
+      pp.value = String(state.people);
+      render();
+    });
     $("#plan-clear").addEventListener("click", function () {
-      state = { start: sd.value, nights: Number(nn.value), days: [] };
+      state = { start: sd.value, nights: Number(nn.value), people: Number(pp.value) || 1, days: [] };
       render();
       toast(t("cleared"));
     });
+    setupIcsAll();
     setupShare();
     drawRidge($("#plan-ridge"));
     drawList($("#plan-list"), "");

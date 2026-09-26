@@ -609,3 +609,31 @@ INSERT INTO transit_periods (id,line_id,year,name_ja,name_en,start_date,end_date
  NULL,NULL,NULL,NULL,
  '始発・最終は公式の時刻表（PDF）を見ること','First and last departures are in the operator''s timetable PDF.',
  'https://minami-alpskankou.jp/?page_id=6542','2026-09-24','reported');
+
+-- ---------------------------------------------------------------
+-- 予約受付開始日の構造化（2026-09-27）。booking_opens_at の自由文はそのまま残し、
+-- カレンダーに正確な日時を入れられる範囲だけ rule を立てる。
+-- 「1ヶ月前」の起点は「宿泊日」なので、行程ボードで選んだ日付が要る（build.py 側では計算しない）。
+-- 期間限定・電話とWebで条件が違う・時刻が書かれていない、といった複合条件は unknown のままにする
+-- （無理に当てはめて間違ったリマインダーを出すより、出さない方が安全）。
+-- ---------------------------------------------------------------
+
+-- 固定の暦日（毎年同じ月日に一斉受付開始。南ぷすリザーブ・中房方式）
+UPDATE hut_seasons SET booking_opens_rule='fixed_date', booking_opens_month=4, booking_opens_day=1, booking_opens_time='10:00'
+  WHERE year=2026 AND hut_id IN ('hirogawara_sanso','kitadake_sanso','shirane_oike','nakabusa_onsen');
+
+-- 宿泊日の1ヶ月前・時刻が明記されているもの
+UPDATE hut_seasons SET booking_opens_rule='months_before_stay', booking_opens_offset_months=1, booking_opens_time='09:00'
+  WHERE year=2026 AND hut_id IN ('dakesawa_goya','minamidake_goya','otenjo_hutte','sesshou_goya','yarigatake_sanso','yarisawa_lodge');
+UPDATE hut_seasons SET booking_opens_rule='months_before_stay', booking_opens_offset_months=1, booking_opens_time='08:00'
+  WHERE year=2026 AND hut_id IN ('hotakadake_sanso','karasawa_hutte');
+UPDATE hut_seasons SET booking_opens_rule='months_before_stay', booking_opens_offset_months=1, booking_opens_time='07:00'
+  WHERE year=2026 AND hut_id IN ('kitahotaka_goya','yokoo_sanso');
+
+-- 宿泊日の2ヶ月前
+UPDATE hut_seasons SET booking_opens_rule='months_before_stay', booking_opens_offset_months=2, booking_opens_time='09:30'
+  WHERE year=2026 AND hut_id='nishiho_sanso';
+
+-- 残り（jonen_goya・karasawa_goya は時刻未記載、chougatake_hutte は期間で条件が変わる、
+-- enzanso・hutte_ooyari・tokusawaen は固定の解禁日を持たない方式、ariakeso・daitenso・
+-- hutte_nishidake・kitadake_kata はデータ自体が無い）は booking_opens_rule='unknown' のまま。
