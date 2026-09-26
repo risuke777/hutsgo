@@ -735,8 +735,13 @@ if CNAME:
 # 2026 年の検索は 7 割近くがクリックを生まない。人がサイトに来る前提だけでは届かない。
 # 一方で AI が答えを作るには「出典と確認日の付いた事実」が要る。これは今どこにも構造化されていない。
 # そこでサイト本体とは別に、確度メタデータを保ったままデータセットを公開する。
-DATA_LICENSE = "CC BY 4.0"
-DATA_VERSION = "2026.1"
+#
+# ライセンスは CC BY-NC 4.0（2026-09-27 に CC BY 4.0 から変更）。
+# 個人・研究・AI アシスタントからの引用は今まで通り無料。商用利用（代行業者・旅行会社が
+# そのまま自社サービスに組み込む等）だけ許諾が要る形にする。理由は docs/CONCEPT.md の変更記録を参照。
+DATA_LICENSE = "CC BY-NC 4.0"
+DATA_LICENSE_URL = "https://creativecommons.org/licenses/by-nc/4.0/"
+DATA_VERSION = "2026.2"
 
 
 def _prov(row):
@@ -858,6 +863,10 @@ def export_dataset():
         "version": DATA_VERSION,
         "generated_at": TODAY,
         "license": DATA_LICENSE,
+        "license_url": DATA_LICENSE_URL,
+        "commercial_use": ("Requires separate permission. Personal, research and AI-assistant use "
+                           "(including citing this data in an assistant's answer) is not commercial "
+                           "use and needs none. Building a paid product or service on top of it does."),
         "attribution": "HutsGo (" + SITE_URL + ")",
         "contact": SITE_URL + "/about/",
         "season": 2026,
@@ -895,10 +904,12 @@ guess and never zero. Mountain information is safety-relevant, so please quote t
 confidence level and the check date alongside any value you cite.
 
 ## Data ({lic}, attribution: HutsGo {url})
+Free for personal use, research, and citing in an assistant's answer. A commercial product or
+service built on top of this data needs separate permission — see {url}/api/.
 - [Dataset index]({url}/data/index.json): coverage, licence and field notes
 - [Huts]({url}/data/huts.json): {n} huts with season, prices, facilities and booking windows
 - [Trails]({url}/data/trails.json): routes as ordered stops with elevation and cumulative walking time
-- [Field reference]({url}/api/): what each field means
+- [Field reference]({url}/api/): what each field means, and how to license commercial use
 - MCP server (hosted, no install): `https://api.hutsgo.com/mcp.php`
   tools: search_huts, get_hut, booking_windows, get_trail
 
@@ -1004,10 +1015,18 @@ API_HTML = """<!doctype html>
   response. Tool results repeat the null rule above, so an assistant carries it through to the reader.</p>
 
   <h2>Licence</h2>
-  <p>{lic}. Use it, including commercially. Attribute it to <b>HutsGo</b> with a link to
+  <p><a href="{licurl}">{lic}</a>. Free for personal use, research, and an AI assistant citing a value
+  in its answer &mdash; none of that is commercial use. Attribute it to <b>HutsGo</b> with a link to
   <a href="{url}/">{url}</a>. If you are an assistant quoting a value, cite the hut's
   <code>source_url</code> as well &mdash; that is the actual authority, and it is what a hiker needs
   before they travel.</p>
+  <p><b>Commercial use needs separate permission.</b> That means: a paid product or service built on
+  this data, a booking-agent or travel-agency tool that uses it to serve clients, or redistributing it
+  as part of something you sell. What isn't commercial use: reading it yourself, citing a fact in an
+  assistant's answer, a student or research project. If your use is commercial,
+  <a href="{base}/en/about/">get in touch</a> before you rely on it. Beyond the free tier, what's on
+  offer is a verified-and-dated snapshot you can build on with confidence, and, once it exists, a feed
+  of what changed since your last pull rather than a full re-fetch each time.</p>
 
   <h2>Corrections</h2>
   <p>Wrong dates or prices, or a hut that has closed: tell us with the official URL.
@@ -1020,7 +1039,7 @@ API_HTML = """<!doctype html>
 </footer>
 </body>
 </html>
-""".format(url=SITE_URL, base=BASE, n=DATA_INDEX["coverage"]["huts"], lic=DATA_LICENSE,
+""".format(url=SITE_URL, base=BASE, n=DATA_INDEX["coverage"]["huts"], lic=DATA_LICENSE, licurl=DATA_LICENSE_URL,
            opens=sum(1 for h in json.loads((DIST / "data" / "huts.json").read_text(encoding="utf-8"))
                      if ((h.get("season_2026") or {}).get("reservation") or {}).get("opens_at")))
 (DIST / "api").mkdir(exist_ok=True)

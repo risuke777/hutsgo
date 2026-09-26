@@ -349,7 +349,10 @@ switch ($method) {
       'instructions' =>
         "Verified data on mountain huts in the Northern Japan Alps (2026 season): opening dates, "
         . "prices, facilities, capacity, and above all when each hut starts taking bookings.\n\n"
-        . NULL_CONTRACT . "\n\nSource: https://hutsgo.com/ . Data licensed CC BY 4.0; please credit HutsGo.",
+        . NULL_CONTRACT . "\n\nSource: https://hutsgo.com/ . Data licensed CC BY-NC 4.0; please credit "
+        . "HutsGo. Free for personal use, research, and citing a value in an assistant's answer — none "
+        . "of that is commercial use. A paid product or service built on this data needs separate "
+        . "permission; see https://hutsgo.com/api/ .",
     ]);
 
   case 'ping':
