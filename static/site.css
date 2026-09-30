@@ -350,6 +350,8 @@ button.btn{font:inherit;cursor:pointer}
   background:none;color:var(--ink-soft);white-space:nowrap}
 .viewswitch-btn[aria-selected="true"]{background:var(--moss);color:#fff}
 .viewswitch-btn:focus-visible{outline:2px solid var(--moss-deep);outline-offset:1px}
+.trail-3d{font-size:.85rem;color:var(--ink-soft);white-space:nowrap}
+.trail-3d::after{content:" 97";color:var(--granite)}
 .trail-map{position:relative;height:60vh;min-height:20rem;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .trail-map[hidden]{display:none}
 .trail-map-note{margin:.4rem 0 0}

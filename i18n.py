@@ -144,6 +144,7 @@ STRINGS = {
     "trail_view_switch": ("表示の切り替え", "View"),
     "trail_view_profile": ("断面図", "Profile"),
     "trail_view_map":   ("地図", "Map"),
+    "trail_view_3d":    ("立体で見る（地理院地図3D）", "See it in 3D (GSI Maps)"),
     "trail_add_plan":   ("このルートを行程に入れる", "Put this route in my plan"),
     "trail_map_note":   ("線は小屋と登山口を行程順に結んだ目安です。実際の登山道ではありません。等高線は地理院タイル。",
                          "The line simply joins the huts and trailhead in walking order — it is not the path itself. Contours from the GSI tiles."),

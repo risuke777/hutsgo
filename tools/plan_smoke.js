@@ -446,6 +446,26 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("装備リンクは新しいタブで開き rel=noopener を付ける",
      /href="https:\/\/www\.yamarent\.com\/en"[^>]*target="_blank"[^>]*rel="noopener"/.test(thHtmlEn));
 
+  // ---- 13. ルートを地理院地図3Dで開くリンク（自前3Dの需要テスト）------------
+  // 地理院地図3D は pxsize が無いと空の alert を出して止まる。lat/lon はルートの座標の内側にあること
+  const trailDirs = ["", "en/"].flatMap(p =>
+    fs.readdirSync(path.join(DIST, p + "trails"), { withFileTypes: true })
+      .filter(e => e.isDirectory()).map(e => p + "trails/" + e.name));
+  const bad3d = trailDirs.filter(d => {
+    const html = fs.readFileSync(path.join(DIST, d, "index.html"), "utf8");
+    const m = /href="https:\/\/maps\.gsi\.go\.jp\/index_3d\.html\?z=(\d+)&amp;lat=([\d.]+)&amp;lon=([\d.]+)&amp;pxsize=2048&amp;ls=std"[^>]*target="_blank"[^>]*rel="noopener"[^>]*data-track="view_3d"/.exec(html);
+    const line = /data-line="([^"]*)"/.exec(html);
+    if (!m || !line) return true;
+    const pts = line[1].split(";").map(s => s.split(",").map(Number));
+    const lat = +m[2], lon = +m[3], z = +m[1];
+    const inside = lat >= Math.min(...pts.map(p => p[0])) && lat <= Math.max(...pts.map(p => p[0]))
+      && lon >= Math.min(...pts.map(p => p[1])) && lon <= Math.max(...pts.map(p => p[1]));
+    return !(inside && z >= 10 && z <= 15);
+  });
+  ok("全ルート（日英" + trailDirs.length + "ページ）に3Dリンクがあり、中心がルートの範囲内",
+     trailDirs.length > 0 && bad3d.length === 0);
+  if (bad3d.length) console.log("  3Dリンクが不正:", bad3d.join(", "));
+
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
   } catch (e) {

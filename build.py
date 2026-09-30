@@ -96,6 +96,22 @@ def metres(v):
 
 
 # ---------------------------------------------------------------- per-locale model
+def gsi3d_url(map_line, pxsize=2048):
+    """地理院地図3D をルート全体が収まる範囲で開く URL。自前で 3D は描かない（C2）。
+    地理院地図3D は中心と zoom から pxsize 四方を切り出すので、ルートの外接範囲に 3割の余白を足して
+    収まる最大の zoom を選ぶ。座標が 2 点未満なら None。"""
+    import math
+    pts = [tuple(map(float, p.split(","))) for p in map_line.split(";") if p]
+    if len(pts) < 2:
+        return None
+    lats, lons = [p[0] for p in pts], [p[1] for p in pts]
+    lat, lon = (min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2
+    cos = math.cos(math.radians(lat))
+    extent = max((max(lats) - min(lats)) * 111320, (max(lons) - min(lons)) * 111320 * cos, 2000) * 1.3
+    z = max(10, min(15, math.floor(math.log2(156543.03 * cos * pxsize / extent))))
+    return f"https://maps.gsi.go.jp/index_3d.html?z={z}&lat={lat:.5f}&lon={lon:.5f}&pxsize={pxsize}&ls=std"
+
+
 def build_model(lang):
     T = i18n.table(lang)
     fmt_time, fmt_date = make_fmt(lang)
@@ -464,6 +480,7 @@ def build_model(lang):
             f"{p['lat']},{p['lon']}" for p in
             [s["hut"] or s["trailhead"] for s in t["stops"] if s["hut"] or s["trailhead"]]
             if p and p.get("lat") and p.get("lon"))
+        t["gsi3d"] = gsi3d_url(t["map_line"])
         trails.append(t)
 
     client = [{

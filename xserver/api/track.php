@@ -20,6 +20,8 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                'article_click',
                // 行程ボード。小屋ページからの追加と、ボード上の操作
                'plan_add', 'plan_share', 'transit_timetable',
+               // ルートを地理院地図3Dで開く。自前3Dを作るかの需要テスト
+               'view_3d',
                // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。
                // outbound_ で始めない: 小屋への送客率（主KPI）に混ぜないため
                'gear_link'];

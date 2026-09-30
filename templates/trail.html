@@ -30,6 +30,7 @@
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="profile" aria-selected="true">{{ T.trail_view_profile }}</button>
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="map" aria-selected="false">{{ T.trail_view_map }}</button>
     </div>
+    {% if t.gsi3d %}<a class="trail-3d" href="{{ t.gsi3d }}" target="_blank" rel="noopener" data-track="view_3d" data-trail="{{ t.id }}">{{ T.trail_view_3d }}</a>{% endif %}
   </div>
 
   <div class="trail-map" id="trail-map" hidden
