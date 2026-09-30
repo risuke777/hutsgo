@@ -328,8 +328,10 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("ルートの線を引く", !!k.d.querySelector("#trail-map .hgmap-route"),
      (k.d.querySelector("#trail-map .hgmap-route") || {}).getAttribute
        ? k.d.querySelector("#trail-map .hgmap-route").getAttribute("points").slice(0, 30) : "");
-  ok("線は目安だと書いてある", !k.d.getElementById("trail-map-note").hidden
-     && /登山道ではありません|not the path/.test(k.d.getElementById("trail-map-note").textContent));
+  // 表銀座は地理院の徒歩道に沿わせた線（trail_paths/omote_ginza.json）。出典と、現況は反映しない旨を出す
+  ok("線の出典と限界を書いてある", !k.d.getElementById("trail-map-note").hidden
+     && /地理院地図の登山道/.test(k.d.getElementById("trail-map-note").textContent)
+     && /通行止め/.test(k.d.getElementById("trail-map-note").textContent));
   const addBtns = k.d.querySelectorAll('.stop-actions a[href*="/plan/#add="]');
   ok("小屋カードごとに行程へ入れる", addBtns.length === 6, `${addBtns.length}個`);
   const thLink = k.d.querySelector('.stop-th a[href*="/trailheads/"]');
@@ -465,6 +467,29 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("全ルート（日英" + trailDirs.length + "ページ）に3Dリンクがあり、中心がルートの範囲内",
      trailDirs.length > 0 && bad3d.length === 0);
   if (bad3d.length) console.log("  3Dリンクが不正:", bad3d.join(", "));
+
+  // ---- 14. 登山道に沿った線と GPX ------------------------------------------
+  // 道をたどれたルートだけ GPX を出す。直線の区間を含む GPX はナビで使われると危ない
+  const ogHtml = fs.readFileSync(path.join(DIST, "trails/omote_ginza/index.html"), "utf8");
+  const ogLine = /data-line="([^"]*)"/.exec(ogHtml)[1].split(";");
+  ok("表銀座の線は登山道の形（小屋・登山口の数よりずっと多い点）", ogLine.length > 100);
+  const gpxPath = path.join(DIST, "trails/omote_ginza/route.gpx");
+  const gpx = fs.existsSync(gpxPath) ? fs.readFileSync(gpxPath, "utf8") : "";
+  const gdoc = new (new JSDOM("").window.DOMParser)().parseFromString(gpx, "application/xml");
+  ok("表銀座の GPX が XML として読め、線の点数が地図と一致",
+     gpx && !gdoc.querySelector("parsererror") && gdoc.getElementsByTagName("trkpt").length === ogLine.length);
+  ok("GPX に小屋・登山口の地点と注意書きが入る",
+     gdoc.getElementsByTagName("wpt").length >= 2 && /通行止め/.test(gpx));
+  ok("表銀座のページに GPX のリンクがある", ogHtml.includes('href="/trails/omote_ginza/route.gpx"')
+     || /href="[^"]*\/trails\/omote_ginza\/route\.gpx"/.test(ogHtml));
+  const noGpx = trailDirs.filter(d => !/omote_ginza$/.test(d)).filter(d => {
+    const html = fs.readFileSync(path.join(DIST, d, "index.html"), "utf8");
+    const gpxLink = /route\.gpx/.test(html);
+    const gpxFile = fs.existsSync(path.join(DIST, d.replace(/^en\//, ""), "route.gpx"));
+    return gpxLink !== gpxFile;
+  });
+  ok("GPX のリンクは GPX ファイルがあるルートにだけ出る", noGpx.length === 0);
+  if (noGpx.length) console.log("  GPX のリンクとファイルが食い違う:", noGpx.join(", "));
 
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);

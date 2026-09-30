@@ -49,7 +49,8 @@ INSERT INTO huts (id,name_ja,hut_type,range_id,sub_area_id,operator_id,lat,lon,e
 ('ariakeso','有明荘','lodge','kita_alps','omote_ginza','enzanso',36.390663,137.749111,1380,'official','https://www.enzanso.co.jp/ariakeso','https://www.enzanso.co.jp/ariakeso','2026-09-13','verified'),
 ('enzanso','燕山荘','mountain_hut','kita_alps','omote_ginza','enzanso',36.399506,137.715208,2712,'official','https://www.enzanso.co.jp/enzanso','https://www.enzanso.co.jp/enzanso','2026-09-13','verified'),
 ('daitenso','大天荘','mountain_hut','kita_alps','omote_ginza','enzanso',36.363749,137.700974,2870,'official','https://www.enzanso.co.jp/daitenso','https://www.enzanso.co.jp/daitenso','2026-09-13','verified'),
-('otenjo_hutte','大天井ヒュッテ','mountain_hut','kita_alps','omote_ginza','yarigatake',36.365025,137.700359,NULL,NULL,'https://www.yarigatake.co.jp/otenjo/','https://www.yarigatake.co.jp/otenjo/','2026-09-13','verified'),
+-- otenjo_hutte の座標: 2026-09-30 修正。公式「大天井岳西方鞍部に位置」、地理院基本図の建物（注記「大天井ヒュッテ」直下）。旧値は大天井岳北西斜面で 800m ずれていた
+('otenjo_hutte','大天井ヒュッテ','mountain_hut','kita_alps','omote_ginza','yarigatake',36.362924,137.695615,NULL,NULL,'https://www.yarigatake.co.jp/otenjo/','https://www.yarigatake.co.jp/otenjo/','2026-09-13','verified'),
 ('hutte_nishidake','ヒュッテ西岳','mountain_hut','kita_alps','omote_ginza','enzanso',36.335603,137.680121,2680,'official','https://www.enzanso.co.jp/hutte-nishidake','https://www.enzanso.co.jp/hutte-nishidake','2026-09-13','verified'),
 ('jonen_goya','常念小屋','mountain_hut','kita_alps','omote_ginza','indep',36.333571,137.727567,2450,'official','http://www.mt-jonen.com/','http://www.mt-jonen.com/about/','2026-09-13','verified'),
 ('chougatake_hutte','蝶ヶ岳ヒュッテ','mountain_hut','kita_alps','omote_ginza','chougatake',36.287923,137.724907,NULL,NULL,'https://chougatake.com/','https://chougatake.com/stay/','2026-09-13','verified'),

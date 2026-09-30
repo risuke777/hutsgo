@@ -36,7 +36,11 @@
   <div class="trail-map" id="trail-map" hidden
        data-huts="{{ t.stops | selectattr('hut') | map(attribute='hut.id') | join(',') }}"
        data-line="{{ t.map_line }}"></div>
-  <p class="quiet trail-map-note" id="trail-map-note" hidden>{{ T.trail_map_note }}</p>
+  <p class="quiet trail-map-note" id="trail-map-note" hidden>
+    {%- if t.legs_traced == 0 %}{{ T.trail_map_note }}
+    {%- else %}{{ T.trail_map_note_path }}{% if t.legs_traced < t.legs_total %} {{ T.trail_map_note_partial }}{% endif %}
+    {%- if t.has_gpx %} <a href="{{ BASE }}/trails/{{ t.id }}/route.gpx" download="hutsgo-{{ t.id }}.gpx" data-track="gpx_download" data-trail="{{ t.id }}">{{ T.trail_gpx }}</a>{% endif %}
+    {%- endif %}</p>
 
   <figure class="profile" aria-label="{{ T.profile_aria }}">
     {{ t.svg_wide }}

@@ -22,6 +22,8 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                'plan_add', 'plan_share', 'transit_timetable',
                // ルートを地理院地図3Dで開く。自前3Dを作るかの需要テスト
                'view_3d',
+               // ルートの GPX 保存（地理院の道路中心線に沿わせた線がある場合のみ）
+               'gpx_download',
                // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。
                // outbound_ で始めない: 小屋への送客率（主KPI）に混ぜないため
                'gear_link'];

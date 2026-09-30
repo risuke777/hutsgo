@@ -96,6 +96,59 @@ def metres(v):
 
 
 # ---------------------------------------------------------------- per-locale model
+def _hav_m(a, b):
+    import math
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 2 * 6371008.8 * math.asin(math.sqrt(h))
+
+
+def trail_line(trail_id, pts):
+    """地図に引く線。trail_paths/<id>.json（tools/trail_paths.py が地理院の道路中心線から作る）に
+    区間の線があればそれを使い、無い区間は小屋・登山口を直線で結ぶ。
+    pts = [(stop_id, lat, lon)]（行程順、座標のある stop のみ）。返り値 (座標列, 道をたどれた区間数, 全区間数)。
+    座標を直したのに線を作り直していない区間は、端が stop から外れるので直線に戻す（古い線を出さない）。"""
+    f = ROOT / "trail_paths" / f"{trail_id}.json"
+    legs = {}
+    if f.exists():
+        for leg in json.loads(f.read_text(encoding="utf-8"))["legs"]:
+            if leg.get("coords"):
+                legs[(leg["from"], leg["to"])] = leg["coords"]
+    line, traced = [], 0
+    for i, (sid, lat, lon) in enumerate(pts):
+        if i == 0:
+            line.append((lat, lon)); continue
+        prev = pts[i - 1]
+        c = legs.get((prev[0], sid))
+        if c and _hav_m(c[0], prev[1:]) < 5 and _hav_m(c[-1], (lat, lon)) < 5:
+            line.extend(tuple(p) for p in c[1:]); traced += 1
+        else:
+            if c:
+                print(f"  ! {trail_id}: {prev[0]} → {sid} の線は stop の座標とずれている。"
+                      f"python tools/trail_paths.py {trail_id} で作り直す", file=sys.stderr)
+            line.append((lat, lon))
+    return line, traced, max(len(pts) - 1, 0)
+
+
+def gpx_for(t, line):
+    """道をたどれたルートだけ GPX にする。直線の区間を含む GPX はナビに読み込まれると危ないので作らない"""
+    from xml.sax.saxutils import escape as x, quoteattr as qa
+    desc = ("小屋と登山口を、国土地理院ベクトルタイルの道路中心線（徒歩道）に沿って結んだ線。"
+            "通行止め・付け替えは反映しない。現地の標識と最新の登山道情報を優先すること。"
+            "Follows footpaths in GSI (Geospatial Information Authority of Japan) map data; "
+            "closures and reroutes are not reflected.")
+    wpts = "".join(
+        f'<wpt lat="{p["lat"]}" lon="{p["lon"]}"><name>{x(p["name_ja"])}</name></wpt>\n'
+        for p in [s["hut"] or s["trailhead"] for s in t["stops"] if s["hut"] or s["trailhead"]]
+        if p.get("lat") and p.get("lon"))
+    pts = "".join(f'<trkpt lat="{la}" lon="{lo}"/>' for la, lo in line)
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<gpx version="1.1" creator="HutsGo" xmlns="http://www.topografix.com/GPX/1/1">\n'
+            f'<metadata><name>{x(t["name_ja"])}</name><desc>{x(desc)}</desc>'
+            f'<link href={qa(SITE_URL + "/trails/" + t["id"] + "/")}><text>HutsGo</text></link></metadata>\n'
+            f'{wpts}<trk><name>{x(t["name_ja"])}</name><trkseg>{pts}</trkseg></trk>\n</gpx>\n')
+
+
 def gsi3d_url(map_line, pxsize=2048):
     """地理院地図3D をルート全体が収まる範囲で開く URL。自前で 3D は描かない（C2）。
     地理院地図3D は中心と zoom から pxsize 四方を切り出すので、ルートの外接範囲に 3割の余白を足して
@@ -476,10 +529,12 @@ def build_model(lang):
         t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)
         t["svg_mini"] = profile_mini_svg(t, t["points"])
         # 地図に引く線。小屋・登山口の座標を行程順に結んだだけのもので、登山道そのものではない
-        t["map_line"] = ";".join(
-            f"{p['lat']},{p['lon']}" for p in
-            [s["hut"] or s["trailhead"] for s in t["stops"] if s["hut"] or s["trailhead"]]
-            if p and p.get("lat") and p.get("lon"))
+        stop_pts = [(s["hut_id"] or s["trailhead_id"], p["lat"], p["lon"]) for s in t["stops"]
+                     for p in [s["hut"] or s["trailhead"]] if p and p.get("lat") and p.get("lon")]
+        line, t["legs_traced"], t["legs_total"] = trail_line(t["id"], stop_pts)
+        t["line_pts"] = line
+        t["map_line"] = ";".join(f"{la:.6f},{lo:.6f}" for la, lo in line)
+        t["has_gpx"] = t["legs_total"] > 0 and t["legs_traced"] == t["legs_total"]
         t["gsi3d"] = gsi3d_url(t["map_line"])
         trails.append(t)
 
@@ -703,6 +758,8 @@ for lang, prefix in LOCALES:
     for t in trails_l:
         write(f"{d}trails/{t['id']}/index.html", "trail.html", t=t, page=f"/trails/{t['id']}/",
               plan_strings=plan_strings, **g)
+        if t["has_gpx"] and not d:
+            (DIST / "trails" / t["id"] / "route.gpx").write_text(gpx_for(t, t["line_pts"]), encoding="utf-8")
 
     if arts:
         hut_names = {h["id"]: h["name"] for h in huts_l}
