@@ -323,14 +323,16 @@
     map = new maplibregl.Map({
       container: "fly-map", attributionControl: false,
       canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true },
-      maxPitch: 80, fadeDuration: 0,
+      // ちらつき対策: 切り替えをフェードでなめらかにし、細かさの違うタイルを多めに持っておく。画素比は 2 まで（3 だと重くてカクつく）
+      maxPitch: 80, fadeDuration: 250, maxTileCacheZoomLevels: 8, pixelRatio: Math.min(2, window.devicePixelRatio || 1),
       style: {
         version: 8,
         sources: {
-          photo: { type: "raster", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 18,
+          photo: { type: "raster", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 17,
                    attribution: "国土地理院" },
           // 地理院の標高 PNG: 標高 = (R×2^16 + G×2^8 + B) × 0.01 m
-          dem: { type: "raster-dem", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14,
+          // 標高は z12 まで（約 30m 格子）。z14 まで使うと動くたびに地形の細かさが切り替わって山がちらつく
+          dem: { type: "raster-dem", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
                  encoding: "custom", redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0 }
         },
         layers: [{ id: "photo", type: "raster", source: "photo", paint: { "raster-saturation": 0.1, "raster-contrast": 0.08 } }],
@@ -346,12 +348,25 @@
     });
     return new Promise(function (ok) { map.on("load", ok); });
   }
+  var DONE = "#1FB5E8", REST = "#E4572E", lastHere = null;   // 通った所 / これから
   function setRouteOnMap() {
     var gj = { type: "Feature", geometry: { type: "LineString", coordinates: route.line.map(function (p) { return [p[1], p[0]]; }) } };
     if (map.getSource("route")) { map.getSource("route").setData(gj); return; }
-    map.addSource("route", { type: "geojson", data: gj });
+    map.addSource("route", { type: "geojson", data: gj, lineMetrics: true });
     map.addLayer({ id: "route-halo", type: "line", source: "route", paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.85 }, layout: { "line-join": "round", "line-cap": "round" } });
-    map.addLayer({ id: "route", type: "line", source: "route", paint: { "line-color": "#E4572E", "line-width": 3.5 }, layout: { "line-join": "round", "line-cap": "round" } });
+    map.addLayer({ id: "route", type: "line", source: "route", paint: { "line-width": 4, "line-gradient": progressExpr(0) }, layout: { "line-join": "round", "line-cap": "round" } });
+    map.addSource("here", { type: "geojson", data: hereData(0) });
+    map.addLayer({ id: "here-halo", type: "circle", source: "here", paint: { "circle-radius": 15, "circle-color": "rgba(31,181,232,.28)", "circle-pitch-alignment": "viewport" } });
+    map.addLayer({ id: "here", type: "circle", source: "here", paint: { "circle-radius": 7.5, "circle-color": "#1E88E5", "circle-stroke-color": "#fff", "circle-stroke-width": 3, "circle-pitch-alignment": "viewport" } });
+  }
+  // 線の塗り分け: line-progress（線の長さに対する割合）で、通った所と残りを分ける。毎回データを作り直さないので軽い
+  function progressExpr(frac) { return ["step", ["line-progress"], DONE, Math.min(0.999999, Math.max(0.000001, frac)), REST]; }
+  function hereData(d) { var p = at(route, d); return { type: "Feature", geometry: { type: "Point", coordinates: [p[1], p[0]] } }; }
+  function showProgress(d) {
+    if (!map.getSource("here")) return;
+    lastHere = hereData(d).geometry.coordinates;
+    map.getSource("here").setData(hereData(d));
+    map.setPaintProperty("route", "line-gradient", progressExpr(d / route.len));
   }
   async function loadHuts() {
     if (huts) return huts;
@@ -376,7 +391,7 @@
       var a = document.createElement("a");
       a.className = "fly-hut"; a.textContent = s.name.ja; a.href = BASE + "/huts/" + s.id + "/"; a.target = "_blank"; a.rel = "noopener";
       a.title = "HutsGo の小屋ページ（営業期間・予約の窓口）";
-      markers.push(new maplibregl.Marker({ element: a, anchor: "bottom" }).setLngLat([s.lon, s.lat]).addTo(map));
+      markers.push(new maplibregl.Marker({ element: a, anchor: "bottom", subpixelPositioning: true }).setLngLat([s.lon, s.lat]).addTo(map));
     });
     media.forEach(function (m) {
       var b = document.createElement("button");
@@ -385,12 +400,8 @@
       b.setAttribute("aria-label", m.name + " を大きく見る");
       b.addEventListener("click", function (e) { e.stopPropagation(); pause(); setD(m.d, true); openPopup(m); });
       var p = at(route, m.d);
-      markers.push(new maplibregl.Marker({ element: b, anchor: "bottom", offset: [0, -8] }).setLngLat([p[1], p[0]]).addTo(map));
+      markers.push(new maplibregl.Marker({ element: b, anchor: "bottom", offset: [0, -8], subpixelPositioning: true, opacityWhenCovered: "0.35" }).setLngLat([p[1], p[0]]).addTo(map));
     });
-    var here = document.createElement("div"); here.className = "fly-here";
-    var p0 = at(route, player.d);
-    hereMarker = new maplibregl.Marker({ element: here }).setLngLat([p0[1], p0[0]]).addTo(map);
-    markers.push(hereMarker);
   }
 
   async function overview() {   // 道全体を見せ、そのあいだに標高の断面を測る（GPX に標高があればそれを使う）
@@ -419,19 +430,50 @@
     });
   }
 
+  // ------------------------------------------------------------------ 山の裏に回り込まないカメラ
+  // カメラから現在地までの見通しを、地形の高さで 12 点確かめる。遮られるなら傾きを起こして真上寄りにする。
+  // 起こすのは早く、戻すのはゆっくり（視点が跳ねないように）。地形が読み込まれていない所は判定しない
+  var aimPitch = null;
+  function camPos() {
+    try {
+      var c = map.getCameraLngLat ? map.getCameraLngLat() : map.transform.getCameraLngLat();
+      var a = map.getCameraAltitude ? map.getCameraAltitude() : map.transform.getCameraAltitude();
+      return c && a != null && isFinite(a) ? { lat: c.lat, lon: c.lng, alt: a } : null;
+    } catch (e) { return null; }
+  }
+  function blocked(target) {   // target は [緯度, 経度]
+    var c = camPos(), te = map.queryTerrainElevation([target[1], target[0]]);
+    if (!c || te == null) return false;
+    for (var k = 1; k <= 12; k++) {
+      var f = k / 13, la = c.lat + (target[0] - c.lat) * f, lo = c.lon + (target[1] - c.lon) * f;
+      var e = map.queryTerrainElevation([lo, la]), los = c.alt + (te + 10 - c.alt) * f;
+      if (e != null && e > los + 15) return true;
+    }
+    return false;
+  }
+  function aim(cam, target, step) {
+    var want = cam.pitch;
+    map.jumpTo(cam);
+    while (want > 25 && blocked(target)) { want -= 8; map.jumpTo(Object.assign({}, cam, { pitch: want })); }
+    if (aimPitch == null) aimPitch = want;
+    aimPitch += Math.max(-step * 3, Math.min(step, want - aimPitch));
+    map.jumpTo(Object.assign({}, cam, { pitch: aimPitch }));
+  }
+
   // ------------------------------------------------------------------ 画面の再生（スライドバー・断面図・写真の小窓）
   var player = { d: 0, playing: false, hold: null, last: null, followBearing: null };
   function setD(d, moveCamera) {
     player.d = Math.max(0, Math.min(route.len, d));
     $("fly-seek").value = String(Math.round(player.d / route.len * 1000));
     var p = at(route, player.d);
-    if (hereMarker) hereMarker.setLngLat([p[1], p[0]]);
+    showProgress(player.d);
     if (moveCamera) map.jumpTo({ center: [p[1], p[0]] });
     updateView();
   }
   function play() {
     if (player.d >= route.len - 1) setD(0, true);
     player.playing = true; player.last = null; player.followBearing = null; closePopup();
+    player.basePitch = map.getPitch(); aimPitch = null;   // 傾きは再生を始めたときの値を基準にする
     $("fly-play").classList.add("is-playing"); $("fly-play").setAttribute("aria-label", "一時停止");
     requestAnimationFrame(step);
   }
@@ -452,12 +494,12 @@
     if (hit) d1 = hit.d;
     setD(d1, false);
     // カメラは進む向きに少しずつ回しながらついていく（ズームと傾きは触った値のまま）
-    var b = bearing(at(route, d1 - 300), at(route, d1 + 900));
+    var b = bearing(at(route, d1 - 700), at(route, d1 + 1800));   // 少し広い範囲の向き（細かい曲がりで揺れない）
     if (player.followBearing == null) player.followBearing = map.getBearing();
     var diff = ((b - player.followBearing + 540) % 360) - 180;
-    player.followBearing = (player.followBearing + diff * 0.03 + 360) % 360;
+    player.followBearing = (player.followBearing + diff * 0.025 + 360) % 360;
     var p = at(route, d1);
-    map.jumpTo({ center: [p[1], p[0]], bearing: player.followBearing });
+    aim({ center: [p[1], p[0]], bearing: player.followBearing, pitch: player.basePitch, zoom: map.getZoom() }, p, 0.8);
     if (hit) { openPopup(hit); player.hold = { until: now + (hit.kind === "video" ? Math.max(3, hit.dur) : 3) * 1000 }; }
     if (d1 >= route.len) { pause(); return; }
     requestAnimationFrame(step);
@@ -540,7 +582,7 @@
     var e = tl.ev.find(function (x) { return t >= x.t0 && t < x.t1; }) || tl.ev[tl.ev.length - 1];
     var f = (t - e.t0) / ((e.t1 - e.t0) || 1);
     var d = e.kind === "intro" ? 0 : e.kind === "fly" ? e.d0 + (e.d1 - e.d0) * f : e.d0;
-    var b = bearing(at(route, d - 300), at(route, d + 900));
+    var b = bearing(at(route, d - 700), at(route, d + 1800));
     if (smoothBearing === null) smoothBearing = b;
     var diff = ((b - smoothBearing + 540) % 360) - 180;
     smoothBearing = (smoothBearing + diff * 0.04 + 360) % 360;
@@ -628,11 +670,12 @@
     var enc = new VideoEncoder({ output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); }, error: function (e) { failedEnc = e; } });
     enc.configure(config);
     media.forEach(function (m) { if (m.el) m.el.pause(); });
-    smoothBearing = null; timeouts = 0;
+    smoothBearing = null; timeouts = 0; aimPitch = null;
     var tl = timeline(), N = Math.ceil(tl.total * FPS);
     for (var i = 0; i < N; i++) {
       var t = i / FPS, st = cameraAt(tl, t);
-      map.jumpTo(st.cam);
+      aim(st.cam, at(route, st.d), 45 / FPS);   // 1 秒に 45 度まで起こせる
+      showProgress(st.d);
       await settle(15000);
       if (st.e.kind === "photo" && st.e.m.kind === "video") await seek(st.e.m.el, t - st.e.t0);
       compose(st);
@@ -661,7 +704,7 @@
       function tick(now) {
         if (start === null) start = now;
         var t = (now - start) / 1000, st = cameraAt(tl, Math.min(t, tl.total - 0.001));
-        map.jumpTo(st.cam);
+        aim(st.cam, at(route, st.d), 1.5); showProgress(st.d);
         if (st.e.kind === "photo" && st.e.m.kind === "video" && st.e.m.el.paused) { st.e.m.el.currentTime = 0; st.e.m.el.play().catch(function () {}); }
         map.once("render", function () { compose(st); }); map.triggerRepaint();
         status("録画中… " + Math.min(100, Math.round(t / tl.total * 100)) + "%");
@@ -695,8 +738,8 @@
     } catch (e) {
       status("うまく動きませんでした: " + (e && e.message || e));
     }
-    phone.classList.remove("is-exporting"); map.setPixelRatio(window.devicePixelRatio || 1); map.resize();
-    map.jumpTo(keep);
+    phone.classList.remove("is-exporting"); map.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); map.resize();
+    map.jumpTo(keep); showProgress(player.d);
     markers.forEach(function (mk) { mk.getElement().style.visibility = ""; });
     busy = false; $("fly-record").disabled = false;
   }
@@ -757,6 +800,15 @@
     $("fly-record").addEventListener("click", exportVideo);
     window.HutsGoFlyover = {
       map: map, setD: function (d) { setD(d, true); }, play: play, pause: pause,
+      // 試験用: 道の d の地点を指定の傾きで狙い、遮られたまま残ったかを返す
+      aimTest: async function (d, pitch) {
+        var p = at(route, d), b = bearing(at(route, d - 700), at(route, d + 1800));
+        map.jumpTo({ center: [p[1], p[0]], bearing: b, pitch: pitch, zoom: Z }); await settle(15000);
+        var before = blocked(p); aimPitch = null; aim({ center: [p[1], p[0]], bearing: b, pitch: pitch, zoom: Z }, p, 90); await settle(15000);
+        return { before: before, after: blocked(p), pitch: map.getPitch() };
+      },
+      here: function () { return lastHere; },
+      gradient: function () { return JSON.stringify(map.getPaintProperty("route", "line-gradient")); },
       state: function () {
         return { route: route.id, source: route.source, len: route.len, d: player.d, playing: player.playing, tz: tz && tz.ms,
                  hutsNear: (route.stops || []).filter(function (s) { return s.kind === "hut"; }).map(function (s) { return s.id; }),
