@@ -186,6 +186,33 @@ def main() -> None:
         elif report["interest_dolomiti"] >= 20:
             print("   → 判断: 着手の目安に届いています。")
 
+        # ここから下は 2026-10-01 以降の kpi.php だけが返す。古いサーバーなら出さない
+        se = report.get("search")
+        if se is not None:
+            print("\n■ 検索（Search Console）")
+            if not se.get("enabled"):
+                print("   未接続（サービスアカウント鍵が未設定）")
+            elif se.get("error"):
+                print(f"   取得エラー: {se['error']}")
+            else:
+                t, pv = se["performance"]["totals"], se["performance"]["prev"]
+                print(f"   直近28日 表示 {t['impressions']}（前 {pv['impressions']}）  クリック {t['clicks']}  CTR {t['ctr']}%  平均順位 {t['position']}")
+                for q in se["performance"]["queries"][:10]:
+                    print(f"   {q['impressions']:>5} 表示 {q['clicks']:>3} クリック  {q['position']:>5} 位  {q['key']}")
+                bad = {u: s for u, s in se.get("inspect", {}).items() if s.get("verdict") != "PASS"}
+                for u, s in bad.items():
+                    print(f"   未インデックス: {u}  {s.get('coverage')}")
+            say(report, "search")
+        ref = report.get("referrers")
+        if ref:
+            names = {"search": "検索", "ai": "AI", "sns": "SNS", "emospot": "Emospot", "other": "その他", "direct": "直接・不明"}
+            print("\n■ 流入元  " + "  ".join(f"{names.get(k, k)} {v}" for k, v in ref["by_group"].items()) if ref["by_group"] else "\n■ 流入元  まだ無い")
+        feats = report.get("features")
+        if feats:
+            print("\n■ 機能の需要テスト")
+            for k, f in feats.items():
+                print(f"   {f['label']:<20} {f['clicks']:>4} クリック / {f['visitors']:>3} 人")
+
     print("\n■ データ被覆率（サイトの中身。ここが差別化の実体）")
     for label, n, total in coverage():
         mark = "" if n == total else "   ← 埋める"

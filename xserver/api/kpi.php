@@ -10,12 +10,24 @@
 // 副KPI  = 投稿数 / ドロミティ興味 / 日付フィルタ利用
 declare(strict_types=1);
 require __DIR__ . '/common.php';
+require __DIR__ . '/gsc.inc.php';
 $cfg = hg_config();
 header('Cache-Control: no-store');
 if (($_GET['token'] ?? '') === '' || !hash_equals((string)$cfg['kpi_token'], (string)$_GET['token'])) {
   http_response_code(403);
   header('Content-Type: text/plain; charset=utf-8');
   exit('forbidden');
+}
+
+// 操作（POST のみ）: サイトマップを Search Console へ送信。合言葉は本文でも確かめる（URL だけでは動かさない）
+$flash = '';
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['action'] ?? '') === 'submit_sitemap') {
+  if (!hash_equals((string)$cfg['kpi_token'], (string)($_POST['token'] ?? ''))) { http_response_code(403); exit('forbidden'); }
+  try {
+    $flash = 'サイトマップを送信しました: ' . gsc_submit_sitemap($cfg);
+  } catch (Throwable $e) {
+    $flash = '送信できませんでした: ' . $e->getMessage();
+  }
 }
 
 $days = max(1, min(365, (int)($_GET['days'] ?? 30)));
@@ -68,6 +80,49 @@ foreach ($ev as $r) {
   }
 }
 
+// ---- 流入元（外から来たページビューの参照元ホストを分類。ホスト名しか持っていない: A6）
+$refGroup = function (string $host): string {
+  $h = strtolower(preg_replace('/^www\./', '', $host));
+  if ($h === '') { return 'direct'; }
+  if (preg_match('/(^|\.)hutsgo\.(com|jp)$|github\.io$/', $h)) { return 'self'; }
+  // AI は検索より先に見る（gemini.google.com を検索に数えないため）
+  if (preg_match('/(^|\.)(chatgpt\.com|openai\.com|perplexity\.ai|claude\.ai|gemini\.google\.com|copilot\.microsoft\.com|you\.com|phind\.com|kagi\.com|felo\.ai|genspark\.ai)$/', $h)) { return 'ai'; }
+  if (preg_match('/(^|\.)(google\.[a-z.]+|bing\.com|yahoo\.co\.jp|search\.yahoo\.com|duckduckgo\.com|ecosia\.org|naver\.com|baidu\.com|yandex\.[a-z]+|brave\.com)$/', $h)) { return 'search'; }
+  if (preg_match('/(^|\.)(t\.co|x\.com|twitter\.com|facebook\.com|instagram\.com|line\.me|threads\.net|reddit\.com|youtube\.com|tiktok\.com|b\.hatena\.ne\.jp|pinterest\.[a-z.]+)$/', $h)) { return 'sns'; }
+  if (preg_match('/(^|\.)emospot\.com$/', $h)) { return 'emospot'; }
+  return 'other';
+};
+$REF_LABEL = ['search' => '検索', 'ai' => 'AI（ChatGPT 等）', 'sns' => 'SNS', 'emospot' => 'Emospot',
+              'other' => 'その他のサイト', 'direct' => '直接・不明'];
+$refByGroup = $refHosts = [];
+$refByLang = ['ja' => [], 'en' => []];
+// ---- 機能の需要テスト（作る前・作った後に、押されているかだけを見る）
+$FEATURES = ['view_3d' => '立体で見る（地理院3D）', 'gpx_download' => 'GPX 保存', 'agency_link' => '旅行会社の予約窓口',
+             'gear_link' => '装備レンタル（英語版）', 'plan_add' => '行程に追加', 'plan_share' => '行程の共有',
+             'transit_timetable' => '時刻表', 'article_click' => '外部記事', 'lang_switch' => '言語の切替'];
+$feat = array_fill_keys(array_keys($FEATURES), ['n' => 0, 'v' => []]);
+$dailyPv = $dailyOut = [];
+foreach ($ev as $r) {
+  $day = substr((string)$r['ts'], 0, 10);
+  if (isset($feat[$r['ev']])) { $feat[$r['ev']]['n']++; $feat[$r['ev']]['v'][$r['v']] = true; }
+  if (strpos($r['ev'], 'outbound_') === 0) { $dailyOut[$day] = ($dailyOut[$day] ?? 0) + 1; }
+  if ($r['ev'] !== 'pageview') { continue; }
+  $dailyPv[$day] = ($dailyPv[$day] ?? 0) + 1;
+  $g = $refGroup((string)($r['ref'] ?? ''));
+  if ($g === 'self') { continue; }   // サイト内の移動は流入ではない
+  $refByGroup[$g] = ($refByGroup[$g] ?? 0) + 1;
+  $lg = ($r['lang'] ?? 'ja') === 'en' ? 'en' : 'ja';
+  $refByLang[$lg][$g] = ($refByLang[$lg][$g] ?? 0) + 1;
+  if ($g !== 'direct') { $refHosts[(string)$r['ref']] = ($refHosts[(string)$r['ref']] ?? 0) + 1; }
+}
+arsort($refByGroup);
+arsort($refHosts);
+$feature_rows = [];
+foreach ($feat as $k => $f) { $feature_rows[$k] = ['label' => $FEATURES[$k], 'clicks' => $f['n'], 'visitors' => count($f['v'])]; }
+
+// ---- Search Console（鍵があれば。6 時間キャッシュ、?refresh=1 で取り直す）
+$gsc = gsc_summary($cfg, ($_GET['refresh'] ?? '') === '1');
+
 $views = count($hutViewPairs);
 $sends = count($hutPairs);
 $ctr = $views ? round($sends / $views * 100, 1) : 0.0;
@@ -108,6 +163,10 @@ $report = [
   'interest_dolomiti' => $counts['interest_dolomiti'] ?? 0,
   // 静的ホスティングでは JSON の取得数が測れない。MCP 経由の利用はここで数える。
   'mcp' => array_filter($counts, fn($k) => strpos($k, 'mcp_') === 0, ARRAY_FILTER_USE_KEY),
+  'referrers'    => ['by_group' => $refByGroup, 'by_language' => $refByLang, 'hosts' => array_slice($refHosts, 0, 30, true)],
+  'features'     => $feature_rows,
+  'daily'        => ['pageviews' => $dailyPv, 'outbound' => $dailyOut],
+  'search'       => $gsc,
 ];
 
 // ---- 判断 -------------------------------------------------------------
@@ -180,13 +239,38 @@ $say('dolomiti', $dol >= DOLOMITI_GO ? 'good' : 'wait',
      $dol >= DOLOMITI_GO ? '着手の目安に到達' : '目安まで ' . (DOLOMITI_GO - $dol),
      '「ドロミティ版がほしい」が ' . DOLOMITI_GO . ' 回で着手。', $dol >= DOLOMITI_GO ? 'Alta Via 1 のデータ確認に着手する' : '');
 
+// 検索での見え方（Search Console）。3ヶ月判定（REVIEW_1）はこの表示回数で決める。
+// 「ほぼゼロ」の線は 28 日で 100 回（仮置き。CONCEPT の「軸を変える条件」を数字にしたもの。変えるならここと STATUS.md）
+const IMPRESSIONS_FLOOR_28D = 100;
+$impr = null;
+if (!($gsc['enabled'] ?? false)) {
+  $say('search', 'act', 'Search Console 未接続', '検索の表示回数が見えないと 3ヶ月判定ができない。',
+       'Search Console のサービスアカウント鍵を設定する（STATUS.md の手順）');
+} elseif (isset($gsc['error'])) {
+  $say('search', 'act', '取得エラー', $gsc['error'], '鍵と Search Console の権限を確認する');
+} else {
+  $t = $gsc['performance']['totals']; $p = $gsc['performance']['prev'];
+  $impr = $t['impressions'];
+  $trend = $p['impressions'] ? round(($t['impressions'] - $p['impressions']) / $p['impressions'] * 100) : null;
+  $tr = $trend === null ? '' : '（前の28日比 ' . ($trend >= 0 ? '+' : '') . $trend . '%）';
+  if ($impr === 0) {
+    $say('search', 'act', '検索に一度も出ていない', '28日の表示回数 0。インデックスされていない可能性。',
+         '下の「インデックス状況」を見て、未登録ならサイトマップを送信する');
+  } elseif ($impr < IMPRESSIONS_FLOOR_28D) {
+    $say('search', 'wait', '表示 ' . $impr . ' 回' . $tr, '28日で ' . IMPRESSIONS_FLOOR_28D . ' 回未満は「ほぼゼロ」の扱い（仮置きの線）。');
+  } else {
+    $say('search', ($trend ?? 0) >= 0 ? 'good' : 'ok', '表示 ' . $impr . ' 回' . $tr, 'クリック ' . $t['clicks'] . '、平均順位 ' . $t['position'] . '。');
+  }
+}
+
 // 継続判定。送客は期間の長さに関わらず 30 日換算で見る
 $monthly = (int)round($sends / $days * 30);
 $today = gmdate('Y-m-d');
 $daysTo = fn(string $d) => (int)ceil((strtotime($d) - strtotime($today)) / 86400);
 if ($today < REVIEW_1) {
   $say('continue', 'wait', '3ヶ月判定まで ' . $daysTo(REVIEW_1) . ' 日（' . REVIEW_1 . '）',
-       'その日に Search Console のインプレッションで判定。送客は 30 日換算で ' . $monthly . ' / ' . MONTHLY_SEND_TARGET . '（6ヶ月判定 ' . REVIEW_2 . ' の基準）。');
+       'その日に Search Console のインプレッションで判定（いま 28日 ' . ($impr === null ? '未取得' : $impr . ' 回') . ' / 基準 ' . IMPRESSIONS_FLOOR_28D . '）。'
+       . '送客は 30 日換算で ' . $monthly . ' / ' . MONTHLY_SEND_TARGET . '（6ヶ月判定 ' . REVIEW_2 . ' の基準）。');
 } elseif ($today < REVIEW_2) {
   $say('continue', $monthly >= MONTHLY_SEND_TARGET ? 'good' : 'act',
        '6ヶ月判定まで ' . $daysTo(REVIEW_2) . ' 日', '送客 30 日換算 ' . $monthly . ' / ' . MONTHLY_SEND_TARGET . '。',
@@ -251,7 +335,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}small{color:#6F7B74
 .lv{display:inline-block;font-size:.72rem;padding:0 .4rem;border-radius:3px;margin-right:.3rem;vertical-align:1px}
 .lv-wait{background:#ECEEEB;color:#55615A}.lv-act{background:#F6E7C8;color:#7A4B00}.lv-ok{background:#E3EEE7;color:#2E6B4A}.lv-good{background:#2E6B4A;color:#fff}
 .todo{border:1px solid #E6CF9C;background:#FFF9EC;border-radius:6px;padding:.6rem 1rem;margin:1rem 0}.todo ol{margin:.3rem 0 0;padding-left:1.3rem}
-.bar{display:inline-block;height:.55rem;background:#2E6B4A;border-radius:2px;vertical-align:middle}.bar.lo{background:#C98A1B}</style>
+.bar{display:inline-block;height:.55rem;background:#2E6B4A;border-radius:2px;vertical-align:middle}.bar.lo{background:#C98A1B}
+h3{font-size:1rem;margin:1.4rem 0 .3rem}.chart{display:block;width:100%;height:auto;margin:.3rem 0 .8rem}
+form{margin:.6rem 0}button{font:inherit;padding:.35rem .9rem;border:1px solid #2E6B4A;background:#2E6B4A;color:#fff;border-radius:4px;cursor:pointer}</style>
 <?php
 $LV = ['wait' => '保留', 'act' => '要対応', 'ok' => '妥当', 'good' => '良い'];
 $verdict = function (string $key) use ($J, $LV, $h) {
@@ -267,6 +353,7 @@ $todo = array_filter($J, fn($j) => $j['level'] === 'act' && $j['todo'] !== '');
   <a href="?token=<?= $tok ?>&days=30">30</a> ·
   <a href="?token=<?= $tok ?>&days=90">90</a> ·
   <a href="?token=<?= $tok ?>&days=<?= $days ?>&format=json">JSON</a></small></h1>
+<?php if ($flash !== ''): ?><p class="todo"><?= $h($flash) ?></p><?php endif; ?>
 
 <div class="todo"><b>今やること</b>
 <?php if ($todo): ?><ol><?php foreach ($todo as $j): ?><li><?= $h($j['todo']) ?> <small>— <?= $h($j['head']) ?></small></li><?php endforeach; ?></ol>
@@ -282,7 +369,102 @@ $todo = array_filter($J, fn($j) => $j['level'] === 'act' && $j['todo'] !== '');
   <div class="tile"><small>MCP ツール呼び出し</small><b><?= $mcpCalls ?></b>
     <small>AI 経由の利用。接続 <?= $counts['mcp_initialize'] ?? 0 ?> 回</small><?= $verdict('mcp') ?></div>
   <div class="tile"><small>日付フィルタ利用</small><b><?= $counts['change_date'] ?? 0 ?></b><small>断面図マーカー <?= $counts['profile_marker'] ?? 0 ?></small></div>
+  <div class="tile"><small>検索の表示（28日・Search Console）</small><b><?= $impr === null ? '—' : $impr ?></b>
+    <small><?= ($gsc['enabled'] ?? false) && !isset($gsc['error']) ? 'クリック ' . $gsc['performance']['totals']['clicks'] . '・CTR ' . $gsc['performance']['totals']['ctr'] . '%' : '' ?></small><?= $verdict('search') ?></div>
 </div>
+
+<?php
+// 日ごとの棒グラフ（インライン SVG。外部ライブラリなし）
+$bars = function (array $series, int $days, string $color, string $unit) use ($h): string {
+  $labels = [];
+  for ($i = $days - 1; $i >= 0; $i--) { $labels[] = gmdate('Y-m-d', time() - $i * 86400); }
+  $max = max(1, ...array_map(fn($d) => (int)($series[$d] ?? 0), $labels));
+  $w = 860; $ht = 90; $bw = $w / count($labels);
+  $out = '<svg viewBox="0 0 ' . $w . ' ' . ($ht + 16) . '" class="chart" role="img" aria-label="' . $h($unit) . 'の日別推移">';
+  foreach ($labels as $i => $d) {
+    $v = (int)($series[$d] ?? 0); $bh = $v / $max * $ht;
+    $out .= '<rect x="' . round($i * $bw + 1, 1) . '" y="' . round($ht - $bh, 1) . '" width="' . round(max(1, $bw - 2), 1) . '" height="' . round($bh, 1)
+          . '" fill="' . $color . '"><title>' . $d . ' ' . $v . ' ' . $h($unit) . '</title></rect>';
+  }
+  $out .= '<text x="0" y="' . ($ht + 13) . '" font-size="10" fill="#6F7B74">' . $labels[0] . '</text>'
+        . '<text x="' . $w . '" y="' . ($ht + 13) . '" font-size="10" fill="#6F7B74" text-anchor="end">' . end($labels) . '　最大 ' . $max . '</text></svg>';
+  return $out;
+};
+$chartDays = min($days, 90);
+?>
+<h2>日別の推移</h2>
+<p><small>閲覧（上）と送客クリック（下）。棒にカーソルを当てると日付と数。</small></p>
+<?= $bars($dailyPv, $chartDays, '#9DB8A7', '閲覧') ?>
+<?= $bars($dailyOut, $chartDays, '#2E6B4A', '送客') ?>
+
+<h2>検索（Search Console）</h2>
+<?php if (!($gsc['enabled'] ?? false)): ?>
+<p><small>未接続。サービスアカウントの JSON 鍵を <code>data/gsc-key.json</code> に置き、config.php に <code>gsc_*</code> を足すと、
+検索語・表示回数・インデックス状況・サイトマップの送信がここでできるようになる（手順は STATUS.md）。</small><?= $verdict('search') ?></p>
+<?php elseif (isset($gsc['error'])): ?>
+<p><?= $verdict('search') ?></p>
+<?php else: $pf = $gsc['performance']; $t = $pf['totals']; $p = $pf['prev']; ?>
+<p><small><?= $h($pf['range'][0]) ?> 〜 <?= $h($pf['range'][1]) ?>（数字は 2〜3 日遅れ。6 時間キャッシュ・
+  <a href="?token=<?= $tok ?>&days=<?= $days ?>&refresh=1">今すぐ取り直す</a>）</small><?= $verdict('search') ?></p>
+<table><tr><th></th><th class="n">表示</th><th class="n">クリック</th><th class="n">CTR</th><th class="n">平均順位</th></tr>
+<tr><td>直近28日</td><td class="n"><b><?= $t['impressions'] ?></b></td><td class="n"><?= $t['clicks'] ?></td><td class="n"><?= $t['ctr'] ?>%</td><td class="n"><?= $t['position'] ?></td></tr>
+<tr><td><small>その前の28日</small></td><td class="n"><?= $p['impressions'] ?></td><td class="n"><?= $p['clicks'] ?></td><td class="n"><?= $p['ctr'] ?>%</td><td class="n"><?= $p['position'] ?></td></tr></table>
+<?= $bars(array_map(fn($x) => $x['impressions'], $pf['daily']), 28, '#5B7FA6', '表示') ?>
+
+<h3>検索語（上位）</h3>
+<table><tr><th>検索語</th><th class="n">表示</th><th class="n">クリック</th><th class="n">順位</th></tr>
+<?php foreach ($pf['queries'] as $q): ?><tr><td><?= $h($q['key']) ?></td><td class="n"><?= $q['impressions'] ?></td><td class="n"><?= $q['clicks'] ?></td><td class="n"><?= $q['position'] ?></td></tr><?php endforeach; ?>
+<?php if (!$pf['queries']): ?><tr><td colspan="4"><small>まだ無い</small></td></tr><?php endif; ?></table>
+
+<h3>ページ（上位）</h3>
+<table><tr><th>ページ</th><th class="n">表示</th><th class="n">クリック</th><th class="n">順位</th></tr>
+<?php foreach ($pf['pages'] as $q): ?><tr><td><?= $h(preg_replace('#^https?://[^/]+#', '', $q['key'])) ?></td><td class="n"><?= $q['impressions'] ?></td><td class="n"><?= $q['clicks'] ?></td><td class="n"><?= $q['position'] ?></td></tr><?php endforeach; ?></table>
+
+<h3>国</h3>
+<p><small>日本以外からの表示は、訪日客向けの仮説（英語版の価値）の裏づけになる。</small></p>
+<table><tr><th>国（ISO）</th><th class="n">表示</th><th class="n">クリック</th></tr>
+<?php foreach ($pf['countries'] as $q): ?><tr><td><?= $h(strtoupper($q['key'])) ?></td><td class="n"><?= $q['impressions'] ?></td><td class="n"><?= $q['clicks'] ?></td></tr><?php endforeach; ?></table>
+
+<h3>サイトマップ</h3>
+<table><tr><th>サイトマップ</th><th>最後に送信</th><th>最後に読まれた</th><th class="n">警告</th><th class="n">エラー</th><th class="n">送信 URL</th></tr>
+<?php foreach ($gsc['sitemaps'] as $s): $c = $s['contents'][0] ?? []; ?>
+<tr><td><small><?= $h($s['path'] ?? '') ?></small></td><td><small><?= $h(substr((string)($s['lastSubmitted'] ?? ''), 0, 16)) ?></small></td>
+<td><small><?= $h(substr((string)($s['lastDownloaded'] ?? ''), 0, 16)) ?></small></td><td class="n"><?= (int)($s['warnings'] ?? 0) ?></td>
+<td class="n"><?= (int)($s['errors'] ?? 0) ?></td><td class="n"><?= $h($c['submitted'] ?? '') ?></td></tr>
+<?php endforeach; ?>
+<?php if (!$gsc['sitemaps']): ?><tr><td colspan="6"><small>登録なし</small></td></tr><?php endif; ?></table>
+<form method="post" action="?token=<?= $tok ?>&days=<?= $days ?>">
+  <input type="hidden" name="token" value="<?= $tok ?>"><input type="hidden" name="action" value="submit_sitemap">
+  <button type="submit">サイトマップを送信（<?= $h($cfg['gsc_sitemap'] ?? '') ?>）</button>
+  <small>更新日（lastmod）は中身が変わったページだけ新しくなる。大きく直したときに押す。</small>
+</form>
+
+<h3>インデックス状況（主要ページ）</h3>
+<table><tr><th>URL</th><th>判定</th><th>状態</th><th>最終クロール</th></tr>
+<?php foreach ($gsc['inspect'] as $u => $s): ?>
+<tr><td><small><?= $h(preg_replace('#^https?://[^/]+#', '', $u)) ?></small></td>
+<td><span class="lv lv-<?= $s['verdict'] === 'PASS' ? 'ok' : ($s['verdict'] === 'NEUTRAL' ? 'wait' : 'act') ?>"><?= $h($s['verdict']) ?></span></td>
+<td><small><?= $h($s['coverage']) ?></small></td><td><small><?= $h(substr((string)$s['last_crawl'], 0, 10)) ?></small></td></tr>
+<?php endforeach; ?></table>
+<?php endif; ?>
+
+<h2>流入元</h2>
+<p><small>外から来た閲覧の参照元（ホスト名だけを記録）。AI からの流入は、ゼロクリック時代に AI が HutsGo を出典として示している目安。</small></p>
+<table><tr><th>分類</th><th class="n">日本語版</th><th class="n">English</th><th class="n">計</th></tr>
+<?php foreach ($REF_LABEL as $g => $label): $n = $refByGroup[$g] ?? 0; if (!$n) continue; ?>
+<tr><td><?= $h($label) ?></td><td class="n"><?= $refByLang['ja'][$g] ?? 0 ?></td><td class="n"><?= $refByLang['en'][$g] ?? 0 ?></td><td class="n"><b><?= $n ?></b></td></tr>
+<?php endforeach; ?>
+<?php if (!$refByGroup): ?><tr><td colspan="4"><small>まだ無い</small></td></tr><?php endif; ?></table>
+<?php if ($refHosts): ?>
+<details><summary><small>参照元のホスト（上位）</small></summary><table>
+<?php foreach (array_slice($refHosts, 0, 30, true) as $host => $n): ?><tr><td><small><?= $h($host) ?></small></td><td><small><?= $h($REF_LABEL[$refGroup($host)] ?? '') ?></small></td><td class="n"><?= $n ?></td></tr><?php endforeach; ?>
+</table></details>
+<?php endif; ?>
+
+<h2>機能の需要テスト</h2>
+<p><small>作る前に「押されるか」だけを見るリンクと、ボード上の操作。人数は日替わりハッシュでの重複除き。</small></p>
+<table><tr><th>機能</th><th class="n">クリック</th><th class="n">人</th></tr>
+<?php foreach ($feature_rows as $k => $f): ?><tr><td><?= $h($f['label']) ?> <small><code><?= $h($k) ?></code></small></td><td class="n"><?= $f['clicks'] ?></td><td class="n"><?= $f['visitors'] ?></td></tr><?php endforeach; ?></table>
 
 <h2>データ被覆率</h2>
 <p><small>公開データ（hutsgo.com/data/huts.json）から集計。ここが差別化の実体。</small><?= $verdict('coverage') ?></p>

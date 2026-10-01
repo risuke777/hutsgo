@@ -35,6 +35,12 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      # 中身が変わったページの一覧。公開の後で IndexNow に知らせるために次のジョブへ渡す
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-meta
+          path: build-meta
+          retention-days: 3
 
   deploy:
     needs: build
@@ -45,3 +51,15 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # 公開が済んでから、変わったページだけを IndexNow（Bing など）へ知らせる。公開前に知らせると古いページを取りに来られる
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-meta
+          path: build-meta
+      - run: python3 tools/indexnow.py

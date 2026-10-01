@@ -4,7 +4,7 @@
 日本語版を / に、英語版を /en/ に出す。データは同じ SQLite から両方を生成する。
 英語版の狙いは訪日ハイカー: 電話が使えず、受付開始を逃すと泊まれない層。
 """
-import json, os, pathlib, shutil, sqlite3, datetime, sys, urllib.parse
+import hashlib, json, os, pathlib, re, shutil, sqlite3, datetime, sys, urllib.parse, urllib.request
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
 import markdown
@@ -1142,6 +1142,67 @@ API_HTML = """<!doctype html>
                      if ((h.get("season_2026") or {}).get("reservation") or {}).get("opens_at")))
 (DIST / "api").mkdir(exist_ok=True)
 (DIST / "api" / "index.html").write_text(API_HTML, encoding="utf-8")
+
+
+# ---------------------------------------------------------------- 更新日（lastmod）と更新の通知
+# 毎回すべてのページを「今日更新」にすると、検索エンジンは lastmod を信用しなくなる（Google は
+# 不正確な lastmod を無視すると明言している）。中身のハッシュを公開中の page-hashes.json と比べ、
+# 変わったページだけ今日の日付にする。前回分が取れないとき（手元のビルド・初回）は今日のまま。
+# 変わったページの URL は build-meta/changed-urls.txt に書き、CI が公開後に IndexNow へ知らせる。
+INDEXNOW_KEY = "6f1c2b8e4d7a49c3a5e0b9d2c8f7a1e4"   # 公開前提の鍵（IndexNow の仕様。鍵ファイルをサイトに置いて所有を示す）
+
+
+def _page_file(loc):
+    rel = loc[len(SITE_URL):].lstrip("/")
+    return DIST / rel / "index.html" if (not rel or rel.endswith("/")) else DIST / rel
+
+
+def _page_hash(p):
+    # 日付だけ違うページを「変わった」と数えない（テンプレートが今日の日付を埋めている箇所がある）
+    return hashlib.sha256(p.read_bytes().replace(TODAY.encode(), b"")).hexdigest()[:16]
+
+
+def stamp_lastmod():
+    prev = {}
+    if not SITE_URL.startswith(("http://localhost", "https://hutsgo.jp")):
+        try:
+            with urllib.request.urlopen(SITE_URL + "/page-hashes.json", timeout=15) as r:
+                prev = json.loads(r.read().decode("utf-8"))
+        except Exception as e:   # 初回や一時的な失敗。今日の日付で出すだけなので止めない
+            print(f"  page-hashes.json を取れなかった（{e}）。lastmod は今日のまま", file=sys.stderr)
+    sm = DIST / "sitemap.xml"
+    xml = sm.read_text(encoding="utf-8")
+    cur, changed = {}, []
+
+    def repl(m):
+        loc = m.group(1)
+        f = _page_file(loc)
+        if not f.exists():
+            return m.group(0)
+        hsh = _page_hash(f)
+        old = prev.get(loc) or {}
+        same = bool(prev) and old.get("hash") == hsh
+        last = old.get("lastmod") if same and old.get("lastmod") else TODAY
+        if not same:
+            changed.append(loc)
+        cur[loc] = {"hash": hsh, "lastmod": last}
+        return re.sub(r"<lastmod>[^<]*</lastmod>", f"<lastmod>{last}</lastmod>", m.group(0))
+
+    xml = re.sub(r"<url><loc>([^<]+)</loc>.*?</url>", repl, xml)
+    sm.write_text(xml, encoding="utf-8")
+    (DIST / "page-hashes.json").write_text(json.dumps(cur, ensure_ascii=False, indent=0), encoding="utf-8")
+    (DIST / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY, encoding="utf-8")
+    meta = ROOT / "build-meta"
+    meta.mkdir(exist_ok=True)
+    (meta / "changed-urls.txt").write_text("\n".join(changed) + ("\n" if changed else ""), encoding="utf-8")
+    host = urllib.parse.urlsplit(SITE_URL).hostname or ""
+    (meta / "indexnow.json").write_text(json.dumps({
+        "host": host, "key": INDEXNOW_KEY, "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt",
+        "urlList": changed, "first_build": not prev}, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"sitemap: {len(cur)} URL、変更 {len(changed)}" + ("" if prev else "（前回分なし）"))
+
+
+stamp_lastmod()
 
 print(f"articles: ja {len(ARTICLES['ja'])} / en {len(ARTICLES['en'])}")
 print(f"built {len(urls)} pages ({len(LOCALES)} languages) + dataset v{DATA_VERSION} ({DATA_INDEX['coverage']['huts']} huts) → {DIST}")

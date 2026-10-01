@@ -12,4 +12,17 @@ return [
   // 保存時の長辺ピクセルと JPEG 品質。再エンコードで EXIF（位置情報）も消える
   'max_photo_edge'  => 1600,
   'photo_quality'   => 78,
+  // Search Console（任意）。鍵が無ければ分析画面は「未接続」と出すだけ。
+  // サービスアカウントの JSON 鍵を data/ の下に置く（data/ は .htaccess で外から読めない）。
+  // そのサービスアカウントのメールを Search Console の「ユーザーと権限」に「フル」で追加しておく。
+  'gsc_key_file'    => __DIR__ . '/data/gsc-key.json',
+  'gsc_site'        => 'sc-domain:hutsgo.com',
+  'gsc_sitemap'     => 'https://hutsgo.com/sitemap.xml',
+  // インデックス状況を見る URL（URL 検査 API は 1 日 2000 回まで。ここは 24 時間キャッシュ）
+  'gsc_inspect'     => [
+    'https://hutsgo.com/', 'https://hutsgo.com/en/', 'https://hutsgo.com/plan/', 'https://hutsgo.com/en/plan/',
+    'https://hutsgo.com/booking/', 'https://hutsgo.com/en/booking/', 'https://hutsgo.com/trails/omote_ginza/',
+    'https://hutsgo.com/en/trails/omote_ginza/', 'https://hutsgo.com/huts/yarigatake_sanso/',
+    'https://hutsgo.com/en/huts/yarigatake_sanso/', 'https://hutsgo.com/api/',
+  ],
 ];

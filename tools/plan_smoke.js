@@ -519,6 +519,16 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
      agencyAsReservation.join(", "));
   ok("窓口が確認できていない小屋には窓口の欄を出さない（涸沢小屋）", !read("huts/karasawa_goya/index.html").includes('class="channel-list"'));
 
+  // ---- 16. サイトマップと更新の通知 --------------------------------------------
+  const sitemap = read("sitemap.xml");
+  const hashes = JSON.parse(read("page-hashes.json"));
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  ok("サイトマップの全 URL に中身のハッシュと更新日がある", locs.length > 50 && locs.every((u) => hashes[u] && /^\d{4}-\d{2}-\d{2}$/.test(hashes[u].lastmod)),
+     `${locs.length} URL`);
+  const keyFile = fs.readdirSync(DIST).find((f) => /^[0-9a-f]{32}\.txt$/.test(f));
+  ok("IndexNow の鍵ファイルがあり、中身がファイル名と一致", !!keyFile && read(keyFile) === keyFile.replace(".txt", ""));
+  ok("robots.txt にサイトマップの場所がある", /^Sitemap: \S+\/sitemap\.xml$/m.test(read("robots.txt")));
+
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
   } catch (e) {

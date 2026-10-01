@@ -13,3 +13,4 @@ xserver/.kpi.env
 tools/kpi/
 node_modules/
 tools/.tilecache/
+build-meta/
