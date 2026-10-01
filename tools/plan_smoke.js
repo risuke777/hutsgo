@@ -529,6 +529,16 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("IndexNow の鍵ファイルがあり、中身がファイル名と一致", !!keyFile && read(keyFile) === keyFile.replace(".txt", ""));
   ok("robots.txt にサイトマップの場所がある", /^Sitemap: \S+\/sitemap\.xml$/m.test(read("robots.txt")));
 
+  // ---- 17. 試作 /lab/flyover/ は検索に出さない・サイトからリンクしない ------------------
+  const lab = read("lab/flyover/index.html");
+  ok("試作ページは noindex", /<meta name="robots" content="noindex, nofollow">/.test(lab));
+  ok("試作ページはサイトマップに入らない", !/\/lab\//.test(sitemap));
+  ok("試作ページへのリンクがサイト本体に無い", !/\/lab\/flyover/.test(read("index.html") + read("en/index.html") + read("trails/omote_ginza/index.html")));
+  const flyRoutes = JSON.parse(read("lab/flyover/routes.json"));
+  const og = flyRoutes.find((r) => r.id === "omote_ginza");
+  ok("試作のルートデータ: 表銀座は登山道沿いの線と、座標のある小屋・登山口", og && og.traced && og.line.length > 100 && og.stops.length >= 6
+     && og.stops.every((s) => s.name.ja && s.name.en));
+
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
   } catch (e) {

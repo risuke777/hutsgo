@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>飛行動画の試作 | HutsGo Lab</title>
+<meta name="hutsgo-api" content="{{ API_URL }}">
+<meta name="hutsgo-lang" content="ja">
+<link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="{{ BASE }}/static/flyover.css">
+</head>
+<body>
+<main class="fly">
+  <header class="fly-head">
+    <p class="fly-kicker"><a href="{{ BASE }}/">HutsGo</a> Lab ・試作</p>
+    <h1>歩いたルートを、上から飛ぶ動画にする</h1>
+    <p class="fly-lede">ルートを選んで、山で撮った写真や動画を入れてください。撮影した場所で止まりながら、
+      航空写真の山の上をルートに沿って飛ぶ縦長の動画（SNS向け）を作ります。</p>
+    <p class="fly-privacy">写真・動画はこの端末の中だけで使います。どこにも送りません。位置情報も端末の中で読むだけです。</p>
+  </header>
+
+  <section class="fly-controls" aria-label="設定">
+    <label class="fly-field">ルート
+      <select id="fly-route"></select>
+    </label>
+    <label class="fly-field fly-file">写真・動画（複数選べます）
+      <input type="file" id="fly-files" accept="image/*,video/*" multiple>
+    </label>
+    <ol id="fly-list" class="fly-list" aria-live="polite"></ol>
+    <div class="fly-buttons">
+      <button type="button" id="fly-preview" class="fly-btn">下見する</button>
+      <button type="button" id="fly-record" class="fly-btn fly-btn-primary">動画を書き出す</button>
+    </div>
+    <p id="fly-status" class="fly-status" role="status"></p>
+  </section>
+
+  <section class="fly-stage" aria-label="プレビュー">
+    <canvas id="fly-out" width="720" height="1280"></canvas>
+    <div id="fly-map" aria-hidden="true"></div>
+  </section>
+
+  <section id="fly-result" class="fly-result" hidden>
+    <h2>できあがり</h2>
+    <video id="fly-video" controls playsinline></video>
+    <p><a id="fly-download" class="fly-btn fly-btn-primary" download>保存する</a></p>
+    <p id="fly-format" class="fly-note"></p>
+  </section>
+
+  <footer class="fly-foot">
+    <p>地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>（航空写真・標高タイル）。
+      ルートの線は地理院の道路中心線をたどったもの（ルートにより直線の目安）。</p>
+    <p>試作です。動きや書き出しは端末によって変わります。</p>
+  </footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.min.js"></script>
+<script src="{{ BASE }}/static/site.js" defer></script>
+<script src="{{ BASE }}/static/flyover.js" defer></script>
+</body>
+</html>

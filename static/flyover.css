@@ -1,0 +1,31 @@
+/* 試作 /lab/flyover/。サイト本体の CSS は読まない（独立した 1 枚） */
+:root{--ink:#17251F;--soft:#55615A;--line:#D5DBD6;--moss:#2E6B4A;--card:#fff;--bg:#F4F6F3}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;color:var(--ink);background:var(--bg)}
+.fly{max-width:980px;margin:0 auto;padding:1.25rem 1rem 3rem;display:grid;gap:1.25rem;
+  grid-template-columns:minmax(0,1fr) minmax(0,380px);grid-template-areas:"head head" "controls stage" "result stage" "foot foot"}
+.fly-head{grid-area:head}.fly-controls{grid-area:controls}.fly-stage{grid-area:stage}.fly-result{grid-area:result}.fly-foot{grid-area:foot}
+@media (max-width:760px){.fly{grid-template-columns:1fr;grid-template-areas:"head" "controls" "stage" "result" "foot"}}
+.fly-kicker{margin:0;font-size:.8rem;color:var(--soft);letter-spacing:.06em}.fly-kicker a{color:inherit}
+h1{font-size:1.45rem;line-height:1.35;margin:.2rem 0 .5rem}
+.fly-lede{margin:0 0 .4rem}.fly-privacy{margin:0;font-size:.85rem;color:var(--moss)}
+.fly-field{display:grid;gap:.25rem;font-size:.85rem;color:var(--soft);margin-bottom:.8rem}
+.fly-field select,.fly-field input{font:inherit;color:var(--ink);padding:.45rem .5rem;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.fly-list{list-style:none;margin:0 0 .8rem;padding:0;display:grid;gap:.35rem}
+.fly-list li{display:flex;gap:.6rem;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.35rem .5rem;font-size:.85rem}
+.fly-list img,.fly-list video{width:44px;height:44px;object-fit:cover;border-radius:4px;flex:none;background:#ddd}
+.fly-list small{color:var(--soft);display:block}
+.fly-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
+.fly-btn{font:inherit;display:inline-block;text-decoration:none;cursor:pointer;padding:.55rem 1.1rem;border-radius:999px;border:1px solid var(--moss);background:var(--card);color:var(--moss)}
+.fly-btn-primary{background:var(--moss);color:#fff}
+.fly-btn:disabled{opacity:.5;cursor:default}
+.fly-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.fly-status{min-height:1.6em;font-size:.85rem;color:var(--soft);margin:.6rem 0 0}
+.fly-stage{position:relative}
+#fly-out{display:block;width:100%;max-width:380px;aspect-ratio:9/16;height:auto;border-radius:14px;background:#1d2a24;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+/* 地図そのものは画面外で描かせ、合成した #fly-out だけを見せる（書き出す絵と見える絵を一致させる） */
+#fly-map{position:absolute;left:-10000px;top:0;width:360px;height:640px}
+.fly-result video{width:100%;max-width:380px;border-radius:12px;background:#000}
+.fly-note{font-size:.8rem;color:var(--soft)}
+.fly-foot{font-size:.78rem;color:var(--soft);border-top:1px solid var(--line);padding-top:.8rem}
+.fly-foot a{color:inherit}

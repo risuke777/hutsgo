@@ -702,6 +702,7 @@ def write(path, tpl, **ctx):
     out.write_text(env.get_template(tpl).render(**ctx), encoding="utf-8")
 
 
+FLY_ROUTES = {}
 for lang, prefix in LOCALES:
     m = build_model(lang)
     # 記事の日付は年をまたぐので年まで出す（小屋の営業期間は年が自明なので fmt_date は月日だけ）
@@ -719,6 +720,17 @@ for lang, prefix in LOCALES:
              AREA_PHOTO=next((p for p in photos if p["role"] == "area"), None))
     d = (prefix.lstrip("/") + "/") if prefix else ""
     huts_l, trails_l = list(m["huts"].values()), m["trails"]
+    # 試作 /lab/flyover/ 用のルート（線と、座標のある小屋・登山口）。言語ごとの名前だけ足していく
+    for t in trails_l:
+        r = FLY_ROUTES.setdefault(t["id"], {
+            "id": t["id"], "name": {}, "traced": t["legs_total"] > 0 and t["legs_traced"] == t["legs_total"],
+            "line": [[round(a, 6), round(b, 6)] for a, b in t["line_pts"]],
+            "stops": [{"id": s["hut_id"] or s["trailhead_id"], "kind": "hut" if s["hut"] else "trailhead", "name": {},
+                       "lat": p["lat"], "lon": p["lon"], "elev": p["elevation_m"]}
+                      for s in t["stops"] for p in [s["hut"] or s["trailhead"]] if p and p.get("lat") and p.get("lon")]})
+        r["name"][lang] = t["name"]
+        for st, s in zip(r["stops"], [s for s in t["stops"] if (s["hut"] or s["trailhead"]) and (s["hut"] or s["trailhead"]).get("lat")]):
+            st["name"][lang] = (s["hut"] or s["trailhead"])["name"]
 
     arts = ARTICLES[lang]
     for h in huts_l:
@@ -1200,6 +1212,15 @@ def stamp_lastmod():
         "host": host, "key": INDEXNOW_KEY, "keyLocation": f"{SITE_URL}/{INDEXNOW_KEY}.txt",
         "urlList": changed, "first_build": not prev}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"sitemap: {len(cur)} URL、変更 {len(changed)}" + ("" if prev else "（前回分なし）"))
+
+
+# ---------------------------------------------------------------- 試作: 立体の飛行動画（/lab/flyover/）
+# サイトからリンクしない・検索に出さない（noindex、サイトマップに入れない）。写真・動画は端末の中だけで使う
+(DIST / "lab" / "flyover").mkdir(parents=True, exist_ok=True)
+(DIST / "lab" / "flyover" / "routes.json").write_text(
+    json.dumps(list(FLY_ROUTES.values()), ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+(DIST / "lab" / "flyover" / "index.html").write_text(
+    env.get_template("lab_flyover.html").render(BASE=BASE, API_URL=API_URL, SITE_URL=SITE_URL), encoding="utf-8")
 
 
 stamp_lastmod()
