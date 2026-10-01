@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>飛行動画の試作 | HutsGo Lab</title>
+<title>3D の山行ふりかえり（試作）| HutsGo Lab</title>
 <meta name="hutsgo-api" content="{{ API_URL }}">
 <meta name="hutsgo-lang" content="ja">
 <link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
@@ -15,30 +15,64 @@
 <main class="fly">
   <header class="fly-head">
     <p class="fly-kicker"><a href="{{ BASE }}/">HutsGo</a> Lab ・試作</p>
-    <h1>歩いたルートを、上から飛ぶ動画にする</h1>
-    <p class="fly-lede">ルートを選んで、山で撮った写真や動画を入れてください。撮影した場所で止まりながら、
-      航空写真の山の上をルートに沿って飛ぶ縦長の動画（SNS向け）を作ります。</p>
-    <p class="fly-privacy">写真・動画はこの端末の中だけで使います。どこにも送りません。位置情報も端末の中で読むだけです。</p>
+    <h1>歩いた道を、3D でふりかえる</h1>
+    <p class="fly-lede">手持ちの GPX か HutsGo のルートを選び、山で撮った写真・動画を入れてください。
+      3D の地図は指で回したり傾けたりでき、下のバーで道の途中へ移動できます。縦長の動画にも書き出せます。</p>
+    <p class="fly-privacy">GPX・写真・動画はこの端末の中だけで使います。どこにも送りません。</p>
   </header>
 
   <section class="fly-controls" aria-label="設定">
-    <label class="fly-field">ルート
-      <select id="fly-route"></select>
-    </label>
-    <label class="fly-field fly-file">写真・動画（複数選べます）
+    <div class="fly-source" role="group" aria-label="道のデータ">
+      <label class="fly-field">HutsGo のルート
+        <select id="fly-route"></select>
+      </label>
+      <label class="fly-field fly-file">または GPX ファイル（YAMAP・ヤマレコ・Garmin など）
+        <input type="file" id="fly-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml">
+      </label>
+    </div>
+    <label class="fly-field fly-file">写真・動画（あとから何回でも足せます）
       <input type="file" id="fly-files" accept="image/*,video/*" multiple>
     </label>
     <ol id="fly-list" class="fly-list" aria-live="polite"></ol>
     <div class="fly-buttons">
-      <button type="button" id="fly-preview" class="fly-btn">下見する</button>
-      <button type="button" id="fly-record" class="fly-btn fly-btn-primary">動画を書き出す</button>
+      <button type="button" id="fly-record" class="fly-btn fly-btn-primary">縦長の動画に書き出す</button>
     </div>
     <p id="fly-status" class="fly-status" role="status"></p>
   </section>
 
-  <section class="fly-stage" aria-label="プレビュー">
-    <canvas id="fly-out" width="720" height="1280"></canvas>
-    <div id="fly-map" aria-hidden="true"></div>
+  <section class="fly-stage" aria-label="3D の地図">
+    <div class="fly-phone">
+      <div id="fly-map"></div>
+      <div class="fly-top" aria-live="off">
+        <p id="fly-date" class="fly-date"></p>
+        <p id="fly-clock" class="fly-clock"></p>
+        <p id="fly-place" class="fly-place"></p>
+      </div>
+      <button type="button" id="fly-add" class="fly-round fly-add" aria-label="写真・動画を足す">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 4 7.5 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-3.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" fill="currentColor"/></svg>
+      </button>
+      <figure id="fly-popup" class="fly-popup" hidden>
+        <button type="button" id="fly-popup-close" class="fly-round fly-popup-close" aria-label="閉じる">×</button>
+        <div id="fly-popup-media"></div>
+        <figcaption id="fly-popup-cap"></figcaption>
+      </figure>
+      <div class="fly-panel">
+        <dl class="fly-stats">
+          <div><dt>経過時間</dt><dd id="fly-st-time">—</dd></div>
+          <div><dt>標高</dt><dd id="fly-st-elev">—</dd></div>
+          <div><dt>距離</dt><dd id="fly-st-dist">—</dd></div>
+        </dl>
+        <canvas id="fly-profile" class="fly-profile" width="640" height="120" aria-hidden="true"></canvas>
+        <div class="fly-player">
+          <button type="button" id="fly-play" class="fly-round fly-play" aria-label="再生">
+            <svg class="i-play" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            <svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
+          </button>
+          <input type="range" id="fly-seek" class="fly-seek" min="0" max="1000" value="0" step="1" aria-label="道の途中へ移動">
+        </div>
+      </div>
+    </div>
+    <p class="fly-hint">ドラッグで移動、右ドラッグ・2 本指で回転と傾き。再生中に地図を触ると止まります。</p>
   </section>
 
   <section id="fly-result" class="fly-result" hidden>
@@ -48,9 +82,11 @@
     <p id="fly-format" class="fly-note"></p>
   </section>
 
+  <canvas id="fly-out" width="720" height="1280" hidden></canvas>
+
   <footer class="fly-foot">
     <p>地図: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>（航空写真・標高タイル）。
-      ルートの線は地理院の道路中心線をたどったもの（ルートにより直線の目安）。</p>
+      HutsGo のルートの線は地理院の道路中心線をたどったもの（ルートにより直線の目安）。小屋のピンは HutsGo の確認済みデータ。</p>
     <p>試作です。動きや書き出しは端末によって変わります。</p>
   </footer>
 </main>
