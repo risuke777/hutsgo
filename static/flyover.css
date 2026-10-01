@@ -60,3 +60,17 @@ h1{font-size:1.45rem;line-height:1.35;margin:.2rem 0 .5rem}
 .fly-foot a{color:inherit}
 /* 書き出し中は地図を書き出しの大きさ（360×640 を 2 倍）に固定する */
 .fly-phone.is-exporting{width:360px;height:640px;aspect-ratio:auto;max-height:none}
+
+/* 動画の長さ */
+.fly-buttons{align-items:end}.fly-len{margin:0}.fly-len select{padding:.5rem}
+/* 山頂 */
+.fly-peak{font-size:.72rem;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 1px 4px rgba(0,0,0,.8);white-space:nowrap;pointer-events:none;text-align:center;line-height:1.15}
+.fly-peak::before{content:"▲";display:block;font-size:.6rem;color:#fff}
+.fly-peak small{display:block;font-weight:500;font-size:.66rem}
+/* 終点で出す「この道の小屋」 */
+.fly-end{position:absolute;left:.8rem;right:.8rem;top:18%;background:#fff;border-radius:16px;padding:.8rem 1rem;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.fly-end[hidden]{display:none}
+.fly-end h2{font-size:1rem;margin:0 0 .4rem}
+.fly-end ol{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
+.fly-end a{font-weight:700;color:var(--moss)}
+.fly-end small{display:block;color:var(--soft);font-size:.78rem}
