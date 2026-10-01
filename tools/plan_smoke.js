@@ -491,6 +491,34 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("GPX のリンクは GPX ファイルがあるルートにだけ出る", noGpx.length === 0);
   if (noGpx.length) console.log("  GPX のリンクとファイルが食い違う:", noGpx.join(", "));
 
+  // ---- 15. 予約の窓口（小屋が案内しているものだけ・英語で使えるか） -------------
+  // 10 の後で行程を描き直しているので、パネルは開き直す
+  const yariCard = n.d.querySelector('.plan-card[data-hut="yarigatake_sanso"]');
+  const yariBtn = yariCard && yariCard.querySelector("button.btn-ghost:not(.plan-move-btn)");
+  if (yariBtn && yariCard.querySelector(".plan-contact").hidden) yariBtn.dispatchEvent(new n.w.Event("click", { bubbles: true }));
+  const chPanel = yariCard && yariCard.querySelector(".plan-contact .channel-list");
+  ok("連絡の準備に予約の窓口が出る（槍ヶ岳山荘）", !!chPanel && chPanel.querySelectorAll("li").length === 1);
+  ok("窓口に英語対応の表示が付く（日本語のみ）", !!chPanel && /日本語のみ/.test(chPanel.textContent));
+  ok("小屋の窓口は送客として計測する", !!chPanel && chPanel.querySelector("a").dataset.track === "reservation");
+  const allHuts = JSON.parse(hutsJson);
+  const allCh = allHuts.flatMap((h) => ((h.season_2026 || {}).reservation || {}).channels || []);
+  ok("公開データに窓口が入り、全部に確認日がある",
+     allCh.length >= 25 && allCh.every((c) => c.provenance && /^\d{4}-\d{2}-\d{2}$/.test(c.provenance.last_verified_at)),
+     `${allCh.length}件`);
+  ok("英語対応の値は4種類のどれか", allCh.every((c) => ["yes", "partial", "no", "unknown"].includes(c.english)));
+  const read = (p) => fs.readFileSync(path.join(DIST, p), "utf8");
+  const yokooEn = read("en/huts/yokoo_sanso/index.html");
+  ok("英語版では窓口の英語ページへ飛ぶ（やまたん /en/）", yokooEn.includes('href="https://www.yamatan.net/en/hut/yokoosanso"'));
+  ok("入国当日は泊まれない旨が英語で出る", /arrive in Japan/.test(yokooEn));
+  // 旅行会社への案内を送客（outbound_reservation）として数えると、小屋への送客率が水増しされる
+  const hutDirs = ["", "en/"].flatMap((p) => fs.readdirSync(path.join(DIST, p + "huts"), { withFileTypes: true })
+    .filter((e) => e.isDirectory()).map((e) => p + "huts/" + e.name + "/index.html"));
+  const agencyAsReservation = hutDirs.filter((p) => /href="https:\/\/jaa\.travel[^"]*"[^>]*data-track="reservation"/.test(read(p)));
+  ok("旅行会社へのリンクは送客に数えない（agency_link）", agencyAsReservation.length === 0
+     && /href="https:\/\/jaa\.travel[^"]*"[^>]*data-track="agency_link"/.test(read("en/huts/hotakadake_sanso/index.html")),
+     agencyAsReservation.join(", "));
+  ok("窓口が確認できていない小屋には窓口の欄を出さない（涸沢小屋）", !read("huts/karasawa_goya/index.html").includes('class="channel-list"'));
+
     report([...a.errors, ...b.errors, ...c.errors, ...e.errors, ...f.errors, ...g.errors, ...h.errors,
             ...k.errors, ...j.errors, ...l.errors, ...l2.errors, ...n.errors, ...o.errors]);
   } catch (e) {

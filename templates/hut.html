@@ -56,6 +56,24 @@
       <div><dt>{{ T.l_booking_opens }}</dt><dd>{% if s and s.opens %}{{ s.opens }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
       <div><dt>{{ T.l_booking_where }}</dt><dd>{% if s and s.reservation_url %}<a href="{{ s.reservation_url }}" target="_blank" rel="noopener" data-track="reservation" data-hut="{{ h.id }}">{{ T.l_booking_page }}</a>{% endif %}{% if s and s.reservation_phone %}{% if s.reservation_url %}{{ T.mid }}{% endif %}<a href="tel:{{ s.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ s.reservation_phone }}</a>{% endif %}{% if not (s and (s.reservation_url or s.reservation_phone)) %}{{ T.unknown }}{% endif %}</dd></div>
     </dl>
+    {% if h.channels %}
+    <div class="channels">
+      <h3>{{ T.plan_js_ch_h }}</h3>
+      <ul class="channel-list">
+        {% for c in h.channels %}
+        <li>
+          <a href="{{ c.href }}" target="_blank" rel="noopener" data-track="{{ c.track }}" data-hut="{{ h.id }}">{{ c.label }}</a>
+          <span class="ch-en ch-en-{{ c.english }}">{{ c.english_label }}</span>
+          {% if c.guide_en_url %}<a class="ch-guide" href="{{ c.guide_en_url }}" target="_blank" rel="noopener">{{ T.plan_js_ch_guide }}</a>{% endif %}
+          {% if c.note_t %}<small>{{ c.note_t }}</small>{% endif %}
+          {% if c.kind == 'agency' %}<small>{{ T.plan_js_ch_agency }}</small>{% endif %}
+          <small class="conf"><span class="dot dot-{{ c.confidence }}" aria-hidden="true"></span>{{ c | conf_text }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="quiet">{{ T.plan_js_ch_src }}</p>
+    </div>
+    {% endif %}
   </section>
 
   <section class="block" aria-labelledby="rates-h">

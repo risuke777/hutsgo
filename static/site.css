@@ -209,6 +209,17 @@ a.pm.is-current .p-label{fill:var(--moss-deep);font-weight:700}
 .facts dt{font-size:.75rem;color:var(--granite);letter-spacing:.04em}
 .facts dd{margin:0;font-weight:500}
 .facts dd small.conf{margin-top:.3rem}
+/* 予約の窓口 */
+.channels{margin-top:1rem}
+.channels h3{font-size:1rem;margin:0 0 .4rem}
+.channel-list{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.channel-list li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .6rem;padding:.55rem .8rem;
+  background:var(--card);border:1px solid var(--line);border-radius:6px}
+.channel-list small{flex-basis:100%;color:var(--ink-soft);font-size:.82rem}
+.ch-en{font-size:.75rem;padding:.05rem .45rem;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap}
+.ch-en-yes{border-color:var(--moss);color:var(--moss-deep)}
+.ch-en-unknown{border-style:dashed}
+.ch-guide{font-size:.82rem}
 .rates{border-collapse:collapse;width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .rates th,.rates td{padding:.6rem .9rem;text-align:left;border-bottom:1px solid var(--line)}
 .rates tr:last-child th,.rates tr:last-child td{border-bottom:0}

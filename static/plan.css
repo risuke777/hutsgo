@@ -190,3 +190,7 @@
 .plan-contact-glossary .rates th,.plan-contact-glossary .rates td{padding:.4rem .6rem}
 .plan-contact-ics{display:flex;flex-direction:column;gap:.35rem;align-items:flex-start}
 .plan-contact-ics .btn{font-size:.85rem}
+
+/* 連絡の準備パネルの予約窓口（.channel-list の基本は site.css） */
+.plan-contact .channel-list{margin:.25rem 0 .75rem}
+.plan-contact .channel-list li{padding:.45rem .65rem}

@@ -306,7 +306,7 @@
       ph.dataset.track = "phone"; ph.dataset.hut = h.id;
       acts.appendChild(ph);
     }
-    if ((res.phone || res.url) && window.HutsGoContact) {
+    if ((res.phone || res.url || (res.channels || []).length) && window.HutsGoContact) {
       var cbtn = el("button", "btn btn-ghost", t("contact_btn"));
       cbtn.type = "button";
       var panelId = "contact-" + h.id + "-" + day;
@@ -321,7 +321,7 @@
       acts.appendChild(cbtn);
     }
     card.appendChild(acts);
-    if ((res.phone || res.url) && window.HutsGoContact) {
+    if ((res.phone || res.url || (res.channels || []).length) && window.HutsGoContact) {
       var contactPanel = el("div", "plan-contact");
       contactPanel.hidden = true;
       card.appendChild(contactPanel);
@@ -357,6 +357,34 @@
       panel.appendChild(el("p", "quiet plan-contact-stay",
         t("your_stay") + "：" + p[0] + "-" + String(p[1]).padStart(2, "0") + "-" + String(p[2]).padStart(2, "0")
         + "（" + (state.people || 1) + (LANG === "en" ? (state.people === 1 ? " person" : " people") : "名") + "）"));
+    }
+
+    // --- 予約の窓口（小屋が案内しているものだけ。英語で使えるかを並べて見せる） ---
+    var chs = res.channels || [];
+    if (chs.length) {
+      panel.appendChild(el("h4", "plan-contact-h", t("ch_h")));
+      var ul = el("ul", "channel-list");
+      chs.forEach(function (c) {
+        var li = el("li");
+        var a = el("a", null, t(c.operator === "hut" && c.kind === "form" ? "ch_hut_form" : "ch_" + c.operator));
+        a.href = (LANG === "en" && c.url_en) ? c.url_en : c.url;
+        a.target = "_blank"; a.rel = "noopener";
+        // 旅行会社への案内は小屋への送客ではないので、送客率の計測に混ぜない
+        a.dataset.track = c.kind === "agency" ? "agency_link" : "reservation";
+        a.dataset.hut = h.id;
+        li.appendChild(a);
+        li.appendChild(el("span", "ch-en ch-en-" + c.english, t("ch_en_" + c.english)));
+        if (c.guide_en_url) {
+          var g = el("a", "ch-guide", t("ch_guide"));
+          g.href = c.guide_en_url; g.target = "_blank"; g.rel = "noopener";
+          li.appendChild(g);
+        }
+        var note = c.note && (LANG === "en" ? (c.note.en || c.note.ja) : (c.note.ja || c.note.en));
+        if (note) li.appendChild(el("small", null, note));
+        if (c.kind === "agency") li.appendChild(el("small", null, t("ch_agency")));
+        ul.appendChild(li);
+      });
+      panel.appendChild(ul);
     }
 
     // --- 電話の台本 ---

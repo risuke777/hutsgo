@@ -638,3 +638,50 @@ UPDATE hut_seasons SET booking_opens_rule='months_before_stay', booking_opens_of
 -- 残り（jonen_goya・karasawa_goya は時刻未記載、chougatake_hutte は期間で条件が変わる、
 -- enzanso・hutte_ooyari・tokusawaen は固定の解禁日を持たない方式、ariakeso・daitenso・
 -- hutte_nishidake・kitadake_kata はデータ自体が無い）は booking_opens_rule='unknown' のまま。
+
+-- ============================================================================
+-- 予約の窓口（2026-10-01 確認）。小屋が自分で案内している窓口だけ。出典はその案内のあるページ。
+-- english は予約画面そのものの言語（schema.sql の注記を参照）。電話は hut_seasons.reservation_phone。
+-- 電話のみの小屋（karasawa_goya）と、窓口を確認できていない小屋（kitadake_kata）は行を持たない。
+-- JAA Travel は「Japan Alps Adventures, Inc.（旅行会社）」の海外在住者向けパッケージ（常念小屋の案内による）。
+-- ============================================================================
+INSERT INTO hut_booking_channels (hut_id, year, seq, kind, operator, url, url_en, english, guide_en_url, note_ja, note_en, source_url, last_verified_at, confidence) VALUES
+-- 燕山荘グループ: 共通の予約サイト。画面の言語は未確認（フレーム構成で読めない）。英語の案内ページから同じ予約サイトへ案内している
+('enzanso',        2026,1,'web','hut','https://enzanso-reservation.jp/reserve/enz0010.php?p=10&type=10',NULL,'unknown','https://www.enzanso.co.jp/english',NULL,NULL,'https://www.enzanso.co.jp/english','2026-10-01','verified'),
+('daitenso',       2026,1,'web','hut','https://enzanso-reservation.jp/reserve/enz0010.php?p=20',NULL,'unknown','https://www.enzanso.co.jp/english',NULL,NULL,'https://www.enzanso.co.jp/english','2026-10-01','verified'),
+('hutte_ooyari',   2026,1,'web','hut','https://enzanso-reservation.jp/reserve/enz0010.php?p=30',NULL,'unknown','https://www.enzanso.co.jp/english',NULL,NULL,'https://www.enzanso.co.jp/english','2026-10-01','verified'),
+('ariakeso',       2026,1,'web','hut','https://enzanso-reservation.jp/reserve/enz0010.php?p=40&type=20',NULL,'unknown','https://www.enzanso.co.jp/english',NULL,NULL,'https://www.enzanso.co.jp/english','2026-10-01','verified'),
+('hutte_nishidake',2026,1,'web','hut','https://enzanso-reservation.jp/reserve/enz0010.php?p=60',NULL,'unknown','https://www.enzanso.co.jp/english',NULL,NULL,'https://www.enzanso.co.jp/hutte-nishidake','2026-10-01','verified'),
+-- 槍ヶ岳山荘グループ: 共通の予約サイト（画面は日本語。英語・韓国語・繁体字の案内ページは別にある）。WEB を推奨、電話枠は制限あり
+('yarigatake_sanso',2026,1,'web','hut','https://www.yarigatake.net/reservation/yarigatake/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('yarisawa_lodge', 2026,1,'web','hut','https://www.yarigatake.net/reservation/yarisawa/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('minamidake_goya',2026,1,'web','hut','https://www.yarigatake.net/reservation/minamidake/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('otenjo_hutte',   2026,1,'web','hut','https://www.yarigatake.net/reservation/otenjo/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('dakesawa_goya',  2026,1,'web','hut','https://www.yarigatake.net/reservation/dakesawa/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('sesshou_goya',   2026,1,'web','hut','https://www.yarigatake.net/reservation/sesshou/',NULL,'no','https://www.yarigatake.co.jp/english/','WEB推奨。電話の予約枠は制限あり','Web booking is recommended; phone slots are limited','https://www.yarigatake.net/reservation/','2026-10-01','verified'),
+('sesshou_goya',   2026,2,'agency','japan_alps_adventures','https://jaa.travel/en/mountain-hut/sesshou-en',NULL,'yes',NULL,NULL,NULL,'https://www.yarigatake.co.jp/english/','2026-10-01','verified'),
+-- 穂高岳山荘: 日本語の予約サイト ＋ 海外の方向けの英語フォーム ＋ JAA
+('hotakadake_sanso',2026,1,'web','hut','https://www.hotakadakesanso.com/reservation',NULL,'unknown','https://www.hotakadakesanso.com/en',NULL,NULL,'https://www.hotakadakesanso.com/reservation','2026-10-01','verified'),
+('hotakadake_sanso',2026,2,'form','hut','https://www.hotakadakesanso.com/en/en-reserve',NULL,'yes',NULL,'海外の方向けの英語の申込フォーム。返信まで数日かかることがある','Reservation form for visitors from abroad; a reply can take a few days','https://www.hotakadakesanso.com/en/en-reserve','2026-10-01','verified'),
+('hotakadake_sanso',2026,3,'agency','japan_alps_adventures','https://jaa.travel/en/mountain-hut/hotakadakesanso',NULL,'yes',NULL,NULL,NULL,'https://www.hotakadakesanso.com/en','2026-10-01','verified'),
+-- 常念小屋: 小屋の予約は電話のみ。海外在住者向けに旅行会社のパッケージを案内している
+('jonen_goya',     2026,1,'agency','japan_alps_adventures','https://jaa.travel/en/mountain-hut/jonengoya-en',NULL,'yes',NULL,'海外在住者向けパッケージ（宿泊の3か月前から予約・カード前払い・英語サポート）。小屋への直接予約は電話のみ','Package for overseas residents: booking from 3 months ahead, card prepayment, English support. Direct booking with the hut is by phone only','https://www.mt-jonen.com/reservation/','2026-10-01','verified'),
+-- 蝶ヶ岳ヒュッテ: ネット予約が主（電話枠は少なめ）。個室はネット不可
+('chougatake_hutte',2026,1,'web','yamatan','https://www.yamatan.net/hut/chogadakehutte','https://www.yamatan.net/en/hut/chogadakehutte','partial','https://chougatake.com/english/','ネット予約が主で電話枠は少なめ。個室はネット不可（相部屋で予約してから電話で変更）。カード決済のみ','Online booking is the main route; phone slots are few. Private rooms cannot be booked online. Card payment only','https://chougatake.com/stay/','2026-10-01','verified'),
+('chougatake_hutte',2026,2,'web','montbell','https://booking.montbell.jp/lodging/facility.php?facility_id=6',NULL,'unknown','https://chougatake.com/english/',NULL,NULL,'https://chougatake.com/stay/','2026-10-01','verified'),
+-- 涸沢ヒュッテ・北穂高小屋・横尾山荘: やまたん（メニューは英語、小屋の案内は日本語）
+('karasawa_hutte', 2026,1,'web','yamatan','https://www.yamatan.net/hut/karasawahutte','https://www.yamatan.net/en/hut/karasawahutte','partial',NULL,NULL,NULL,'https://www.yamatan.net/hut/karasawahutte','2026-10-01','verified'),
+('kitahotaka_goya',2026,1,'web','yamatan','https://www.yamatan.net/hut/kitahotakagoya','https://www.yamatan.net/en/hut/kitahotakagoya','partial',NULL,'Webと山小屋直通電話で受付','Booked online or by the direct phone line of the hut','https://www.kitaho.co.jp/booking','2026-10-01','verified'),
+('yokoo_sanso',    2026,1,'web','yamatan','https://www.yamatan.net/hut/yokoosanso','https://www.yamatan.net/en/hut/yokoosanso','partial','https://www.yokoo-sanso.co.jp/english/reservations','7/1〜10/25の宿泊だけ、2か月前から限定数。カード保証で、キャンセル料が電話予約より早くかかる。入国当日の宿泊は不可','Only for stays from 1 July to 25 October, from 2 months ahead, limited places. Card guarantee; cancellation fees start earlier than for phone bookings. You cannot stay on the day you arrive in Japan','https://www.yokoo-sanso.co.jp/english/reservations','2026-10-01','verified'),
+-- 徳澤園: 日本語の予約は電話のみ。海外の方は英語の問い合わせフォームのみ
+('tokusawaen',     2026,1,'form','hut','https://www.tokusawaen.com/english/contact.html',NULL,'yes','https://www.tokusawaen.com/english/english.html','海外の方は英語の問い合わせフォームで予約（日本語の予約は電話のみ）','Visitors from abroad book through the English contact form (Japanese bookings are by phone only)','https://www.tokusawaen.com/english/english.html','2026-10-01','verified'),
+-- 西穂山荘: Web は相部屋1〜7名の一般予約のみ。個室・連泊・前日16時以降は電話
+('nishiho_sanso',  2026,1,'web','hut','https://select-type.com/rsv/?id=-TVMgpOH-fk',NULL,'no',NULL,'Webは相部屋1〜7名の一般予約のみ。個室・連泊・前日16時以降は電話','Online booking covers shared rooms for 1 to 7 people only. Private rooms, multi-night stays and bookings after 16:00 the day before are by phone','https://select-type.com/rsv/?id=-TVMgpOH-fk','2026-10-01','verified'),
+-- 中房温泉（登山口の宿）: 公式サイトが案内する3つ
+('nakabusa_onsen', 2026,1,'web','hut','https://select-type.com/rsv/?id=EwWXU3u_WdM&c_id=286819',NULL,'unknown','https://select-type.com/s/nakabusa-english',NULL,NULL,'https://nakabusa.com/','2026-10-01','verified'),
+('nakabusa_onsen', 2026,2,'web','hitou','https://www.hitou.or.jp/provider/plans?providerId=692',NULL,'unknown',NULL,NULL,NULL,'https://nakabusa.com/','2026-10-01','verified'),
+('nakabusa_onsen', 2026,3,'web','jalan','https://www.jalan.net/yad385989/',NULL,'unknown',NULL,NULL,NULL,'https://nakabusa.com/','2026-10-01','verified'),
+-- 南アルプス（南ぷすリザーブ）: 画面は日本語、英語の使い方 PDF あり。電話予約は事務手数料が加算。小屋の掲載は二次情報のまま
+('hirogawara_sanso',2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported'),
+('kitadake_sanso', 2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported'),
+('shirane_oike',   2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported');

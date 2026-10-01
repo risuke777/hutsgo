@@ -245,6 +245,16 @@ def build_model(lang):
             s["note"] = pick(s, "season_note", lang)
             s["opens"] = pick(s, "booking_opens_at", lang)
         h["season"] = s
+        # 予約の窓口。小屋が自分で案内している窓口だけ（hut_booking_channels の注記を参照）
+        h["channels"] = rows("SELECT * FROM hut_booking_channels WHERE hut_id=? AND year=2026 ORDER BY seq", hid)
+        for c in h["channels"]:
+            c["label"] = T["plan_js_ch_hut_form" if c["operator"] == "hut" and c["kind"] == "form"
+                           else "plan_js_ch_" + c["operator"]]
+            c["href"] = c["url_en"] if lang == "en" and c["url_en"] else c["url"]
+            c["note_t"] = pick(c, "note", lang)
+            c["english_label"] = T["plan_js_ch_en_" + c["english"]]
+            # 旅行会社への案内は小屋への送客ではない。送客率（outbound_）に混ぜない
+            c["track"] = "agency_link" if c["kind"] == "agency" else "reservation"
         h["rates"] = rows("SELECT * FROM hut_rates WHERE hut_id=? AND year=2026 "
                           "ORDER BY CASE plan_type WHEN 'two_meals' THEN 0 WHEN 'one_meal' THEN 1 "
                           "WHEN 'no_meal' THEN 2 WHEN 'private_room' THEN 3 WHEN 'tent' THEN 4 ELSE 5 END", hid)
@@ -870,6 +880,13 @@ def export_dataset():
                     "required": se["reservation_required"],
                     "url": se["reservation_url"],
                     "phone": se["reservation_phone"],
+                    # 小屋が案内している予約の窓口。english は予約画面そのものの言語（yes/partial/no/unknown）。
+                    # kind='agency' は旅行会社のパッケージで、小屋への直接の予約ではない
+                    "channels": [{
+                        "kind": c["kind"], "operator": c["operator"], "url": c["url"], "url_en": c["url_en"],
+                        "english": c["english"], "guide_en_url": c["guide_en_url"],
+                        "note": _bi(c, "note"), "provenance": _prov(c),
+                    } for c in rows("SELECT * FROM hut_booking_channels WHERE hut_id=? AND year=2026 ORDER BY seq", h["id"])],
                     # 訪日ハイカーに最も価値のある項目。英語圏のどこにも構造化されていない
                     "opens_at": _bi(se, "booking_opens_at"),
                     # 上の自由文のうち、カレンダーに正確な日時を入れられる範囲だけの構造化版。
@@ -996,6 +1013,9 @@ service built on top of this data needs separate permission — see {url}/api/.
 Japanese mountain huts take bookings by phone, in Japanese, and the popular ones fill
 within minutes of their booking window opening. That window is published on each hut's
 own site and nowhere in machine-readable form. season_2026.reservation.opens_at carries it.
+season_2026.reservation.channels lists every booking route the hut itself points to
+(its own site, a shared booking site, an English form, a travel-agency package), each with
+whether its screen works in English (yes / partial / no / unknown) and when that was checked.
 """.format(desc=DATA_INDEX["description"], lic=DATA_LICENSE, url=SITE_URL,
            n=DATA_INDEX["coverage"]["huts"])
 (DIST / "llms.txt").write_text(LLMS, encoding="utf-8")
@@ -1062,6 +1082,10 @@ API_HTML = """<!doctype html>
   of that moment. Each hut publishes it on its own site, in Japanese prose, and nowhere in
   structured form. That is the field this dataset exists for. It is present for
   {opens} of {n} huts, in both Japanese and English.</p>
+  <p><code>season_2026.reservation.channels</code> lists the booking routes each hut itself points to:
+  its own site, a shared booking site, an English form, or a travel-agency package. Each carries
+  <code>english</code> (<code>yes</code>, <code>partial</code>, <code>no</code> or <code>unknown</code>) for whether
+  the booking screen itself works in English, plus its own source and check date. We list no route the hut does not.</p>
 
   <h2>MCP server</h2>
   <p>The same data is available to AI assistants over the

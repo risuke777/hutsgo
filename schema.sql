@@ -90,6 +90,30 @@ CREATE TABLE hut_seasons (
   PRIMARY KEY (hut_id, year)
 );
 
+-- 予約の窓口（オンラインのもの。電話は hut_seasons.reservation_phone）。
+-- 載せるのは「小屋が自分で案内している窓口」だけ。小屋が案内していない予約サイトは、予約できても載せない。
+-- HutsGo は予約を持たないので（A4）、どの窓口にも中立。並びは小屋が勧める順。
+-- english は予約画面そのものの言語: yes=英語で操作できる / partial=メニューは英語・中身は日本語、または英語の手引きだけ
+--   / no=日本語のみ / unknown=未確認。英語の案内ページがあっても画面が日本語なら yes にしない（guide_en_url に分けて持つ）。
+-- kind='agency' は旅行会社のパッケージ。小屋への直接の送客ではないので計測を分ける（送客率に混ぜない）。
+CREATE TABLE hut_booking_channels (
+  hut_id           TEXT NOT NULL REFERENCES huts(id),
+  year             INTEGER NOT NULL,
+  seq              INTEGER NOT NULL,
+  kind             TEXT NOT NULL CHECK (kind IN ('web','form','agency')),  -- web=予約システム / form=申込フォーム（返信で確定）
+  operator         TEXT NOT NULL CHECK (operator IN ('hut','yamatan','montbell','minamialps_reserve','hitou','jalan','japan_alps_adventures')),
+  url              TEXT NOT NULL,
+  url_en           TEXT,                                  -- 同じ窓口の英語版の URL（あれば）
+  english          TEXT NOT NULL DEFAULT 'unknown' CHECK (english IN ('yes','partial','no','unknown')),
+  guide_en_url     TEXT,                                  -- 小屋側の英語の案内ページ（予約画面とは別）
+  note_ja          TEXT,
+  note_en          TEXT,
+  source_url       TEXT NOT NULL,
+  last_verified_at TEXT NOT NULL,
+  confidence       TEXT NOT NULL CHECK (confidence IN ('verified','reported')),
+  PRIMARY KEY (hut_id, year, seq)
+);
+
 CREATE TABLE hut_rates (
   hut_id         TEXT NOT NULL REFERENCES huts(id),
   year           INTEGER NOT NULL,

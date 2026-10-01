@@ -24,6 +24,8 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                'view_3d',
                // ルートの GPX 保存（地理院の道路中心線に沿わせた線がある場合のみ）
                'gpx_download',
+               // 旅行会社（小屋が案内している英語の予約パッケージ）への案内。outbound_ で始めない: 小屋への送客ではないため
+               'agency_link',
                // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。
                // outbound_ で始めない: 小屋への送客率（主KPI）に混ぜないため
                'gear_link'];

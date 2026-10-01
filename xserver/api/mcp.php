@@ -128,7 +128,9 @@ function tool_defs(): array {
     [
       'name' => 'booking_windows',
       'description' =>
-        "When each hut starts taking reservations, plus the phone number and booking URL.\n\n"
+        "When each hut starts taking reservations, plus the phone number and every booking route "
+        . "the hut itself points to (its own site, a shared booking site, an English form or a travel-agency "
+        . "package), each marked with whether its screen works in English.\n\n"
         . "This is the thing that actually stops visitors from abroad. Japanese huts take bookings by "
         . "phone, in Japanese, and the popular ones fill within minutes of the window opening. Each hut "
         . "publishes its window on its own site in Japanese prose and nowhere else in structured form. "
@@ -290,6 +292,8 @@ function call_tool(string $name, array $args): array {
         'reservation_required' => $r['required'] ?? null,
         'booking_url' => $r['url'] ?? null,
         'phone' => $r['phone'] ?? null,
+        // 小屋が自分で案内している予約の窓口。english は予約画面の言語（yes/partial/no/unknown）、kind=agency は旅行会社
+        'channels' => $r['channels'] ?? [],
         'confidence' => $h['season_2026']['provenance']['confidence'] ?? null,
         'last_verified_at' => $h['season_2026']['provenance']['last_verified_at'] ?? null,
         'official_url' => $h['official_url'] ?? null,
