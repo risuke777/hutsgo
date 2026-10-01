@@ -318,6 +318,67 @@
     });
   }
 
+  // ------------------------------------------------------------------ タイルの先読み（読み込みの遅れ・灰色の抜け対策）
+  // 地理院のタイルには保存期間の指定が無く、ブラウザの保存は当てにできない。そこで地図のタイルを自前の保存庫（gsic://）
+  // 経由で読み、①ルートを開いたら道の周りの粗い写真と標高、②再生中は現在地から先 3.5km の細かい写真を先に取っておく。
+  // 粗い写真が手元にあれば、細かい写真が間に合わなくても灰色にならず、ぼやけた写真が出る
+  var store = new Map(), STORE_MAX = 2500, queue = [], inflight = 0, PREFETCH_PAR = 4;
+  function getTile(url) {
+    if (store.has(url)) { var hit = store.get(url); store.delete(url); store.set(url, hit); return hit; }   // 使ったものを新しい側へ
+    var pr = fetch(url).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); });
+    pr.catch(function () { store.delete(url); });
+    store.set(url, pr);
+    if (store.size > STORE_MAX) store.delete(store.keys().next().value);
+    return pr;
+  }
+  if (window.maplibregl && maplibregl.addProtocol) {
+    maplibregl.addProtocol("gsic", function (params) {
+      return getTile(params.url.replace(/^gsic:\/\//, "https://")).then(function (buf) { return { data: buf }; });
+    });
+  }
+  var TILE = { photo: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", dem: "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png" };
+  function tileXY(lat, lon, z) {
+    var n = Math.pow(2, z);
+    return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(lat * rad) + 1 / Math.cos(lat * rad)) / Math.PI) / 2 * n)];
+  }
+  function pump() {
+    // 画面に要るタイルを読んでいる間は先読みしない（遅い回線で取り合うと、今見ている所が遅れる）
+    if (map && map.loaded() && !map.areTilesLoaded()) { setTimeout(pump, 300); return; }
+    while (inflight < PREFETCH_PAR && queue.length) {
+      var url = queue.shift();
+      if (store.has(url)) continue;
+      inflight++;
+      getTile(url).catch(function () {}).then(function () { inflight--; pump(); });
+    }
+  }
+  // 道の d0〜d1 の区間について、zoom z のタイルを、道の点から r タイル以内まで先読みの列に足す（先に足したものから取る）
+  function want(kind, z, d0, d1, r) {
+    var seen = {}, step = 40075000 * Math.cos(at(route, d0)[0] * rad) / Math.pow(2, z) / 2;
+    for (var d = Math.max(0, d0); d <= Math.min(route.len, d1) + step; d += step) {
+      var p = at(route, Math.min(d, route.len)), t = tileXY(p[0], p[1], z);
+      for (var dx = -r; dx <= r; dx++) for (var dy = -r; dy <= r; dy++) {
+        var key = (t[0] + dx) + "/" + (t[1] + dy);
+        if (seen[key]) continue;
+        seen[key] = true;
+        var url = TILE[kind].replace("{z}", z).replace("{x}", t[0] + dx).replace("{y}", t[1] + dy);
+        if (!store.has(url) && queue.indexOf(url) < 0) queue.push(url);
+      }
+    }
+    pump();
+  }
+  function prefetchBase() {   // ルートを開いたとき: 標高と、下敷きの粗い写真を道全体で（数十枚）
+    queue = [];
+    [9, 10, 11, 12].forEach(function (z) { want("dem", z, 0, route.len, 1); });
+    [10, 11, 12, 13].forEach(function (z) { want("photo", z, 0, route.len, 1); });
+  }
+  var lastAhead = -1e9;
+  function prefetchAhead(d) {   // 再生中: 現在地から先 3.5km の細かい写真（500m 進むごとに足す）
+    if (Math.abs(d - lastAhead) < 500) return;
+    lastAhead = d;
+    want("photo", 14, d, d + 4000, 1);
+    want("photo", 15, d, d + 2000, 0);
+  }
+
   // ------------------------------------------------------------------ 地図
   function initMap() {
     map = new maplibregl.Map({
@@ -328,17 +389,20 @@
       style: {
         version: 8,
         sources: {
-          photo: { type: "raster", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 17,
+          photo: { type: "raster", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 16,
                    attribution: "国土地理院" },
           // 地理院の標高 PNG: 標高 = (R×2^16 + G×2^8 + B) × 0.01 m
           // 標高は z12 まで（約 30m 格子）。z14 まで使うと動くたびに地形の細かさが切り替わって山がちらつく
-          dem: { type: "raster-dem", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
+          dem: { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
                  encoding: "custom", redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0 },
-          "dem-hs": { type: "raster-dem", tiles: ["https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
+          "photo-lo": { type: "raster", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 13 },
+          "dem-hs": { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
                       encoding: "custom", redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0 },
           world: { type: "geojson", data: { type: "Feature", geometry: { type: "Polygon", coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]] } } }
         },
         layers: [
+          // 下敷き: 粗い写真（z13 まで）。枚数が少なくすぐ揃うので、細かい写真が届く前も灰色にならない
+          { id: "photo-lo", type: "raster", source: "photo-lo", paint: { "raster-saturation": 0.1, "raster-contrast": 0.08, "raster-fade-duration": 0 } },
           { id: "photo", type: "raster", source: "photo", paint: { "raster-saturation": 0.1, "raster-contrast": 0.08 } },
           // 日の当たり方: 太陽の方位から影を落とす（地形用とは別の標高ソースを使う。同じソースを共有すると描画が乱れることがある）
           { id: "hs", type: "hillshade", source: "dem-hs", paint: { "hillshade-illumination-anchor": "map", "hillshade-illumination-direction": 315, "hillshade-exaggeration": 0.3 } },
@@ -477,8 +541,10 @@
     // 夜 < -6° < 薄明 < 4° < 朝夕の光 < 15° < 昼
     var warm = ramp(a, [[-8, 0], [-2, 0.9], [4, 1], [15, 0]]);
     var night = ramp(a, [[-10, 1], [-4, 0.6], [2, 0]]);
-    map.setPaintProperty("photo", "raster-brightness-max", ramp(a, [[-10, 0.3], [-3, 0.55], [5, 0.92], [20, 1]]));
-    map.setPaintProperty("photo", "raster-saturation", ramp(a, [[-6, -0.45], [5, 0.05], [20, 0.1]]));
+    ["photo", "photo-lo"].forEach(function (id) {
+      map.setPaintProperty(id, "raster-brightness-max", ramp(a, [[-10, 0.3], [-3, 0.55], [5, 0.92], [20, 1]]));
+      map.setPaintProperty(id, "raster-saturation", ramp(a, [[-6, -0.45], [5, 0.05], [20, 0.1]]));
+    });
     map.setPaintProperty("hs", "hillshade-illumination-direction", s.az);
     map.setPaintProperty("hs", "hillshade-exaggeration", ramp(a, [[-6, 0.15], [3, 0.7], [15, 0.45], [50, 0.25]]));
     map.setPaintProperty("hs", "hillshade-highlight-color", "rgba(255," + Math.round(lerp(255, 196, warm)) + "," + Math.round(lerp(255, 120, warm)) + "," + (0.18 + 0.25 * warm).toFixed(2) + ")");
@@ -640,10 +706,16 @@
     }
     return false;
   }
-  function aim(cam, target, step) {
+  var aimWant = null, aimCount = 0;
+  function aim(cam, target, step, every) {
     var want = cam.pitch;
-    map.jumpTo(cam);
-    while (want > 25 && blocked(target)) { want -= 8; map.jumpTo(Object.assign({}, cam, { pitch: want })); }
+    if (every && aimWant != null && (aimCount++ % every)) {
+      want = Math.min(cam.pitch, aimWant);   // 間引いたコマは前回の判定を使う（重い地形の問い合わせを毎コマしない）
+    } else {
+      map.jumpTo(cam);
+      while (want > 25 && blocked(target)) { want -= 8; map.jumpTo(Object.assign({}, cam, { pitch: want })); }
+      aimWant = want;
+    }
     if (aimPitch == null) aimPitch = want;
     aimPitch += Math.max(-step * 3, Math.min(step, want - aimPitch));
     map.jumpTo(Object.assign({}, cam, { pitch: aimPitch }));
@@ -663,7 +735,8 @@
   function play() {
     if (player.d >= route.len - 1) setD(0, true);
     player.playing = true; player.last = null; player.followBearing = null; closePopup();
-    player.basePitch = map.getPitch(); aimPitch = null;   // 傾きは再生を始めたときの値を基準にする
+    player.basePitch = map.getPitch(); aimPitch = null; aimWant = null;   // 傾きは再生を始めたときの値を基準にする
+    lastAhead = -1e9; prefetchAhead(player.d);
     $("fly-end").hidden = true;
     $("fly-play").classList.add("is-playing"); $("fly-play").setAttribute("aria-label", "一時停止");
     requestAnimationFrame(step);
@@ -693,7 +766,8 @@
     var diff = ((b - player.followBearing + 540) % 360) - 180;
     player.followBearing = (player.followBearing + diff * 0.025 + 360) % 360;
     var p = at(route, d1);
-    aim({ center: [p[1], p[0]], bearing: player.followBearing, pitch: player.basePitch, zoom: map.getZoom() }, p, 0.8);
+    aim({ center: [p[1], p[0]], bearing: player.followBearing, pitch: player.basePitch, zoom: map.getZoom() }, p, 0.8, 6);
+    prefetchAhead(d1);
     if (hit) { openPopup(hit); player.hold = { until: now + (hit.kind === "video" ? Math.max(3, hit.dur) : 3) * 1000 }; }
     if (d1 >= route.len) { pause(); showEnd(); return; }
     requestAnimationFrame(step);
@@ -898,6 +972,7 @@
     for (var i = 0; i < N; i++) {
       var t = i / FPS, st = cameraAt(tl, t);
       aim(st.cam, at(route, st.d), 45 / FPS);   // 1 秒に 45 度まで起こせる
+      prefetchAhead(st.d);
       showProgress(st.d); applyLight(st.d);
       await settle(15000);
       if (st.e.kind === "photo" && st.e.m.kind === "video") await seek(st.e.m.el, t - st.e.t0);
@@ -980,6 +1055,7 @@
     $("fly-end").hidden = true;
     await loadHuts();
     await nearbyHuts();
+    prefetchBase(); lastAhead = -1e9;
     try { route.peaks = await loadPeaks(); } catch (e) { route.peaks = []; }
     setRouteOnMap();
     place(); renderList(); drawMarkers();
@@ -1045,7 +1121,8 @@
                  stats: [$("fly-st-time").textContent, $("fly-st-elev").textContent, $("fly-st-dist").textContent], date: $("fly-date").textContent, clock: $("fly-clock").textContent,
                  popup: !$("fly-popup").hidden, thumbs: document.querySelectorAll(".fly-thumb").length,
                  peaks: (route.peaks || []).map(function (p) { return p.name.ja + (p.elev ? ":" + p.elev : ""); }), end: !$("fly-end").hidden,
-                 endHuts: endCardHuts().map(function (h) { return h.id; }), light: lastLight };
+                 endHuts: endCardHuts().map(function (h) { return h.id; }), light: lastLight,
+                 tiles: { stored: store.size, queued: queue.length, inflight: inflight } };
       }
     };
   }
