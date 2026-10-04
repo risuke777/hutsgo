@@ -35,10 +35,11 @@
     <div class="fly-buttons">
       <label class="fly-field fly-len">長さ
         <select id="fly-len">
-          <option value="10">10 秒</option><option value="20">20 秒</option>
-          <option value="30" selected>30 秒</option><option value="60">60 秒</option>
+          <option value="10">10 秒</option><option value="20" selected>20 秒</option>
+          <option value="30">30 秒</option><option value="60">60 秒</option>
         </select>
       </label>
+      <button type="button" id="fly-preview" class="fly-btn">プレビュー</button>
       <button type="button" id="fly-record" class="fly-btn fly-btn-primary">動画に書き出す</button>
     </div>
     <p id="fly-status" class="fly-status" role="status"></p>
@@ -47,6 +48,7 @@
   <section class="fly-stage" aria-label="3D の地図">
     <div class="fly-phone">
       <div id="fly-map"></div>
+      <canvas id="fly-out" width="720" height="1280" hidden></canvas>
       <div class="fly-top" aria-live="off">
         <p id="fly-date" class="fly-date"></p>
         <p id="fly-clock" class="fly-clock"></p>
@@ -55,11 +57,6 @@
       <button type="button" id="fly-add" class="fly-round fly-add" aria-label="写真・動画を足す">
         <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 4 7.5 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-3.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" fill="currentColor"/></svg>
       </button>
-      <aside id="fly-end" class="fly-end" hidden aria-label="この道の小屋">
-        <button type="button" id="fly-end-close" class="fly-round fly-popup-close" aria-label="閉じる">×</button>
-        <h2>この道を歩くなら</h2>
-        <ol id="fly-end-list"></ol>
-      </aside>
       <figure id="fly-popup" class="fly-popup" hidden>
         <button type="button" id="fly-popup-close" class="fly-round fly-popup-close" aria-label="閉じる">×</button>
         <div id="fly-popup-media"></div>
@@ -90,7 +87,6 @@
     <p id="fly-format" class="fly-note"></p>
   </section>
 
-  <canvas id="fly-out" width="720" height="1280" hidden></canvas>
 
   <footer class="fly-foot">
     <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>　試作</p>
