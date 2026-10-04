@@ -218,7 +218,7 @@
   // ------------------------------------------------------------------ 写真・動画の読み込み（何度でも足せる）
   async function addFiles(files) {
     status("読み込み中…");
-    var added = 0;
+    var added = 0, bad = [];
     for (var i = 0; i < files.length; i++) {
       var f = files[i], isVideo = /^video\//.test(f.type) || /\.(mov|mp4|m4v)$/i.test(f.name);
       var m = { file: f, kind: isVideo ? "video" : "image", name: f.name, url: URL.createObjectURL(f) };
@@ -230,6 +230,8 @@
           m.el.src = m.url; m.el.muted = true; m.el.playsInline = true; m.el.preload = "auto";
           vbin().appendChild(m.el);   // 文書に入れておかないと、Android では止めた動画の絵を取り出せないことがある
           await new Promise(function (ok) { m.el.onloadeddata = ok; m.el.onerror = ok; setTimeout(ok, 8000); });
+          m.el.style.cssText = "width:96px;height:96px;object-fit:cover";
+          if (!m.el.videoWidth) { m.err = "この端末のブラウザでは再生できない形式の動画です（HEVC・HDR など。カメラの設定で「互換性優先」/ H.264 にすると使えます）"; }
           m.full = m.el.duration && isFinite(m.el.duration) ? m.el.duration : VIDEO_MAX_SEC;
           m.dur = Math.min(VIDEO_MAX_SEC, m.full);
           m.thumb = frameThumb(m.el, m.el.videoWidth, m.el.videoHeight);
@@ -248,7 +250,7 @@
       } catch (e) {
         m.err = String(e && e.message || e);
       }
-      if (!m.err) { media.push(m); added++; } else { failed.push(m); }
+      if (!m.err) { media.push(m); added++; } else { failed.push(m); bad.push(m); if (m.el) m.el.remove(); }
     }
     place();
     renderList();
@@ -261,6 +263,7 @@
         ? "写真 " + imgs.length + " 枚とも位置情報がありません（スマホのブラウザは写真を渡す前に位置情報を外すことがあります）。"
           + (withTime ? "撮影時刻はあります。" : "") + "写真を押すと場所を合わせられます。"
         : "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。");
+    if (bad.length) status($("fly-status").textContent + " 使えなかったもの: " + bad.map(function (m) { return m.name + "（" + m.err + "）"; }).join("、"));
   }
   // 動画の「いちばん良い場面」: 0.5 秒ごとに小さく取り出し、ピント（輪郭の強さ）・明るさ・色・動きで点数を付ける。
   // 手ぶれ（画面全体が大きく動く）と、撮り始め・撮り終わり（ポケットの出し入れ）は下げる。点数は動画を足した後で裏で出す
@@ -332,8 +335,9 @@
     if (!vbinEl) {
       vbinEl = document.createElement("div");
       vbinEl.setAttribute("aria-hidden", "true");
-      vbinEl.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none";
-      document.body.appendChild(vbinEl);
+      // 動画は画面の中（作る動画の絵の裏）に置く。画面外や透明だと、Android の Chrome は再生や絵の更新を止めることがある
+      vbinEl.style.cssText = "position:absolute;left:0;top:0;width:96px;height:96px;overflow:hidden;z-index:0;pointer-events:none";
+      (document.querySelector(".fly-phone") || document.body).appendChild(vbinEl);
     }
     return vbinEl;
   }
@@ -1488,7 +1492,8 @@
     else if (e.kind === "approach") {
       // 上の枠: 道の上から撮影地点の視点へ寄る（ピンを立てる）。下の地図: 道を進み続ける
       st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1;
-      st.top = mixCam(flyCam(e.m.d, false), povCam(e.m), ease(f));
+      // 撮影地点の視点の手前（85%）で止める。地面すれすれまで寄ると景色が流れて灰色になる
+      st.top = mixCam(flyCam(e.m.d, false), povCam(e.m), 0.85 * ease(f));
       st.split = e.sin ? ease(Math.min(1, f / 0.35)) : 1;
       st.pin = Math.min(1, f / 0.3);
     }
@@ -1502,7 +1507,8 @@
       // 画面の上 2/3 に写真が滑り込み、下 1/3 の地図は進み続ける
       st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1;
       var tin = Math.min(0.35, (e.t1 - e.t0) * 0.3);
-      st.split = ease(Math.max(0, Math.min(1, e.sin ? (t - e.t0) / tin : 1, e.sout ? (e.t1 - t) / tin : 1)));
+      var kin = e.sin ? (t - e.t0) / tin : 1, kout = e.sout ? (e.t1 - t) / tin : 1;
+      st.split = ease(Math.max(0, Math.min(1, kin, kout))); st.exit = kout < kin;
       st.fromTop = e.afterApproach ? 1 - Math.min(1, (t - e.t0) / Math.min(0.4, (e.t1 - e.t0) * 0.4)) : 0;   // 寄った絵から写真へ溶ける
     }
     else { st.d = route.len; st.cam = mixCam(flyCam(route.len, false), overviewCam(8 + 25 * f), ease(f)); st.outro = true; }
@@ -1616,26 +1622,29 @@
   function compose(st, show) {
     var info = show.info, ok = mediaReady(st.m);
     // 写真・動画の絵がまだ無いとき（動画の頭出し中など）は地図を出す。前のコマの絵を残さない
-    var pa = ok ? st.photoAlpha : 0, sk = ok ? (st.split || 0) : 0, top = sk * H * 2 / 3;
+    var isAppr = st.e.kind === "approach" && topFor === st.m, isMedia = st.e.kind === "media" && ok;
+    var pa = ok ? st.photoAlpha : 0, sk = isAppr || isMedia ? (st.split || 0) : 0;
+    // 上の枠と下の地図の境目: 入るときは画面の下から 2/3 の高さへ上がり、抜けるときは 2/3 から上端へ上がる
+    var top = sk > 0 ? (st.exit ? lerp(0, H * 2 / 3, sk) : lerp(H, H * 2 / 3, sk)) : 0;
     if (pa < 1) {
       var sky = ctx.createLinearGradient(0, 0, 0, H * 0.55);
       sky.addColorStop(0, skyPaint.top); sky.addColorStop(1, skyPaint.bottom);
       ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
       if (st.space) { ctx.save(); ctx.globalAlpha = Math.min(1, st.space * 1.5); ctx.fillStyle = "#05080d"; ctx.fillRect(0, 0, W, H); ctx.restore(); }   // 宇宙
       if (sk > 0) {   // 下の地図: 現在地を中心に切り出す（縦横比は変えない）
-        var mc = map.getCanvas(), CH = mc.height, sy = lerp(0, Math.max(0, Math.min(2 / 3, dotY() - 1 / 6)), sk) * CH;
-        ctx.drawImage(mc, 0, sy, mc.width, (1 - sk * 2 / 3) * CH, 0, top, W, H - top);
+        var mc = map.getCanvas(), CH = mc.height, sh2 = (H - top) / H * CH;
+        if (sh2 >= 1) ctx.drawImage(mc, 0, Math.max(0, Math.min(CH - sh2, dotY() * CH - sh2 / 2)), mc.width, sh2, 0, top, W, H - top);
       } else ctx.drawImage(map.getCanvas(), 0, 0, W, H);
     }
     if (pa > 0) drawMedia(st.m, 0, 0, W, H, pa, st.f);
-    if (st.e.kind === "approach" && st.split > 0 && topFor === st.m) {   // 上の枠: 撮影地点へ寄る絵（ピンを中心に切り出す）
-      var tTop = st.split * H * 2 / 3, ty = Math.max(0, Math.min(H - tTop, (topPin ? topPin[1] * H : H / 2) - tTop / 2));
-      ctx.drawImage(topCv, 0, ty, W, tTop, 0, 0, W, tTop);
+    if (isAppr && sk > 0) {   // 上の枠: 撮影地点へ寄る絵（ピンを中心に切り出す）
+      var ty = Math.max(0, Math.min(H - top, (topPin ? topPin[1] * H : H / 2) - top / 2));
+      ctx.drawImage(topCv, 0, ty, W, top, 0, 0, W, top);
       if (topPin) drawPin(topPin[0] * W, topPin[1] * H - ty, 1.25, st.pin);
-      ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(0, tTop - 2, W, 3);
+      ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(0, top - 2, W, 3);
     }
-    if (sk > 0 && st.e.kind === "media") {   // 上の写真: 上から滑り込む（寄る場面の後は、寄った絵から溶ける）
-      var ph = H * 2 / 3, y0 = top - ph;
+    if (isMedia && sk > 0) {   // 上の写真（寄る場面の後は、寄った絵から溶ける）。抜けるときは上へ
+      var ph = st.exit ? H * 2 / 3 : top, y0 = top - ph;
       if (st.fromTop > 0 && topFor === st.m) {
         var fy = Math.max(0, Math.min(H - ph, (topPin ? topPin[1] * H : H / 2) - ph / 2));
         ctx.drawImage(topCv, 0, fy, W, ph, 0, y0, W, ph);
@@ -1711,9 +1720,9 @@
       ctx.restore();
     }
     if (st.hud > 0) {   // 道中: 標高と距離（音なしでも伝わる数字）。画面を分けているときは下の地図の左上に小さく
-      var e2 = eleAt(st.d), t2 = timeAt(st.d), hy = sk > 0 ? top + 64 : SAFE_TOP + 52, big = sk > 0 ? 44 : 58;
+      var e2 = eleAt(st.d), t2 = timeAt(st.d), hy = sk > 0 ? Math.max(SAFE_TOP + 52, top + 64) : SAFE_TOP + 52, big = sk > 0 ? 44 : 58;
       if (!sk) shade(0.35 * st.hud, 0);
-      ctx.save(); ctx.globalAlpha = st.hud;
+      ctx.save(); ctx.globalAlpha = st.hud * (sk > 0 && !st.exit ? Math.min(1, (H - top) / (H / 3)) : 1);
       if (e2 != null) text(Math.round(e2).toLocaleString() + "m", 44, hy, big, 800, "#fff", "left");
       text(fmtDist(st.d) + (t2 != null ? "  ·  " + fmtClock(t2) : ""), 46, hy + (sk > 0 ? 38 : 46), sk > 0 ? 24 : 28, 700, "#fff", "left");
       ctx.restore();
@@ -1939,6 +1948,7 @@
   function makeCard(bg) {
     var CW = 1080, CH = 1350, c = document.createElement("canvas"); c.width = CW; c.height = CH;
     var x = c.getContext("2d"), hl = highlight();
+    if (hl && mediaReady(hl)) return makeCardPhoto(c, x, hl);
     if (bg) return makeCard3d(c, x, bg, hl);
     var cover = function (src, sw, sh) { var sc = Math.max(CW / sw, CH / sh); x.drawImage(src, (CW - sw * sc) / 2, (CH - sh * sc) / 2, sw * sc, sh * sc); };
     x.fillStyle = "#16241d"; x.fillRect(0, 0, CW, CH);
@@ -1996,10 +2006,82 @@
     // 画像は開いたときに作る（作る前は img を置かない）
     var box = $("fly-card-box"), img = $("fly-card-img");
     if (!img) { img = document.createElement("img"); img.id = "fly-card-img"; img.className = "fly-card-preview"; img.alt = "共有用の画像（3D の地図に歩いた道と記録）"; box.appendChild(img); }
-    img.removeAttribute("src"); box.classList.add("is-loading");
-    try { cardCanvas = makeCard(await shot3d()); } catch (e) { cardCanvas = makeCard(); }
+    img.alt = "共有用の画像（写真に歩いた道を立体で重ねたもの）"; img.removeAttribute("src"); box.classList.add("is-loading");
+    var hl = highlight();
+    try { cardCanvas = hl && mediaReady(hl) ? makeCard() : makeCard(await shot3d()); } catch (e) { cardCanvas = makeCard(); }
     img.src = cardCanvas.toDataURL("image/jpeg", 0.85); box.classList.remove("is-loading");
     busy = false; setButtons(true);
+  }
+  // 道を立体で描く（地図は使わず、写真の上に浮かべる）: 道の広がりの主軸を横にし、斜め上から見た形に。標高は強調する。
+  // 足元の影と、道から地面へ降りる細い線で高さを見せる
+  function drawRoute3d(x, bx, by, bw, bh) {
+    var L = route.line, n = L.length, step = Math.max(1, Math.floor(n / 700)), la0 = L[0][0], lo0 = L[0][1];
+    var kx = Math.cos(la0 * rad) * 111320, ky = 110540, pts = [], cum = 0, prev = null;
+    for (var i = 0; i < n; i += step) {
+      var q = L[i]; if (prev) cum += dist(prev, q); prev = q;
+      pts.push({ x: (q[1] - lo0) * kx, y: (q[0] - la0) * ky, z: eleAt(Math.min(cum, route.len)), d: cum });
+    }
+    var zs = pts.map(function (p2) { return p2.z; }).filter(function (v) { return v != null; });
+    var zmin = zs.length ? Math.min.apply(null, zs) : 0, zmax = zs.length ? Math.max.apply(null, zs) : 1;
+    pts.forEach(function (p2) { if (p2.z == null) p2.z = zmin; });
+    var mx = 0, my = 0; pts.forEach(function (p2) { mx += p2.x; my += p2.y; }); mx /= pts.length; my /= pts.length;
+    var sxx = 0, syy = 0, sxy = 0; pts.forEach(function (p2) { var a = p2.x - mx, b = p2.y - my; sxx += a * a; syy += b * b; sxy += a * b; });
+    var th = 0.5 * Math.atan2(2 * sxy, sxx - syy), ct = Math.cos(-th), st2 = Math.sin(-th), tilt = 58 * rad;
+    var ext = Math.sqrt(Math.max(sxx, syy) / pts.length) * 4 || 1, zex = Math.min(4, 0.3 * ext / Math.max(1, zmax - zmin));
+    var V = pts.map(function (p2) {
+      var a = p2.x - mx, b = p2.y - my, xr = a * ct - b * st2, yr = a * st2 + b * ct;
+      return { X: xr, Y: -yr * Math.cos(tilt) - (p2.z - zmin) * zex * Math.sin(tilt), G: -yr * Math.cos(tilt), d: p2.d, z: p2.z };
+    });
+    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    V.forEach(function (v) { x0 = Math.min(x0, v.X); x1 = Math.max(x1, v.X); y0 = Math.min(y0, v.Y, v.G); y1 = Math.max(y1, v.Y, v.G); });
+    var sc = Math.min(bw / ((x1 - x0) || 1), bh / ((y1 - y0) || 1)), ox = bx + (bw - (x1 - x0) * sc) / 2 - x0 * sc, oy = by + (bh - (y1 - y0) * sc) / 2 - y0 * sc;
+    var P = function (v, g) { return [ox + v.X * sc, oy + (g ? v.G : v.Y) * sc]; };
+    var line = function (g) { x.beginPath(); V.forEach(function (v, i) { var q = P(v, g); if (i) x.lineTo(q[0], q[1]); else x.moveTo(q[0], q[1]); }); };
+    x.save(); x.lineJoin = "round"; x.lineCap = "round";
+    line(true); x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 10; x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 16; x.stroke(); x.shadowBlur = 0;   // 足元の影
+    x.strokeStyle = "rgba(255,255,255,.22)"; x.lineWidth = 2;   // 高さの線
+    for (var j = 0; j < V.length; j += Math.max(1, Math.round(V.length / 90))) { var a2 = P(V[j], true), b2 = P(V[j], false); x.beginPath(); x.moveTo(a2[0], a2[1]); x.lineTo(b2[0], b2[1]); x.stroke(); }
+    line(false); x.strokeStyle = "#fff"; x.lineWidth = 15; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 14; x.stroke(); x.shadowBlur = 0;
+    var pa = paceOn() ? paceArr() : null;
+    for (var k2 = 1; k2 < V.length; k2++) {
+      var u = P(V[k2 - 1], false), w2 = P(V[k2], false);
+      x.beginPath(); x.moveTo(u[0], u[1]); x.lineTo(w2[0], w2[1]); x.lineWidth = 8;
+      x.strokeStyle = pa ? paceColor(pa[Math.min(pa.length - 1, Math.round(V[k2].d / route.len * (pa.length - 1)))]) : REST; x.stroke();
+    }
+    var s0 = P(V[0], false), s1 = P(V[V.length - 1], false);
+    [[s0, "#3CC46B"], [s1, "#E4572E"]].forEach(function (q) { x.beginPath(); x.arc(q[0][0], q[0][1], 13, 0, Math.PI * 2); x.fillStyle = q[1]; x.fill(); x.lineWidth = 5; x.strokeStyle = "#fff"; x.stroke(); });
+    var hi = V.reduce(function (a, v) { return v.z > a.z ? v : a; }, V[0]), hp = P(hi, false);   // いちばん高い所
+    x.beginPath(); x.moveTo(hp[0], hp[1] - 40); x.lineTo(hp[0] - 15, hp[1] - 14); x.lineTo(hp[0] + 15, hp[1] - 14); x.closePath(); x.fillStyle = "#fff"; x.fill();
+    x.restore();
+  }
+  function makeCardPhoto(c, x, hl) {
+    var CW = c.width, CH = c.height, src = hl.kind === "video" ? hl.el : hl.img;
+    var sw = hl.kind === "video" ? hl.el.videoWidth : hl.img.width, sh = hl.kind === "video" ? hl.el.videoHeight : hl.img.height, sc = Math.max(CW / sw, CH / sh);
+    x.drawImage(src, (CW - sw * sc) / 2, (CH - sh * sc) / 2, sw * sc, sh * sc);
+    var g = x.createLinearGradient(0, CH * 0.25, 0, CH); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(0.45, "rgba(0,0,0,.3)"); g.addColorStop(1, "rgba(0,0,0,.85)");
+    x.fillStyle = g; x.fillRect(0, 0, CW, CH);
+    var g2 = x.createLinearGradient(0, 0, 0, 240); g2.addColorStop(0, "rgba(0,0,0,.5)"); g2.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g2; x.fillRect(0, 0, CW, 240);
+    drawRoute3d(x, 90, 470, CW - 180, 520);
+    cardText(c, x);
+    return c;
+  }
+  function cardText(c, x) {
+    var CW = c.width, T = function (s2, px, py, size, weight, color, align) {
+      x.font = weight + " " + size + "px system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif"; x.textAlign = align || "left";
+      x.fillStyle = color || "#fff"; x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = 14; x.fillText(s2, px, py); x.shadowBlur = 0;
+    };
+    var info = titleInfo(), mh = movingHours(), g3 = gainUp();
+    T("HutsGo", CW - 56, 92, 40, 800, "#fff", "right");
+    if (info.date) T(info.date, 56, 92, 34, 700, "#fff");
+    T(info.title + (info.sub ? "  " + info.sub : ""), 56, 1110, info.title.length > 9 ? 56 : 70, 800, "#fff");
+    var stats = [["距離", fmtDist(route.len)], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
+    stats.forEach(function (st2, j) { var px2 = 56 + j * 330; T(st2[0], px2, 1196, 30, 600, "rgba(255,255,255,.8)"); T(st2[1], px2, 1268, 56, 800, "#fff"); });
+    if (paceOn()) {   // ペースの凡例
+      var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
+      PACE.forEach(function (q, i) { lg.addColorStop(i / (PACE.length - 1), "rgb(" + q[1].join(",") + ")"); });
+      x.fillStyle = lg; x.beginPath(); x.roundRect(lx, ly - 10, 260, 10, 5); x.fill();
+      T("ゆっくり", lx - 10, ly, 20, 600, "rgba(255,255,255,.85)", "right"); T("速い", lx + 270, ly, 20, 600, "rgba(255,255,255,.85)", "left");
+    }
   }
   function makeCard3d(c, x, bg, hl) {
     var CW = c.width, CH = c.height;
