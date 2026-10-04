@@ -72,3 +72,14 @@ h1{font-size:1.45rem;line-height:1.35;margin:.2rem 0 .5rem}
 /* ★: 冒頭に使う写真 */
 .fly-star{margin-left:auto;flex:none;border:0;background:none;font-size:1.3rem;line-height:1;color:#b9c2bc;cursor:pointer;padding:.2rem .3rem}
 .fly-star.is-on{color:#E4A72E}
+
+/* 画面はいつも動画の絵。地図は動画の大きさ（360×640 の 2 倍）で後ろに置き、合成した絵だけを見せる */
+.fly-phone #fly-map{inset:auto;left:0;top:0;width:360px;height:640px}
+.fly-phone #fly-out{position:absolute;inset:0;width:100%;height:100%;z-index:2;background:#1d2a24}
+.fly-player{display:flex;align-items:center;gap:.6rem;margin-top:.6rem}
+.fly-player .fly-add{position:static;width:40px;height:40px;flex:none}
+.fly-time{font-size:.8rem;color:var(--soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fly-play:disabled{opacity:.4}
+/* 道の上の位置のつまみ */
+.fly-list li > div{flex:1;min-width:0}
+.fly-pos{display:block;width:100%;margin:.25rem 0 0;accent-color:var(--moss)}

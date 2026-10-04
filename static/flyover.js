@@ -232,7 +232,8 @@
           m.dur = Math.min(VIDEO_MAX_SEC, m.el.duration || VIDEO_MAX_SEC);
           m.thumb = videoThumb(m.el);
         } else {
-          var ex = readExif(await f.slice(0, 256 * 1024).arrayBuffer()) || {};
+          var exRaw = readExif(await f.slice(0, 256 * 1024).arrayBuffer()), ex = exRaw || {};
+          m.exif = !!exRaw;
           m.gps = ex.gps || null; m.dir = ex.dir != null ? ex.dir : null; m.local = ex.local != null ? ex.local : null; m.offset = ex.offset != null ? ex.offset : null;
           if (m.local != null && m.offset != null) m.utc = m.local - m.offset;
           m.img = await createImageBitmap(f);
@@ -245,9 +246,14 @@
     }
     place();
     renderList();
-    drawMarkers();
-    updateView();
-    status(added ? "地図に置きました。丸い写真を押すと大きく見られます。" : "読み込めるファイルがありませんでした。");
+    refreshShow();
+    var imgs = media.filter(function (m) { return m.kind === "image"; }), withGps = imgs.filter(function (m) { return m.gps; }).length;
+    var withTime = imgs.filter(function (m) { return m.local != null || m.utc != null; }).length;
+    status(!added ? "読み込めるファイルがありませんでした。"
+      : imgs.length && !withGps
+        ? "写真 " + imgs.length + " 枚とも位置情報がありません（スマホのブラウザは写真を渡す前に位置情報を外すことがあります）。"
+          + (withTime ? "撮影時刻はあります。" : "") + "一覧のつまみで場所を合わせられます。"
+        : "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。");
   }
   function videoThumb(el) {
     try {
@@ -291,6 +297,7 @@
     tz = guessTz();
     var rest = [];
     media.forEach(function (m) {
+      if (m.placed === "manual" && m.manualFor === route.id) return;   // 手で合わせた位置はそのまま
       m.placed = null; m.d = null; m.far = false;
       if (m.gps) {
         var p = project(m.gps, route);
@@ -305,7 +312,7 @@
     // 残り: 撮影時刻の順に、置けた写真のあいだへ挟む。何も無ければ等間隔（目安）
     var key = function (m) { return m.utc != null ? m.utc : m.local != null ? m.local : m.file.lastModified; };
     rest.sort(function (a, b) { return key(a) - key(b); });
-    var anchors = media.filter(function (m) { return m.d != null; }).sort(function (a, b) { return key(a) - key(b); });
+    var anchors = media.filter(function (m) { return m.d != null && rest.indexOf(m) < 0; }).sort(function (a, b) { return key(a) - key(b); });
     rest.forEach(function (m, i) {
       var before = null, after = null;
       anchors.forEach(function (a) { if (key(a) <= key(m)) before = a; else if (!after) after = a; });
@@ -319,9 +326,13 @@
   }
   function placeText(m) {
     var near = nearestStop(m.d), nearTxt = near && Math.abs(near.d - m.d) < 1500 ? "・" + near.name.ja + "付近" : "";
-    if (m.placed === "gps") return "撮影地点に配置（道から " + Math.round(m.off) + "m）" + nearTxt;
-    if (m.placed === "time") return "撮影時刻で GPX の通過地点に配置" + (m.utc == null && tz ? "（時差 " + fmtOffset(tz.ms) + "・" + tz.how + "）" : "") + nearTxt;
-    return (m.far ? "位置が道から 3km 以上離れているため、" : "位置も時刻の手がかりも無いため、") + "撮影の順に配置（場所は目安）";
+    if (m.placed === "gps") return "撮影地点（位置情報）" + nearTxt;
+    if (m.placed === "time") return "撮影時刻を GPX の時刻と照合" + (m.utc == null && tz ? "（時差 " + fmtOffset(tz.ms) + "）" : "") + nearTxt;
+    if (m.placed === "manual") return "手で合わせた位置" + nearTxt;
+    var hasTime = m.local != null || m.utc != null;
+    var why = m.far ? "位置が道から 3km 以上離れている" : m.kind === "image" && m.exif ? "位置情報が外されている" : "位置情報なし";
+    var how = !hasTime ? "撮った順に並べた" : route.times ? "撮影時刻が GPX の時間外" : "撮影時刻の順に並べた（道に時刻が無い）";
+    return why + "・" + how + nearTxt;
   }
   function fmtOffset(ms) { var s = ms < 0 ? "-" : "+", a = Math.abs(ms) / 60000; return s + Math.floor(a / 60) + ":" + String(a % 60).padStart(2, "0"); }
   function renderList() {
@@ -334,6 +345,11 @@
       t.firstChild.textContent = m.name; t.lastChild.textContent = m.err ? "読めませんでした（" + m.err + "）" : placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
       li.appendChild(t);
       if (!m.err) {
+        // 道の上の位置を手で合わせるつまみ（位置情報が外された写真のため）
+        var pos = document.createElement("input");
+        pos.type = "range"; pos.min = "0"; pos.max = "1000"; pos.className = "fly-pos"; pos.dataset.pos = String(media.indexOf(m));
+        pos.value = String(Math.round(m.d / route.len * 1000)); pos.setAttribute("aria-label", m.name + " の道の上の位置");
+        t.appendChild(pos);
         var star = document.createElement("button");
         star.type = "button"; star.className = "fly-star" + (m.star ? " is-on" : ""); star.dataset.star = String(media.indexOf(m));
         star.textContent = m.star ? "★" : "☆"; star.setAttribute("aria-label", "冒頭に使う"); star.setAttribute("aria-pressed", String(!!m.star));
@@ -441,11 +457,6 @@
       center: [137.69, 36.36], zoom: 11, pitch: 0
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "top-right");
-    // 再生中に地図を触ったら止める（見たい所を自由に回せるように）
-    // 毎コマ jumpTo で動かしているため、地図の dragstart は出る前に打ち消されることがある。触れた瞬間に止める
-    ["pointerdown", "wheel", "touchstart"].forEach(function (ev) {
-      $("fly-map").addEventListener(ev, function () { if (player.playing) pause(); }, { passive: true, capture: true });
-    });
     return new Promise(function (ok) { map.on("load", ok); });
   }
   var DONE = "#1FB5E8", REST = "#E4572E", lastHere = null;   // 通った所 / これから
@@ -483,32 +494,7 @@
       return p.off <= HUT_NEAR_M ? { id: h.id, kind: "hut", name: h.name, lat: loc.lat, lon: loc.lon, elev: loc.elevation_m, d: p.d } : null;
     }).filter(Boolean);
   }
-  var markers = [], hereMarker = null;
-  function clearMarkers() { markers.forEach(function (mk) { mk.remove(); }); markers = []; hereMarker = null; }
-  function drawMarkers() {
-    clearMarkers();
-    (route.stops || []).filter(function (s) { return s.kind === "hut"; }).forEach(function (s) {
-      var a = document.createElement("a");
-      a.className = "fly-hut"; a.textContent = s.name.ja; a.href = BASE + "/huts/" + s.id + "/"; a.target = "_blank"; a.rel = "noopener";
-      a.title = "HutsGo の小屋ページ（営業期間・予約の窓口）";
-      markers.push(new maplibregl.Marker({ element: a, anchor: "bottom", subpixelPositioning: true }).setLngLat([s.lon, s.lat]).addTo(map));
-    });
-    (route.peaks || []).forEach(function (pk) {
-      var el = document.createElement("div");
-      el.className = "fly-peak"; el.textContent = pk.name.ja;
-      if (pk.elev) { var sm = document.createElement("small"); sm.textContent = pk.elev.toLocaleString() + "m"; el.appendChild(sm); }
-      markers.push(new maplibregl.Marker({ element: el, anchor: "bottom", subpixelPositioning: true, opacityWhenCovered: "0" }).setLngLat([pk.lon, pk.lat]).addTo(map));
-    });
-    media.forEach(function (m) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "fly-thumb" + (m.kind === "video" ? " is-video" : "");
-      if (m.thumb) b.style.backgroundImage = "url(" + JSON.stringify(m.thumb) + ")";
-      b.setAttribute("aria-label", m.name + " を大きく見る");
-      b.addEventListener("click", function (e) { e.stopPropagation(); pause(); setD(m.d, true); openPopup(m); });
-      var p = at(route, m.d);
-      markers.push(new maplibregl.Marker({ element: b, anchor: "bottom", offset: [0, -8], subpixelPositioning: true, opacityWhenCovered: "0.35" }).setLngLat([p[1], p[0]]).addTo(map));
-    });
-  }
+  var markers = [];   // 地図上のピンは使わない（画面にはいつも動画と同じ絵を出す）
 
   async function overview() {   // 道全体を見せ、そのあいだに標高の断面を測る（GPX に標高があればそれを使う）
     map.setTerrain(null);
@@ -526,7 +512,6 @@
       route.profile = prof.some(function (x) { return x != null; }) ? prof : null;
     }
     map.setTerrain({ source: "dem", exaggeration: EXAG });
-    map.easeTo({ pitch: 55, bearing: -15, duration: 900 });
   }
   var timeouts = 0;
   function settle(ms) {   // 地形と航空写真の読み込みが済むまで待つ。打ち切ったら数える（崩れたコマが混ざった印）
@@ -700,111 +685,73 @@
     map.jumpTo(Object.assign({}, cam, { pitch: aimPitch }));
   }
 
-  // ------------------------------------------------------------------ 画面の再生（スライドバー・断面図・写真の小窓）
-  var player = { d: 0, playing: false, hold: null, last: null, followBearing: null };
-  function setD(d, moveCamera) {
-    player.d = Math.max(0, Math.min(route.len, d));
-    $("fly-seek").value = String(Math.round(player.d / route.len * 1000));
-    var p = at(route, player.d);
-    showProgress(player.d);
-    applyLight(player.d);
-    if (moveCamera) map.jumpTo({ center: [p[1], p[0]] });
-    updateView();
-  }
-  function play() {
-    if (player.d >= route.len - 1) setD(0, true);
-    player.playing = true; player.last = null; player.followBearing = null; closePopup();
-    player.basePitch = map.getPitch(); aimPitch = null; aimWant = null;   // 傾きは再生を始めたときの値を基準にする
-    lastAhead = -1e9; prefetchAhead(player.d);
-    $("fly-play").classList.add("is-playing"); $("fly-play").setAttribute("aria-label", "一時停止");
-    requestAnimationFrame(step);
-  }
-  function pause() {
-    player.playing = false; player.hold = null;
-    $("fly-play").classList.remove("is-playing"); $("fly-play").setAttribute("aria-label", "再生");
-  }
-  function step(now) {
-    if (!player.playing) return;
-    var dt = player.last == null ? 0 : Math.min(0.1, (now - player.last) / 1000);
-    player.last = now;
-    if (player.hold) {
-      if (now < player.hold.until) { requestAnimationFrame(step); return; }
-      player.hold = null; closePopup();
-    }
-    // 次の写真まで遠いときは最大 4 倍の速さで進み、写真の 300m 手前からふつうの速さに戻す
-    var d0 = player.d, next = media.find(function (m) { return m.d > d0; }), gap = next ? next.d - d0 : Infinity;
-    var v = route.len / PLAY_SEC * (1 + 3 * Math.max(0, Math.min(1, (gap - 300) / 2000)));
-    var d1 = Math.min(route.len, d0 + v * dt);
-    var hit = media.find(function (m) { return m.d > d0 && m.d <= d1; });
-    if (hit) d1 = hit.d;
-    setD(d1, false);
-    // カメラは進む向きに少しずつ回しながらついていく（ズームと傾きは触った値のまま）
-    var b = bearing(railAt(d1 - 800), railAt(d1 + 1600));   // ならした軌道の向き（細かい曲がりで揺れない）
-    if (player.followBearing == null) player.followBearing = map.getBearing();
-    var diff = ((b - player.followBearing + 540) % 360) - 180;
-    player.followBearing = (player.followBearing + diff * 0.02 + 360) % 360;
-    var p = at(route, d1), c = railAt(d1);
-    aim({ center: [c[1], c[0]], bearing: player.followBearing, pitch: player.basePitch, zoom: map.getZoom() }, p, 0.35, 6);
-    prefetchAhead(d1);
-    if (hit) { openPopup(hit); player.hold = { until: now + (hit.kind === "video" ? Math.max(3, hit.dur) : 3) * 1000 }; }
-    if (d1 >= route.len) { pause(); return; }
-    requestAnimationFrame(step);
-  }
-  function openPopup(m) {
-    var box = $("fly-popup-media"); box.innerHTML = "";
-    var el;
-    if (m.kind === "video") { el = document.createElement("video"); el.src = m.url; el.controls = true; el.muted = true; el.playsInline = true; el.autoplay = true; }
-    else { el = document.createElement("img"); el.src = m.url; el.alt = m.name; }
-    box.appendChild(el);
-    var t = m.utc != null ? m.utc : (m.local != null && tz ? m.local - tz.ms : null);
-    $("fly-popup-cap").textContent = (t != null ? fmtDate(t) + " " + fmtClock(t) + "・" : m.local != null ? fmtClockNaive(m.local) + "・" : "") + placeText(m);
-    $("fly-popup").hidden = false;
-  }
-  function closePopup() {
-    $("fly-popup").hidden = true;
-    var v = $("fly-popup-media").querySelector("video"); if (v) v.pause();
-  }
-  // 日時の表示は「その山行の現地時刻」。時差は写真から推定したもの、無ければ端末の時差
+  // ------------------------------------------------------------------ 動画のプレーヤー（作る動画をそのまま流す・止める・スライドで場面を選ぶ）
+  // 記録を残すための「道をたどる再生」はやめ、画面にはいつも書き出す動画と同じ絵を出す
   function localMs(utc) { return utc + (tz ? tz.ms : -new Date(utc).getTimezoneOffset() * 60000); }
   function fmtDate(utc) { var d = new Date(localMs(utc)); return d.getUTCFullYear() + "/" + String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + String(d.getUTCDate()).padStart(2, "0") + "(" + JA_DOW[d.getUTCDay()] + ")"; }
   function fmtClock(utc) { var d = new Date(localMs(utc)); return d.getUTCHours() + ":" + String(d.getUTCMinutes()).padStart(2, "0"); }
   function fmtClockNaive(local) { var d = new Date(local); return (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + " " + d.getUTCHours() + ":" + String(d.getUTCMinutes()).padStart(2, "0"); }
-  function fmtDur(ms) { var m = Math.round(ms / 60000); return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m"; }
   function fmtDist(d) { return d < 1000 ? Math.round(d) + " m" : (d / 1000).toFixed(1) + " km"; }
-  function updateView() {
-    if (!route) return;
-    var d = player.d, t = timeAt(d), t0 = route.times ? route.times.find(function (x) { return x != null; }) : null;
-    $("fly-st-time").textContent = t != null && t0 != null ? fmtDur(t - t0) : "—";
-    var e = eleAt(d);
-    $("fly-st-elev").textContent = e != null ? Math.round(e).toLocaleString() + " m" : "—";
-    $("fly-st-dist").textContent = fmtDist(d);
-    $("fly-date").textContent = t != null ? fmtDate(t) : route.name.ja;
-    $("fly-clock").textContent = t != null ? fmtClock(t) : "";
-    var s = nearestStop(d);
-    $("fly-place").textContent = s && Math.abs(s.d - d) < 600 ? s.name.ja + (Math.abs(s.d - d) > 150 ? " 付近" : "") : "";
-    drawProfileTo($("fly-profile").getContext("2d"), 640, 120, d, false);
+  function fmtT(t) { return Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0"); }
+
+  var sp = { show: null, t: 0, playing: false, last: null };
+  function refreshShow() {   // 写真・長さ・★・位置が変わったら組み直し、今の場面を描き直す
+    if (!route || !map || busy) return;
+    sp.show = buildShow();
+    sp.t = Math.min(sp.t, sp.show.total - 0.001);
+    renderAt(sp.t, true);
   }
-  function profileValues() {
-    var N = 160, vals = [];
-    for (var i = 0; i <= N; i++) vals.push(eleAt(route.len * i / N));
-    return vals.some(function (x) { return x != null; }) ? vals : null;
+  function updateTime() {
+    $("fly-seek").value = String(Math.round(sp.t / sp.show.total * 1000));
+    $("fly-time").textContent = fmtT(sp.t) + " / " + fmtT(sp.show.total);
   }
-  function drawProfileTo(c, w, h, d, forVideo) {
-    if (!forVideo) c.clearRect(0, 0, w, h);   // 動画の合成では消さない（透明が白として符号化される）
-    var prof = route._pv || (route._pv = profileValues());
-    if (!prof) return;
-    var vals = prof.filter(function (v) { return v != null; }), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-    var pad = forVideo ? 0 : 6, Y = function (v) { return h - pad - (v - lo) / ((hi - lo) || 1) * (h - pad * 2 - (forVideo ? 0 : 8)); };
-    var X = function (i) { return i / (prof.length - 1) * w; }, k = d / route.len * (prof.length - 1);
-    var path = function () { c.beginPath(); c.moveTo(0, h); prof.forEach(function (v, i) { c.lineTo(X(i), Y(v == null ? lo : v)); }); c.lineTo(w, h); c.closePath(); };
-    path(); c.fillStyle = forVideo ? "rgba(255,255,255,.22)" : "#E6ECE8"; c.fill();
-    c.save(); c.beginPath(); c.rect(0, 0, d / route.len * w, h); c.clip(); path(); c.fillStyle = forVideo ? "rgba(255,255,255,.45)" : "#9DB8A7"; c.fill(); c.restore();
-    c.beginPath(); prof.forEach(function (v, i) { var y = Y(v == null ? lo : v); if (i) c.lineTo(X(i), y); else c.moveTo(X(i), y); });
-    c.strokeStyle = forVideo ? "rgba(255,255,255,.9)" : "#2E6B4A"; c.lineWidth = forVideo ? 3 : 2.5; c.stroke();
-    media.forEach(function (m) { c.fillStyle = forVideo ? "rgba(255,255,255,.8)" : "#2F80ED"; c.fillRect(m.d / route.len * w - 2, h - 10, 4, 10); });
-    var cy = Y(prof[Math.round(k)] == null ? lo : prof[Math.round(k)]);
-    c.beginPath(); c.arc(d / route.len * w, cy, forVideo ? 9 : 7, 0, Math.PI * 2); c.fillStyle = "#E4572E"; c.fill();
-    c.lineWidth = 3; c.strokeStyle = "#fff"; c.stroke();
+  function applyFrame(st, live) {   // 地図をその場面へ（写真が全面のときは地図を動かさない）
+    if (st.photoAlpha >= 1) return;
+    if (st.e.kind === "fly" || st.e.kind === "swoop") aim(st.cam, at(route, st.d), live ? 1.2 : 90, live ? 6 : 0); else keepAbove(st.cam);
+    setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
+  }
+  function syncVideo(st, t, playing) {   // 動画の場面では、動画の再生位置を場面の時間に合わせる
+    media.forEach(function (m) { if (m.el && m !== st.m && !m.el.paused) m.el.pause(); });
+    if (!(st.m && st.m.kind === "video" && st.photoAlpha > 0)) return;
+    var el = st.m.el, want = Math.max(0, Math.min(st.e.kind === "hook" ? t : t - st.e.t0, (el.duration || 1) - 0.05));
+    if (playing) {
+      if (el.paused) { el.currentTime = want; el.play().catch(function () {}); }
+      else if (Math.abs(el.currentTime - want) > 0.35) el.currentTime = want;
+    } else {
+      if (!el.paused) el.pause();
+      if (Math.abs(el.currentTime - want) > 0.05) el.currentTime = want;
+    }
+  }
+  function draw(st) {
+    if (st.photoAlpha < 1) { map.once("render", function () { compose(st, sp.show); }); map.triggerRepaint(); }
+    else compose(st, sp.show);
+  }
+  function renderAt(t, sharp) {
+    var st = showState(sp.show, t);
+    applyFrame(st, false); syncVideo(st, t, false); draw(st); updateTime();
+    if (sharp && st.photoAlpha < 1) settle(4000).then(function () { if (!sp.playing && sp.t === t) draw(st); });   // 読み込みが済んだら細かい絵で描き直す
+  }
+  function playSp() {
+    if (!sp.show || busy) return;
+    if (sp.t >= sp.show.total - 0.05) sp.t = 0;
+    sp.playing = true; sp.last = null; aimPitch = null; aimWant = null; lastAhead = -1e9;
+    $("fly-play").classList.add("is-playing"); $("fly-play").setAttribute("aria-label", "一時停止");
+    requestAnimationFrame(tickSp);
+  }
+  function pauseSp() {
+    sp.playing = false;
+    $("fly-play").classList.remove("is-playing"); $("fly-play").setAttribute("aria-label", "再生");
+    media.forEach(function (m) { if (m.el && !m.el.paused) m.el.pause(); });
+  }
+  function tickSp(now) {
+    if (!sp.playing) return;
+    var dt = sp.last == null ? 0 : Math.min(0.1, (now - sp.last) / 1000);
+    sp.last = now;
+    sp.t = Math.min(sp.show.total, sp.t + dt);
+    var st = showState(sp.show, Math.min(sp.t, sp.show.total - 0.001));
+    applyFrame(st, true); syncVideo(st, sp.t, true); draw(st); updateTime();
+    if (sp.t >= sp.show.total) { pauseSp(); return; }
+    requestAnimationFrame(tickSp);
   }
 
   // ------------------------------------------------------------------ 書き出し（ショート動画）
@@ -914,9 +861,8 @@
     return { center: overviewCamCache.center, zoom: overviewCamCache.zoom, pitch: 38, bearing: -20 + (spin || 0), elevation: overviewCamCache.elevation };
   }
   function flyCam(d, stepState) {
-    var c = railAt(d), b = bearing(railAt(d - 800), railAt(d + 1600));
-    if (stepState) { if (flyBearing == null) flyBearing = b; flyBearing = angLerp(flyBearing, b, 0.05); b = flyBearing; }
-    else if (flyBearing != null) b = flyBearing;
+    // 向きは前後に広く取ったならした軌道から決める（時間でならさない。スライドでどこへ飛んでも同じ絵になる）
+    var c = railAt(d), b = bearing(railAt(d - 1500), railAt(d + 2500));
     return { center: [c[1], c[0]], zoom: SHOW_Z, pitch: SHOW_PITCH, bearing: b, elevation: groundAt(c[1], c[0], d) };
   }
   // カメラを地面より上に保つ: 動かした後のカメラの真下の地形と比べ、80m より低ければ引いて（ズームを下げて）持ち上げる。
@@ -1102,15 +1048,11 @@
     }
   }
   function stageMap(on) {   // 書き出し・プレビューの間だけ、地図を 360×640 の 2 倍（720×1280）に固定する
-    var phone = document.querySelector(".fly-phone");
-    phone.classList.toggle("is-exporting", on);
     map.setPixelRatio(on ? W / 360 : Math.min(2, window.devicePixelRatio || 1)); map.resize();
-    markers.forEach(function (mk) { mk.getElement().style.visibility = on ? "hidden" : ""; });
     // 書き出し中は写真の切り替えフェードを切る（「読み込み完了」がフェードの終わりまで待つので、1 コマごとに遅くなる）
-    map.setPaintProperty("photo", "raster-fade-duration", on ? 0 : 400);
+    map.setPaintProperty("photo", "raster-fade-duration", 0);
     // 全体を見せたときの余白（fitBounds）が残ると画面の中心がずれる。書き出し中は上にだけ余白を付け、現在地を画面の下寄りに置く（前方が見える）
     map.setPadding(on ? { top: 170, bottom: 0, left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 });
-    overviewCamCache = null;
   }
   async function encodeFrames(show) {
     if (!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) return null;
@@ -1177,27 +1119,17 @@
     await playShow(show, rec); await done;
     return { blob: new Blob(chunks, { type: rec.mimeType || mime }), mime: (rec.mimeType || mime) + "（実時間で録画）", sec: show.total };
   }
-  function showOut(on) { out.hidden = !on; out.classList.toggle("is-live", on); }
-  async function previewVideo() {
+  async function previewVideo() {   // 画面の中央に動画を出して、頭から流す
     if (busy) return;
-    busy = true; pause(); closePopup(); setButtons(false);
-    var keep = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
-    try {
-      stageMap(true); showOut(true);
-      var show = buildShow();
-      status("プレビュー（" + Math.round(show.total) + " 秒）");
-      await playShow(show, null);
-      status("");
-    } catch (e) { status("うまく動きませんでした: " + (e && e.message || e)); }
-    showOut(false); stageMap(false); map.jumpTo(keep); restoreLine();
-    busy = false; setButtons(true);
+    var stage = document.querySelector(".fly-stage");
+    stage.scrollIntoView({ behavior: "smooth", block: "center" });
+    pauseSp(); sp.t = 0; refreshShow();
+    setTimeout(playSp, 500);
   }
   async function exportVideo() {
     if (busy) return;
-    busy = true; pause(); closePopup(); setButtons(false);
-    var keep = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
+    pauseSp(); busy = true; setButtons(false);
     try {
-      stageMap(true); showOut(true);
       var show = buildShow();
       await prepareTiles(show);
       var res = await encodeFrames(show);
@@ -1213,15 +1145,10 @@
     } catch (e) {
       status("うまく動きませんでした: " + (e && e.message || e));
     }
-    showOut(false); stageMap(false); map.jumpTo(keep); restoreLine();
     busy = false; setButtons(true);
+    renderAt(sp.t, true);
   }
-  function restoreLine() {
-    if (!map.getLayer("route")) return;
-    setLine({ e: { kind: "fly" }, d: player.d, line: 1 });
-    applyLight(player.d);
-  }
-  function setButtons(on) { ["fly-record", "fly-preview"].forEach(function (id) { var b = $(id); if (b) b.disabled = !on; }); }
+  function setButtons(on) { ["fly-record", "fly-preview", "fly-play"].forEach(function (id) { var b = $(id); if (b) b.disabled = !on; }); }
   function track(ev) {
     var api = (document.querySelector('meta[name="hutsgo-api"]') || {}).content;
     if (api && navigator.sendBeacon) {
@@ -1231,23 +1158,21 @@
 
   // ------------------------------------------------------------------ 起動
   async function useRoute(r) {
-    pause(); closePopup();
-    route = prepRoute(r); route._pv = null; route.profile = null; player.d = 0; lastLight = null; overviewCamCache = null;
+    pauseSp(); sp.t = 0;
+    route = prepRoute(r); route._pv = null; route.profile = null; lastLight = null; overviewCamCache = null;
     await loadHuts();
     await nearbyHuts();
     prefetchBase(); lastAhead = -1e9;
     try { route.peaks = await loadPeaks(); } catch (e) { route.peaks = []; }
     setRouteOnMap();
-    place(); renderList(); drawMarkers();
+    place(); renderList();
     status("地形を読み込んでいます…");
     await overview();
-    route._pv = null;
-    setD(0, false);
-    var hutsNear = (route.stops || []).filter(function (s) { return s.kind === "hut"; }).length;
+    stageMap(true);
+    refreshShow();
     status(route.source === "gpx"
       ? "GPX を読み込みました（" + fmtDist(route.len) + (route.times ? "・時刻あり" : "・時刻なし") + (route.ele ? "・標高あり" : "") + "）。"
-        + (hutsNear ? "道の近くの小屋 " + hutsNear + " 軒をピンで出しています。" : "")
-      : "▶ で再生、下のバーや断面図で道の途中へ移動できます。");
+      : "");
   }
   async function boot() {
     if (!window.maplibregl) { status("地図の部品を読み込めませんでした。通信を確かめてください。"); return; }
@@ -1271,35 +1196,45 @@
     });
     $("fly-files").addEventListener("change", function (e) { addFiles(Array.prototype.slice.call(e.target.files)); e.target.value = ""; });
     $("fly-add").addEventListener("click", function () { $("fly-files").click(); });
-    $("fly-play").addEventListener("click", function () { if (player.playing) pause(); else play(); });
-    $("fly-seek").addEventListener("input", function (e) { pause(); setD(Number(e.target.value) / 1000 * route.len, true); });
-    var prof = $("fly-profile"), dragging = false;
-    var seekProfile = function (ev) { var r = prof.getBoundingClientRect(); pause(); setD((ev.clientX - r.left) / r.width * route.len, true); };
-    prof.addEventListener("pointerdown", function (ev) { dragging = true; prof.setPointerCapture(ev.pointerId); seekProfile(ev); });
-    prof.addEventListener("pointermove", function (ev) { if (dragging) seekProfile(ev); });
-    prof.addEventListener("pointerup", function () { dragging = false; });
-    $("fly-popup-close").addEventListener("click", closePopup);
+    $("fly-play").addEventListener("click", function () { if (sp.playing) pauseSp(); else playSp(); });
+    var seekTimer = null;
+    $("fly-seek").addEventListener("input", function (e) {
+      pauseSp(); sp.t = Number(e.target.value) / 1000 * sp.show.total;
+      renderAt(sp.t, false);
+      clearTimeout(seekTimer); seekTimer = setTimeout(function () { renderAt(sp.t, true); }, 250);
+    });
+    $("fly-len").addEventListener("change", function () { pauseSp(); sp.t = 0; refreshShow(); });
+    // 道の上の位置を手で合わせる
+    $("fly-list").addEventListener("input", function (e) {
+      var r = e.target.closest("[data-pos]"); if (!r) return;
+      var m = media[Number(r.dataset.pos)];
+      m.d = Number(r.value) / 1000 * route.len; m.placed = "manual"; m.manualFor = route.id; m.pov = null;
+      r.parentNode.querySelector("small").textContent = placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
+    });
+    $("fly-list").addEventListener("change", function (e) {
+      if (!e.target.closest("[data-pos]")) return;
+      media.sort(function (a, b) { return a.d - b.d; }); renderList(); refreshShow();
+    });
     $("fly-record").addEventListener("click", exportVideo);
     $("fly-preview").addEventListener("click", previewVideo);
     // ★: 冒頭（フック）に使う写真・動画を選ぶ
     $("fly-list").addEventListener("click", function (e) {
       var b = e.target.closest("[data-star]"); if (!b) return;
       var m = media[Number(b.dataset.star)]; var on = !m.star;
-      media.forEach(function (x) { x.star = false; }); m.star = on; renderList();
+      media.forEach(function (x) { x.star = false; }); m.star = on; renderList(); sp.t = 0; refreshShow();
     });
     window.HutsGoFlyover = {
-      map: map, setD: function (d) { setD(d, true); }, play: play, pause: pause,
+      map: map, play: playSp, pause: pauseSp, seekT: function (t) { pauseSp(); sp.t = t; renderAt(t, true); },
       // 試験用: 道の d の地点を指定の傾きで狙い、遮られたまま残ったかを返す
       sun: function (ms, lat, lon) { return sunPos(ms, lat, lon); },
       timeline: function () { var sh = buildShow(); return { total: sh.total, kinds: sh.ev.map(function (e) { return e.kind; }), info: sh.info, chosen: sh.chosen.length }; },
       pov: function (i) { var m = media[i]; m.pov = null; return povCam(m); },
       flyDebug: async function (d) {
-        stageMap(true); flyBearing = null;
         var cam = flyCam(d, true); map.jumpTo(cam); await settle(15000);
         var dot = at(route, d), rl = railAt(d), q = map.project([dot[1], dot[0]]), c = map.project(map.getCenter());
         var res = { railOff: Math.round(dist(dot, rl)), dotY: Math.round(q.y), centerY: Math.round(c.y), h: map.getContainer().clientHeight,
                     padding: map.getPadding(), pitch: map.getPitch(), zoom: map.getZoom() };
-        stageMap(false); return res;
+        return res;
       },
       aimTest: async function (d, pitch) {
         var p = at(route, d), b = bearing(at(route, d - 700), at(route, d + 1800));
@@ -1310,11 +1245,10 @@
       here: function () { return lastHere; },
       gradient: function () { return JSON.stringify(map.getPaintProperty("route", "line-gradient")); },
       state: function () {
-        return { route: route.id, source: route.source, len: route.len, d: player.d, playing: player.playing, tz: tz && tz.ms,
+        return { route: route.id, source: route.source, len: route.len, t: sp.t, total: sp.show && sp.show.total, playing: sp.playing, tz: tz && tz.ms,
                  hutsNear: (route.stops || []).filter(function (s) { return s.kind === "hut"; }).map(function (s) { return s.id; }),
-                 media: media.map(function (m) { return { name: m.name, placed: m.placed, d: m.d }; }), profile: !!(route.ele || route.profile),
-                 stats: [$("fly-st-time").textContent, $("fly-st-elev").textContent, $("fly-st-dist").textContent], date: $("fly-date").textContent, clock: $("fly-clock").textContent,
-                 popup: !$("fly-popup").hidden, thumbs: document.querySelectorAll(".fly-thumb").length,
+                 media: media.map(function (m) { return { name: m.name, placed: m.placed, d: m.d, exif: !!m.exif }; }), profile: !!(route.ele || route.profile),
+                 time: $("fly-time").textContent, list: $("fly-list").textContent,
                  peaks: (route.peaks || []).map(function (p) { return p.name.ja + (p.elev ? ":" + p.elev : ""); }), light: lastLight,
                  dirs: media.map(function (m) { return m.dir == null ? null : Math.round(m.dir); }), highlight: (highlight() || {}).name || null,
                  tiles: { stored: store.size, queued: queue.length, inflight: inflight } };

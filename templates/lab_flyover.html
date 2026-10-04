@@ -47,36 +47,19 @@
 
   <section class="fly-stage" aria-label="3D の地図">
     <div class="fly-phone">
-      <div id="fly-map"></div>
-      <canvas id="fly-out" width="720" height="1280" hidden></canvas>
-      <div class="fly-top" aria-live="off">
-        <p id="fly-date" class="fly-date"></p>
-        <p id="fly-clock" class="fly-clock"></p>
-        <p id="fly-place" class="fly-place"></p>
-      </div>
-      <button type="button" id="fly-add" class="fly-round fly-add" aria-label="写真・動画を足す">
-        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 4 7.5 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-3.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" fill="currentColor"/></svg>
+      <div id="fly-map" aria-hidden="true"></div>
+      <canvas id="fly-out" width="720" height="1280" aria-label="作る動画"></canvas>
+    </div>
+    <div class="fly-player">
+      <button type="button" id="fly-play" class="fly-round fly-play" aria-label="再生">
+        <svg class="i-play" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
       </button>
-      <figure id="fly-popup" class="fly-popup" hidden>
-        <button type="button" id="fly-popup-close" class="fly-round fly-popup-close" aria-label="閉じる">×</button>
-        <div id="fly-popup-media"></div>
-        <figcaption id="fly-popup-cap"></figcaption>
-      </figure>
-      <div class="fly-panel">
-        <dl class="fly-stats">
-          <div><dt>経過時間</dt><dd id="fly-st-time">—</dd></div>
-          <div><dt>標高</dt><dd id="fly-st-elev">—</dd></div>
-          <div><dt>距離</dt><dd id="fly-st-dist">—</dd></div>
-        </dl>
-        <canvas id="fly-profile" class="fly-profile" width="640" height="120" aria-hidden="true"></canvas>
-        <div class="fly-player">
-          <button type="button" id="fly-play" class="fly-round fly-play" aria-label="再生">
-            <svg class="i-play" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            <svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
-          </button>
-          <input type="range" id="fly-seek" class="fly-seek" min="0" max="1000" value="0" step="1" aria-label="道の途中へ移動">
-        </div>
-      </div>
+      <input type="range" id="fly-seek" class="fly-seek" min="0" max="1000" value="0" step="1" aria-label="場面を選ぶ">
+      <span id="fly-time" class="fly-time">0:00 / 0:20</span>
+      <button type="button" id="fly-add" class="fly-round fly-add" aria-label="写真・動画を足す">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 4 7.5 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-3.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" fill="currentColor"/></svg>
+      </button>
     </div>
   </section>
 
