@@ -93,12 +93,22 @@
     </div>
 
     <div class="fly-step">
+      <h2><label for="fly-title">タイトル</label></h2>
+      <input type="text" id="fly-title" class="fly-title-in" maxlength="24" autocomplete="off" placeholder="山の名前">
+      <p class="fly-hint">空欄なら、歩いた中でいちばん高い山の名前と標高にします。</p>
+    </div>
+
+    <div class="fly-step">
       <h2>長さ</h2>
       <div class="fly-chips" role="radiogroup" aria-label="動画の長さ">
         <button type="button" role="radio" data-len="10">10 秒<small>2〜4 本</small></button>
         <button type="button" role="radio" data-len="20">20 秒<small>4〜8 本</small></button>
         <button type="button" role="radio" data-len="30">30 秒<small>6〜12 本</small></button>
         <button type="button" role="radio" data-len="60">60 秒<small>10〜25 本</small></button>
+      </div>
+      <div class="fly-mode" role="radiogroup" aria-label="作り方">
+        <label><input type="radio" name="fly-mode" value="fast" checked> 速く作る<small>再生と同じ時間</small></label>
+        <label><input type="radio" name="fly-mode" value="fine"> きれいに作る<small>時間がかかる</small></label>
       </div>
       <select id="fly-len" hidden><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="60">60</option></select>
     </div>

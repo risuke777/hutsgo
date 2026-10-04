@@ -1072,6 +1072,54 @@
     $("fly-seek").value = String(Math.round(sp.t / sp.show.total * 1000));
     $("fly-time").textContent = fmtT(sp.t) + " / " + fmtT(sp.show.total);
   }
+  // ---- 撮影地点のピンと、写真の右下の小さな 3D 地図
+  function pinLL(m) { var q = m.gps && project(m.gps, route).off < 300 ? m.gps : at(route, m.d); return [q[1], q[0]]; }
+  function insetCam(m) {
+    var ll = pinLL(m), b = m.dir != null ? m.dir : bearing(railAt(m.d - 800), railAt(m.d + 1600));
+    return { center: ll, zoom: 14.1, pitch: 52, bearing: b, elevation: groundAt(ll[0], ll[1], m.d) };
+  }
+  function pinScreen(m) { var c = map.getCanvas(), q = map.project(pinLL(m)); return [q.x / (c.clientWidth || 360), q.y / (c.clientHeight || 640)]; }
+  // 次の描画を待つ。その場で描かせる（map.redraw）と、画像タイルの読み込みの列が壊れて MapLibre の中でエラーになる（v5.24）。
+  // そこで上の枠・小さな地図・道の地図は、続くコマで 1 つずつ描く（寄る場面だけコマ数が少し落ちる）
+  function renderOnce() { return new Promise(function (ok) { map.once("render", function () { ok(); }); map.triggerRepaint(); }); }
+  var topCv = document.createElement("canvas"); topCv.width = W; topCv.height = H;
+  var topCx = topCv.getContext("2d"), topPin = null, topFor = null;
+  function grabTop(m) { topCx.drawImage(map.getCanvas(), 0, 0, W, H); topPin = pinScreen(m); topFor = m; }
+  function grabInset(m, sharp) {
+    var c = map.getCanvas(), ps = pinScreen(m), S = Math.round(c.width * 0.66);
+    var sx = Math.max(0, Math.min(c.width - S, ps[0] * c.width - S / 2)), sy = Math.max(0, Math.min(c.height - S, ps[1] * c.height - S / 2));
+    var cv = m.inset || (m.inset = document.createElement("canvas")); cv.width = cv.height = 300;
+    cv.getContext("2d").drawImage(c, sx, sy, S, S, 0, 0, 300, 300);
+    m.insetPin = [(ps[0] * c.width - sx) / S * 300, (ps[1] * c.height - sy) / S * 300]; m.insetSharp = !!sharp;
+  }
+  function needInset(st) { return st.e.kind === "media" && st.m && !st.m.inset; }
+  function mapNeeded(st) { return st.photoAlpha < 1 || !mediaReady(st.m); }
+  // 読み込みを待たずに 1 コマ（再生・プレビュー・速く作る）。alive() が偽になったら途中でやめる
+  async function liveFrame(st, t, playing, show, alive) {
+    alive = alive || function () { return true; };
+    if (needInset(st)) { map.jumpTo(insetCam(st.m)); setLine(st, "inset"); await renderOnce(); if (!alive()) return false; grabInset(st.m, false); }
+    if (st.top) { keepAbove(st.top); setLine(st, "top"); await renderOnce(); if (!alive()) return false; grabTop(st.m); }
+    syncVideo(st, t, playing);
+    if (mapNeeded(st)) { applyFrame(st, true); await renderOnce(); if (!alive()) return false; }
+    compose(st, show);
+    return true;
+  }
+  // 読み込みを待って 1 コマ（書き出し・止めたときの描き直し）。alive() が偽になったら途中でやめる
+  async function settledFrame(st, t, show, live, alive) {
+    alive = alive || function () { return true; };
+    if (st.e.kind === "media" && st.m && !st.m.insetSharp) {
+      map.jumpTo(insetCam(st.m)); setLine(st, "inset"); await settle(6000); if (!alive()) return false; grabInset(st.m, true);
+    }
+    if (st.top) { keepAbove(st.top); setLine(st, "top"); await settle(6000); if (!alive()) return false; grabTop(st.m); }
+    if (mapNeeded(st)) {
+      if (moving(st)) aim(st.cam, at(route, st.d), live ? 90 : 30 / FPS); else keepAbove(st.cam);
+      setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
+      await settle(6000); if (!alive()) return false;
+    }
+    if (st.m && st.m.kind === "video" && mediaOn(st)) { await seek(st.m.el, vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0)); if (!alive()) return false; }
+    compose(st, show);
+    return true;
+  }
   function applyFrame(st, live) {   // 地図をその場面へ（写真が全面のときは地図を動かさない）
     if (st.photoAlpha >= 1) return;
     if (moving(st)) aim(st.cam, at(route, st.d), live ? 1.2 : 90, live ? 6 : 0); else keepAbove(st.cam);
@@ -1091,19 +1139,20 @@
       if (Math.abs(el.currentTime - want) > 0.05) el.currentTime = want;
     }
   }
-  function draw(st) {
-    if (st.photoAlpha < 1) { map.once("render", function () { compose(st, sp.show); }); map.triggerRepaint(); }
-    else compose(st, sp.show);
-  }
+  var renderToken = 0;
   function renderAt(t, sharp) {
-    var st = showState(sp.show, t);
-    applyFrame(st, false); syncVideo(st, t, false); draw(st); updateTime();
-    // 動画の場面は、動画の頭出しが済んでから描き直す（止めた絵が前の位置のままにならないように）
-    if (st.m && st.m.kind === "video" && mediaOn(st) && st.m.el.seeking) {
-      st.m.el.addEventListener("seeked", function () { if (!sp.playing && sp.t === t) draw(st); }, { once: true });
-    }
-    if ($("fly-loading") && !$("fly-loading").hidden) map.once("render", function () { $("fly-loading").hidden = true; $("fly-empty").hidden = media.length > 0 || sp.playing; });
-    if (sharp && st.photoAlpha < 1) settle(4000).then(function () { if (!sp.playing && sp.t === t) draw(st); });   // 読み込みが済んだら細かい絵で描き直す
+    var st = showState(sp.show, t), my = ++renderToken, alive = function () { return !sp.playing && my === renderToken; };
+    updateTime();
+    return liveFrame(st, t, false, sp.show, alive).then(function (ok) {
+      if (!ok) return;
+      if ($("fly-loading") && !$("fly-loading").hidden) { $("fly-loading").hidden = true; $("fly-empty").hidden = media.length > 0 || sp.playing; }
+      // 動画の場面は、動画の頭出しが済んでから描き直す（止めた絵が前の位置のままにならないように）
+      if (st.m && st.m.kind === "video" && mediaOn(st) && st.m.el.seeking) {
+        st.m.el.addEventListener("seeked", function () { if (alive()) compose(st, sp.show); }, { once: true });
+      }
+      // 読み込みが済んだら細かい絵で描き直す（その間に場面が変わったらやめる）
+      if (sharp && !busy) return settledFrame(st, t, sp.show, true, function () { return alive() && !busy; });
+    });
   }
   function playSp() {
     if (!sp.show || busy) return;
@@ -1125,9 +1174,12 @@
     sp.last = now;
     sp.t = Math.min(sp.show.total, sp.t + dt);
     var st = showState(sp.show, Math.min(sp.t, sp.show.total - 0.001));
-    applyFrame(st, true); syncVideo(st, sp.t, true); draw(st); updateTime();
-    if (sp.t >= sp.show.total) { pauseSp(); return; }
-    requestAnimationFrame(tickSp);
+    liveFrame(st, sp.t, true, sp.show, function () { return sp.playing; }).then(function () {
+      updateTime();
+      if (!sp.playing) return;
+      if (sp.t >= sp.show.total) { pauseSp(); return; }
+      requestAnimationFrame(tickSp);
+    });
   }
 
   // ------------------------------------------------------------------ エネルギー収支（消費と山ごはん）
@@ -1282,8 +1334,8 @@
       days = Math.round((Date.UTC(b[0], b[1] - 1, b[2]) - Date.UTC(a[0], a[1] - 1, a[2])) / 86400000) + 1;
       date = a[0] + "." + String(a[1]).padStart(2, "0") + "." + String(a[2]).padStart(2, "0") + (days > 1 ? "–" + (a[1] === b[1] ? String(b[2]).padStart(2, "0") : b[1] + "." + String(b[2]).padStart(2, "0")) : "");
     }
-    var g = gainUp();
-    return { title: top ? top.name.ja : route.name.ja, sub: top ? top.elev.toLocaleString() + "m" : "", date: date,
+    var g = gainUp(), custom = ((($("fly-title") || {}).value) || "").trim();
+    return { title: custom || (top ? top.name.ja : route.name.ja), sub: !custom && top ? top.elev.toLocaleString() + "m" : "", date: date,
              stats: [fmtDist(route.len), g ? "↑" + g.toLocaleString() + "m" : null, days ? days + "日間" : null].filter(Boolean) };
   }
   function highlight() {
@@ -1299,21 +1351,19 @@
     var hl = highlight();
     var en = energy(), hook = (hl ? 1.4 : 1.0) * s, draw = 1.3 * s, swoop = 1.1 * s, outro = (2.2 + (en && foods.length ? 1.3 : 0)) * s;
     var budget = T - hook - 1.8 * s - draw - swoop - outro;
-    // 写真・動画の出し方は 2 通り。おすすめの本数以内なら、撮った向きが分かるものは撮影地点へ降りて全面に出す。
-    // それ以外（と、本数が多いとき）は画面の上 2/3 に写真、下 1/3 に進み続ける地図（どこを歩いているかが途切れない）
+    // 写真・動画は画面の上 2/3、下 1/3 は進み続ける地図（どこを歩いているかが途切れない）。おすすめの本数以内なら、写真の前に
+    // 撮影地点へ寄る場面を入れる（上の枠で寄り、下の地図は道を進み続ける）。写真の右下には撮影地点を中心にした小さな 3D 地図
     var chosen = usedMedia().sort(function (a, b) { return a.d - b.d; }), rec = REC[T] || [4, 8];
     var povOK = chosen.length <= rec[1];
-    var isPov = function (m) { return povOK && m.dir != null; };
-    var pw = function (m) { return m.kind === "video" ? Math.min(m.full || m.dur || 3, 3 * s) : (isPov(m) ? 1.7 : 1.4) * s; };
+    var pw = function (m) { return m.kind === "video" ? Math.min(m.full || m.dur || 3, 3 * s) : 1.5 * s; };
     var pmin = function (m) { return m.kind === "video" ? 1.0 : 0.6; };
     var A = budget * 0.75;
-    var need = function (k) { return chosen.reduce(function (a, m) { return a + Math.max(pmin(m), pw(m) * k) + (isPov(m) ? 1.5 * s * k : 0); }, 0); };
+    var need = function (k) { return chosen.reduce(function (a, m) { return a + Math.max(pmin(m), pw(m) * k) + (povOK ? 0.9 * s * k : 0); }, 0); };
     var k = 1;
     if (need(1) > A) { var lo = 0.05, hi = 1; for (var it = 0; it < 30; it++) { var mid = (lo + hi) / 2; if (need(mid) <= A) lo = mid; else hi = mid; } k = lo; }
     var durOf = function (m) { return Math.max(pmin(m), pw(m) * k); };
-    var splitT = chosen.reduce(function (a, m) { return a + (isPov(m) ? 0 : durOf(m)); }, 0);
     var F = Math.max(budget * 0.25, budget - need(k));
-    var v = route.len / (F + 0.5 * splitT);   // 写真を出している間も半分の速さで進む
+    var v = route.len / (F + 0.5 * need(k));   // 写真を出している間も半分の速さで進む
     var ev = [], t = 0, push = function (o, dur) { o.t0 = t; o.t1 = t + dur; ev.push(o); t += dur; return o; };
     push({ kind: "hook", m: hl }, hook);
     push({ kind: "globe" }, 1.8 * s);   // 宇宙から、その山へ一気に寄る
@@ -1323,18 +1373,16 @@
     chosen.forEach(function (m) {
       var dur = durOf(m), target = Math.max(m.d, d), dt = (target - d) / v;
       if (m.kind === "video") { m.clipLen = dur; m.autoStart = bestStart(m, dur); }
-      if (isPov(m)) {
-        if (dt > 0.05) push({ kind: "fly", d0: d, d1: target }, dt);
-        push({ kind: "approach", m: m, d0: target, d1: target }, 0.9 * s * k);
-        push({ kind: "photo", m: m, d0: target, d1: target }, dur);
-        push({ kind: "back", m: m, d0: target, d1: target }, 0.6 * s * k);
-        d = target; last = null;
-      } else {
-        if (last && dt < 0.6) { last.d1 = target; last.t1 += dt; t += dt; }   // 近い写真のあいだは、画面を分けたまま進む
-        else if (dt > 0.05) push({ kind: "fly", d0: d, d1: target }, dt);
-        last = push({ kind: "media", m: m, d0: target, d1: Math.min(route.len, target + 0.5 * v * dur) }, dur);
+      if (last && dt < 0.6) { last.d1 = target; last.t1 += dt; t += dt; }   // 近い写真のあいだは、画面を分けたまま進む
+      else if (dt > 0.05) push({ kind: "fly", d0: d, d1: target }, dt);
+      d = target;
+      if (povOK) {
+        var ad = 0.9 * s * k;
+        last = push({ kind: "approach", m: m, d0: d, d1: Math.min(route.len, d + 0.5 * v * ad) }, ad);
         d = last.d1;
       }
+      last = push({ kind: "media", m: m, d0: d, d1: Math.min(route.len, d + 0.5 * v * dur) }, dur);
+      d = last.d1;
     });
     if (route.len - d > 1) push({ kind: "fly", d0: d, d1: route.len }, Math.max(0.3, (route.len - d) / v));
     push({ kind: "outro" }, outro);
@@ -1346,12 +1394,14 @@
     }
     // 写真がとても多いとき（下限まで縮めても入らない）は、全体を選んだ長さに収める
     if (t > T + 0.01) { var sq = T / t; t = 0; ev.forEach(function (e) { var dur = (e.t1 - e.t0) * sq; e.t0 = t; e.t1 = t + dur; t += dur; }); }
-    // 画面を分ける場面の出入り（続いている間は分けたまま、写真だけ切り替える）
+    // 画面を分ける場面の出入り（続いている間は分けたまま、上の枠だけ切り替える）
+    var splitK = function (e) { return e && (e.kind === "media" || e.kind === "approach"); };
     ev.forEach(function (e, i) {
-      if (e.kind !== "media") return;
-      e.sin = !ev[i - 1] || ev[i - 1].kind !== "media"; e.sout = !ev[i + 1] || ev[i + 1].kind !== "media";
+      if (!splitK(e)) return;
+      e.sin = !splitK(ev[i - 1]); e.sout = !splitK(ev[i + 1]);
+      e.afterApproach = e.kind === "media" && ev[i - 1] && ev[i - 1].kind === "approach" && ev[i - 1].m === e.m;
     });
-    var shown = ev.filter(function (e) { return e.kind === "photo" || e.kind === "media"; });
+    var shown = ev.filter(function (e) { return e.kind === "media"; });
     var info = titleInfo(); info.energy = en;
     return { ev: ev, total: t, info: info, chosen: chosen, rec: rec, pov: povOK,
              perPhoto: shown.length ? shown.reduce(function (a, e) { return a + e.t1 - e.t0; }, 0) / shown.length : 0 };
@@ -1435,7 +1485,13 @@
     else if (e.kind === "draw") { st.cam = overviewCam(8 * f); st.line = easeOut(f); st.drawing = true; }
     else if (e.kind === "swoop") { var k = ease(f); st.cam = mixCam(overviewCam(8), flyCam(0, false), k); st.hud = k; }
     else if (e.kind === "fly") { st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1; }
-    else if (e.kind === "approach") { st.d = e.d0; st.cam = mixCam(flyCam(e.d0, false), povCam(e.m), ease(f)); st.hud = 1 - f; }
+    else if (e.kind === "approach") {
+      // 上の枠: 道の上から撮影地点の視点へ寄る（ピンを立てる）。下の地図: 道を進み続ける
+      st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1;
+      st.top = mixCam(flyCam(e.m.d, false), povCam(e.m), ease(f));
+      st.split = e.sin ? ease(Math.min(1, f / 0.35)) : 1;
+      st.pin = Math.min(1, f / 0.3);
+    }
     else if (e.kind === "photo") {
       st.d = e.d0; var pc = povCam(e.m);
       st.cam = { center: pc.center, zoom: pc.zoom, pitch: pc.pitch, bearing: pc.bearing + 3 * f, elevation: pc.elevation };
@@ -1447,11 +1503,12 @@
       st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1;
       var tin = Math.min(0.35, (e.t1 - e.t0) * 0.3);
       st.split = ease(Math.max(0, Math.min(1, e.sin ? (t - e.t0) / tin : 1, e.sout ? (e.t1 - t) / tin : 1)));
+      st.fromTop = e.afterApproach ? 1 - Math.min(1, (t - e.t0) / Math.min(0.4, (e.t1 - e.t0) * 0.4)) : 0;   // 寄った絵から写真へ溶ける
     }
     else { st.d = route.len; st.cam = mixCam(flyCam(route.len, false), overviewCam(8 + 25 * f), ease(f)); st.outro = true; }
     return st;
   }
-  function setLine(st) {   // 描かれていく線（冒頭）／通った所と残り（道中）
+  function setLine(st, mode) {   // 描かれていく線（冒頭）／通った所と残り（道中）。mode: "top"（寄る枠）・"inset"（小さな地図）
     if (!map.getLayer("route")) return;
     if (st.drawing || st.e.kind === "hook") {
       var fr = Math.min(0.999999, Math.max(0.000001, st.line));
@@ -1462,10 +1519,10 @@
       map.setPaintProperty("route-halo", "line-gradient", ["step", ["line-progress"], "#ffffff", 0.5, "#ffffff"]);
     }
     // 撮影地点に降りた視点では、足元の線が遠近で極太になるので薄くする
-    var pov = st.e.kind === "approach" || st.e.kind === "photo" || st.e.kind === "back";
+    var pov = mode === "top" || (!mode && (st.e.kind === "photo" || st.e.kind === "back"));
     map.setPaintProperty("route", "line-opacity", pov ? 0.35 : 1);
     map.setPaintProperty("route-halo", "line-opacity", pov ? 0 : 0.85);
-    var showDot = !(st.drawing || st.e.kind === "hook" || st.outro || pov);
+    var showDot = !(mode || st.drawing || st.e.kind === "hook" || st.outro || pov);
     if (st.outro && paceOn()) map.setPaintProperty("route", "line-gradient", progressExpr(1));
     // 冒頭と締めは大きな文字を重ねるので、地図の文字（山名・注記）は消す
     var labelsOn = !(st.e.kind === "hook" || st.e.kind === "globe" || st.outro);
@@ -1499,6 +1556,17 @@
     }
     ctx.restore();
   }
+  function drawPin(x, y, sc, a) {   // 撮影地点のピン（カメラのしるし）
+    if (a <= 0) return;
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(sc, sc);
+    ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-8, -14, -24, -24, -24, -42); ctx.arc(0, -42, 24, Math.PI, 0); ctx.bezierCurveTo(24, -24, 8, -14, 0, 0); ctx.closePath();
+    ctx.fillStyle = "#E4572E"; ctx.fill(); ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.lineWidth = 3; ctx.strokeStyle = "#fff"; ctx.stroke();
+    ctx.fillStyle = "#fff"; rr(-13, -51, 26, 18, 4); ctx.fill(); ctx.fillRect(-6, -55, 10, 5);
+    ctx.beginPath(); ctx.arc(0, -42, 5.5, 0, Math.PI * 2); ctx.fillStyle = "#E4572E"; ctx.fill();
+    ctx.restore();
+  }
   function dotY() {   // 地図の上での現在地の高さ（0〜1）。画面を分けたとき、下の地図をここを中心に切り出す
     if (!lastHere) return 0.6;
     var c = map.getCanvas(), q = map.project(lastHere);
@@ -1515,15 +1583,16 @@
   }
   function drawProfile(d, a) {
     var P = profPts(); if (!P || a <= 0) return;
-    var x0 = 44, x1 = W - 44, yb = SAFE_BOTTOM - 16, hh = 78, span = Math.max(150, P.max - P.min);
-    var X = function (i) { return x0 + (x1 - x0) * i / P.n; }, Y = function (v) { return yb - (v - P.min) / span * hh; };
+    // 海抜 0m を画面のいちばん下（出典の高さ）に置き、高さはそこから測る（山の高さがそのまま見える）
+    var x0 = 0, x1 = W, yb = H - 6, hh = 200, top = Math.max(1000, Math.ceil(P.max / 500) * 500);
+    var X = function (i) { return x0 + (x1 - x0) * i / P.n; }, Y = function (v) { return yb - Math.max(0, v) / top * hh; };
     var path = function () { ctx.beginPath(); ctx.moveTo(x0, yb); P.e.forEach(function (v, i) { ctx.lineTo(X(i), Y(v)); }); ctx.lineTo(x1, yb); ctx.closePath(); };
     ctx.save(); ctx.globalAlpha = a;
-    var g = ctx.createLinearGradient(0, yb - hh - 40, 0, yb + 16); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.38)");
-    ctx.fillStyle = g; ctx.fillRect(0, yb - hh - 40, W, hh + 56);
-    path(); ctx.fillStyle = "rgba(255,255,255,.2)"; ctx.fill();
+    var g = ctx.createLinearGradient(0, yb - hh - 30, 0, H); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.3)");
+    ctx.fillStyle = g; ctx.fillRect(0, yb - hh - 30, W, H - (yb - hh - 30));
+    path(); ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fill();
     var xd = x0 + (x1 - x0) * Math.max(0, Math.min(1, d / route.len));
-    ctx.save(); ctx.beginPath(); ctx.rect(x0, yb - hh - 4, xd - x0, hh + 8); ctx.clip(); path(); ctx.fillStyle = "rgba(31,181,232,.55)"; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, yb - hh - 4, xd - x0, hh + 8); ctx.clip(); path(); ctx.fillStyle = "rgba(31,181,232,.3)"; ctx.fill(); ctx.restore();
     ctx.beginPath(); P.e.forEach(function (v, i) { if (i) ctx.lineTo(X(i), Y(v)); else ctx.moveTo(X(i), Y(v)); });
     ctx.lineWidth = 2.5; ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.stroke();
     var ed = eleAt(d);
@@ -1559,9 +1628,19 @@
       } else ctx.drawImage(map.getCanvas(), 0, 0, W, H);
     }
     if (pa > 0) drawMedia(st.m, 0, 0, W, H, pa, st.f);
-    if (sk > 0) {   // 上の写真: 上から滑り込む
+    if (st.e.kind === "approach" && st.split > 0 && topFor === st.m) {   // 上の枠: 撮影地点へ寄る絵（ピンを中心に切り出す）
+      var tTop = st.split * H * 2 / 3, ty = Math.max(0, Math.min(H - tTop, (topPin ? topPin[1] * H : H / 2) - tTop / 2));
+      ctx.drawImage(topCv, 0, ty, W, tTop, 0, 0, W, tTop);
+      if (topPin) drawPin(topPin[0] * W, topPin[1] * H - ty, 1.25, st.pin);
+      ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(0, tTop - 2, W, 3);
+    }
+    if (sk > 0 && st.e.kind === "media") {   // 上の写真: 上から滑り込む（寄る場面の後は、寄った絵から溶ける）
       var ph = H * 2 / 3, y0 = top - ph;
-      drawMedia(st.m, 0, y0, W, ph, 1, st.f);
+      if (st.fromTop > 0 && topFor === st.m) {
+        var fy = Math.max(0, Math.min(H - ph, (topPin ? topPin[1] * H : H / 2) - ph / 2));
+        ctx.drawImage(topCv, 0, fy, W, ph, 0, y0, W, ph);
+      }
+      drawMedia(st.m, 0, y0, W, ph, 1 - (st.fromTop > 0 && topFor === st.m ? st.fromTop : 0), st.f);
       var gs = ctx.createLinearGradient(0, top, 0, top + 28); gs.addColorStop(0, "rgba(0,0,0,.45)"); gs.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = gs; ctx.fillRect(0, top, W, 28);
       ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(0, top - 2, W, 3);
@@ -1597,6 +1676,14 @@
       ctx.fillStyle = gc; ctx.fillRect(0, top - 200, W, 200);
       if (tm != null) text(fmtClock(tm), 44, top - 66, 52, 800, "#fff", "left");
       text((nr && Math.abs(nr.d - mm.d) < 1500 ? nr.name.ja + "  " : "") + (em != null ? Math.round(em).toLocaleString() + "m" : ""), 46, top - 24, 28, 700, "#fff", "left");
+      if (mm.inset) {   // 右下: 撮影地点を中心にした小さな 3D 地図とピン（どこで撮ったかが分かる）
+        var S2 = 210, ix = W - S2 - 26, iy = top - S2 - 26, ia = Math.min(1, 1 - (st.fromTop || 0));
+        ctx.save(); ctx.globalAlpha = ia;
+        ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 18; rr(ix, iy, S2, S2, 22); ctx.fillStyle = "#fff"; ctx.fill(); ctx.shadowBlur = 0;
+        ctx.save(); rr(ix + 4, iy + 4, S2 - 8, S2 - 8, 19); ctx.clip(); ctx.drawImage(mm.inset, ix + 4, iy + 4, S2 - 8, S2 - 8); ctx.restore();
+        if (mm.insetPin) drawPin(ix + 4 + mm.insetPin[0] / 300 * (S2 - 8), iy + 4 + mm.insetPin[1] / 300 * (S2 - 8), 0.8, 1);
+        ctx.restore();
+      }
     } else if (st.outro) {
       shade(0.5, 0.65);
       if (paceOn()) paceLegend(Math.min(1, st.f * 3));
@@ -1651,7 +1738,8 @@
     });
   }
   // 書き出し前の準備: 飛ぶ道筋と写真の地点の地図を先に読む（読み込みを待つ時間を書き出しの外に出す）
-  async function prepareTiles(show) {
+  function exportMode() { var r = document.querySelector('input[name="fly-mode"]:checked'); return r ? r.value : "fast"; }
+  async function prepareTiles(show, fast) {
     queue = [];
     var ph = REGION === "jp" ? "photo" : "eox";
     [2, 3, 4, 5, 6, 7, 8, 9].forEach(function (z) { want("eox", z, 0, 0, 1); });   // 地球から寄る場面
@@ -1659,11 +1747,18 @@
     want(ph, 15, 0, route.len, 0);
     if (REGION === "jp") [11, 12, 13, 14].forEach(function (z) { want("vec", z, 0, route.len, 1); });   // 地図の文字（注記）
     show.chosen.forEach(function (m) { want(ph, 15, Math.max(0, m.d - 500), m.d + 2500, 1); });
-    var t0 = Date.now(), total = queue.length + inflight || 1;
-    while ((queue.length || inflight) && Date.now() - t0 < 30000) {
+    var t0 = Date.now(), total = queue.length + inflight || 1, cap = fast ? 15000 : 30000;
+    while ((queue.length || inflight) && Date.now() - t0 < cap) {
       if (exportCancel) throw new Error("cancel");
-      progress("地図を用意しています", (1 - (queue.length + inflight) / total) * 0.999, null);
+      progress("地図を用意しています", (1 - (queue.length + inflight) / total) * 0.8, null);
       await new Promise(function (ok) { setTimeout(ok, 250); });
+    }
+    // 写真の右下の小さな 3D 地図を、読み込みを待ってきれいに作っておく
+    var list = show.chosen.filter(function (m) { return !m.insetSharp; });
+    for (var i = 0; i < list.length; i++) {
+      if (exportCancel) throw new Error("cancel");
+      progress("地図を用意しています", 0.8 + 0.2 * i / list.length, null);
+      map.jumpTo(insetCam(list[i])); setLine(showState(show, 0), "inset"); await settle(6000); grabInset(list[i], true);
     }
   }
   function stageMap(on) {   // 書き出し・プレビューの間だけ、地図を 360×640 の 2 倍（720×1280）に固定する
@@ -1690,13 +1785,7 @@
     var N = Math.ceil(show.total * FPS);
     for (var i = 0; i < N; i++) {
       var t = i / FPS, st = showState(show, t);
-      if (st.photoAlpha < 1) {   // 写真が全面に出ている間は地図を描かない（そのぶん速い）
-        if (moving(st)) aim(st.cam, at(route, st.d), 30 / FPS); else keepAbove(st.cam);
-        setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
-        await settle(6000);
-      }
-      if (st.m && st.m.kind === "video" && mediaOn(st)) await seek(st.m.el, vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0));
-      compose(st, show);
+      await settledFrame(st, t, show, false);
       var vf = new VideoFrame(out, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       enc.encode(vf, { keyFrame: i % (FPS * 2) === 0 });
       vf.close();
@@ -1710,20 +1799,53 @@
     return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), sec: show.total, frames: N, timeouts: timeouts, took: (Date.now() - t0) / 1000,
              mime: "video/mp4（" + FPS + "fps）" + (timeouts ? "・読み込み待ちを打ち切ったコマ " + timeouts : "") };
   }
+  async function encodeLive(show) {
+    if (!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) return null;
+    var config = null, codecs = ["avc1.640028", "avc1.4d0028", "avc1.42001f"];
+    for (var c = 0; c < codecs.length && !config; c++) {
+      var cfg = { codec: codecs[c], width: W, height: H, bitrate: 8e6, framerate: 30 };
+      try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) config = cfg; } catch (e) { /* 次の候補へ */ }
+    }
+    if (!config) return null;
+    var muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: "avc", width: W, height: H }, fastStart: "in-memory" });
+    var failedEnc = null, wall = Date.now();
+    var enc = new VideoEncoder({ output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); }, error: function (e) { failedEnc = e; } });
+    enc.configure(config);
+    media.forEach(function (m) { if (m.el) m.el.pause(); m.pov = null; });
+    flyBearing = null; aimPitch = null; aimWant = null; lastAhead = -1e9;
+    var n = 0, lastT = -1;
+    await new Promise(function (resolve, reject) {
+      var start = null;
+      async function tick(now) {
+        if (exportCancel) { reject(new Error("cancel")); return; }
+        if (failedEnc) { reject(failedEnc); return; }
+        if (start === null) start = now;
+        var t = Math.min((now - start) / 1000, show.total - 0.001), st = showState(show, t);
+        await liveFrame(st, t, true, show);
+        if (lastT < 0 || t - lastT >= 1 / 30 - 0.004) {   // 30 コマ/秒まで
+          var vf = new VideoFrame(out, { timestamp: Math.round(t * 1e6) });
+          enc.encode(vf, { keyFrame: n % 60 === 0 }); vf.close(); n++; lastT = t;
+        }
+        if (n % 6 === 0) progress("動画を作っています（再生と同じ時間）", t / show.total, wall);
+        if ((now - start) / 1000 >= show.total) { resolve(); return; }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+    media.forEach(function (m) { if (m.el && !m.el.paused) m.el.pause(); });
+    await enc.flush();
+    muxer.finalize();
+    return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), sec: show.total, frames: n, took: (Date.now() - wall) / 1000, mime: "video/mp4（再生しながら作成・" + n + " コマ）" };
+  }
   function playShow(show, rec) {   // 実時間で流す（プレビュー、または WebCodecs の無い端末での録画）
     return new Promise(function (resolve) {
       var start = null;
       media.forEach(function (m) { m.pov = null; });
       flyBearing = null; aimPitch = null; aimWant = null;
-      function tick(now) {
+      async function tick(now) {
         if (start === null) start = now;
         var t = (now - start) / 1000, st = showState(show, Math.min(t, show.total - 0.001));
-        if (st.photoAlpha < 1) {
-          if (moving(st)) aim(st.cam, at(route, st.d), 1.2, 6); else keepAbove(st.cam);
-          setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
-        }
-        if (st.m && st.m.kind === "video" && mediaOn(st) && st.m.el.paused) { st.m.el.currentTime = vstart(st.m); st.m.el.play().catch(function () {}); }
-        if (st.photoAlpha < 1) { map.once("render", function () { compose(st, show); }); map.triggerRepaint(); } else compose(st, show);
+        await liveFrame(st, t, true, show);
         if (t < show.total) requestAnimationFrame(tick); else setTimeout(function () { if (rec) rec.stop(); resolve(); }, 200);
       }
       requestAnimationFrame(tick);
@@ -1766,10 +1888,10 @@
     var lock = null;
     try { if (navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) { lock = null; }   // 書き出し中に画面が消えると止まるため
     try {
-      var show = buildShow(), tPrep = Date.now();
-      await prepareTiles(show);
+      var show = buildShow(), tPrep = Date.now(), fast = exportMode() === "fast";
+      await prepareTiles(show, fast);
       tPrep = (Date.now() - tPrep) / 1000;
-      var res = await encodeFrames(show);
+      var res = fast ? await encodeLive(show) : await encodeFrames(show);
       if (!res) { progress("この端末では実時間で録画します", 0, null); res = await recordRealtime(show); }
       res.prep = tPrep;
       var ext = /mp4/.test(res.mime) ? "mp4" : "webm", name = "hutsgo-" + (route.source === "gpx" ? "yama" : route.id) + "." + ext;
@@ -1798,9 +1920,26 @@
     renderAt(sp.t, true);
     $("fly-empty").hidden = media.length > 0 || !$("fly-loading").hidden;
   }
-  function makeCard() {
+  // 3D の全体図を 1 枚撮る（道はペースの色、現在地の丸や山名は出さない）。撮ったら元の場面に戻す
+  async function shot3d() {
+    var b = new maplibregl.LngLatBounds(); route.line.forEach(function (q) { b.extend([q[1], q[0]]); });
+    map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
+    var c0 = map.cameraForBounds(b, { padding: { top: 150, bottom: 300, left: 40, right: 40 }, pitch: 0, bearing: 0 });
+    var ctr = [c0.center.lng != null ? c0.center.lng : c0.center[0], c0.center.lat != null ? c0.center.lat : c0.center[1]];
+    map.jumpTo({ center: ctr, zoom: c0.zoom - 0.2, pitch: 50, bearing: -18, elevation: groundAt(ctr[0], ctr[1], route.len / 2) });
+    var st = showState(sp.show, sp.show.total - 0.01);
+    setLine(st, "inset"); map.setPaintProperty("route", "line-gradient", progressExpr(1)); map.setPaintProperty("route", "line-width", 6);
+    ["peak-label", "gsi-anno", "ofm-hut"].forEach(function (id) { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", "none"); });
+    await settle(8000);
+    var mc = map.getCanvas(), cv = document.createElement("canvas"); cv.width = mc.width; cv.height = mc.height; cv.getContext("2d").drawImage(mc, 0, 0);
+    map.setPaintProperty("route", "line-width", 4);
+    stageMap(true); renderAt(sp.t, true);
+    return cv;
+  }
+  function makeCard(bg) {
     var CW = 1080, CH = 1350, c = document.createElement("canvas"); c.width = CW; c.height = CH;
     var x = c.getContext("2d"), hl = highlight();
+    if (bg) return makeCard3d(c, x, bg, hl);
     var cover = function (src, sw, sh) { var sc = Math.max(CW / sw, CH / sh); x.drawImage(src, (CW - sw * sc) / 2, (CH - sh * sc) / 2, sw * sc, sh * sc); };
     x.fillStyle = "#16241d"; x.fillRect(0, 0, CW, CH);
     if (hl && mediaReady(hl)) cover(hl.kind === "video" ? hl.el : hl.img, hl.kind === "video" ? hl.el.videoWidth : hl.img.width, hl.kind === "video" ? hl.el.videoHeight : hl.img.height);
@@ -1838,7 +1977,7 @@
     return c;
   }
   async function shareCard() {
-    var c = makeCard(), blob = await new Promise(function (ok) { c.toBlob(ok, "image/jpeg", 0.92); });
+    var c = cardCanvas || makeCard(), blob = await new Promise(function (ok) { c.toBlob(ok, "image/jpeg", 0.92); });
     var name = "hutsgo-" + (route.source === "gpx" ? "yama" : route.id) + ".jpg", file = null;
     try { file = new File([blob], name, { type: "image/jpeg" }); } catch (e) { file = null; }
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1849,14 +1988,51 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
     track("flyover_card");
   }
-  function openShareSheet() {
+  var cardCanvas = null;
+  async function openShareSheet() {
     if (busy) return;
-    pauseSp();
+    pauseSp(); busy = true; setButtons(false);
+    $("fly-sheet").hidden = false;
     // 画像は開いたときに作る（作る前は img を置かない）
     var box = $("fly-card-box"), img = $("fly-card-img");
-    if (!img) { img = document.createElement("img"); img.id = "fly-card-img"; img.className = "fly-card-preview"; img.alt = "共有用の画像（★ の写真に道と記録）"; box.appendChild(img); }
-    img.src = makeCard().toDataURL("image/jpeg", 0.85);
-    $("fly-sheet").hidden = false;
+    if (!img) { img = document.createElement("img"); img.id = "fly-card-img"; img.className = "fly-card-preview"; img.alt = "共有用の画像（3D の地図に歩いた道と記録）"; box.appendChild(img); }
+    img.removeAttribute("src"); box.classList.add("is-loading");
+    try { cardCanvas = makeCard(await shot3d()); } catch (e) { cardCanvas = makeCard(); }
+    img.src = cardCanvas.toDataURL("image/jpeg", 0.85); box.classList.remove("is-loading");
+    busy = false; setButtons(true);
+  }
+  function makeCard3d(c, x, bg, hl) {
+    var CW = c.width, CH = c.height;
+    // 3D の全体図を 4:5 に切り出す（道は上寄りに撮ってある）
+    var bh = bg.width * CH / CW, by = Math.max(0, Math.min(bg.height - bh, bg.height * 0.36 - bh / 2));
+    x.drawImage(bg, 0, by, bg.width, bh, 0, 0, CW, CH);
+    var g = x.createLinearGradient(0, CH * 0.55, 0, CH); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.85)");
+    x.fillStyle = g; x.fillRect(0, 0, CW, CH);
+    var g2 = x.createLinearGradient(0, 0, 0, 240); g2.addColorStop(0, "rgba(0,0,0,.5)"); g2.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g2; x.fillRect(0, 0, CW, 240);
+    var T = function (s2, px, py, size, weight, color, align) {
+      x.font = weight + " " + size + "px system-ui,-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif"; x.textAlign = align || "left";
+      x.fillStyle = color || "#fff"; x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = 14; x.fillText(s2, px, py); x.shadowBlur = 0;
+    };
+    if (hl && mediaReady(hl)) {   // ★ の写真を右上に小さく
+      var src = hl.kind === "video" ? hl.el : hl.img, sw = hl.kind === "video" ? hl.el.videoWidth : hl.img.width, sh = hl.kind === "video" ? hl.el.videoHeight : hl.img.height;
+      var S = 230, px = CW - S - 56, py = 130, sc = Math.max(S / sw, S / sh);
+      x.save(); x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 24; x.beginPath(); x.roundRect(px, py, S, S, 24); x.fillStyle = "#fff"; x.fill(); x.shadowBlur = 0;
+      x.beginPath(); x.roundRect(px + 6, py + 6, S - 12, S - 12, 19); x.clip();
+      x.drawImage(src, px + 6 + (S - 12 - sw * sc) / 2, py + 6 + (S - 12 - sh * sc) / 2, sw * sc, sh * sc); x.restore();
+    }
+    var info = titleInfo(), mh = movingHours(), g3 = gainUp();
+    T("HutsGo", CW - 56, 92, 40, 800, "#fff", "right");
+    if (info.date) T(info.date, 56, 92, 34, 700, "#fff");
+    T(info.title + (info.sub ? "  " + info.sub : ""), 56, 1110, info.title.length > 9 ? 56 : 70, 800, "#fff");
+    var stats = [["距離", fmtDist(route.len)], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
+    stats.forEach(function (st2, j) { var px2 = 56 + j * 330; T(st2[0], px2, 1196, 30, 600, "rgba(255,255,255,.8)"); T(st2[1], px2, 1268, 56, 800, "#fff"); });
+    if (paceOn()) {   // ペースの凡例
+      var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
+      PACE.forEach(function (q, i) { lg.addColorStop(i / (PACE.length - 1), "rgb(" + q[1].join(",") + ")"); });
+      x.fillStyle = lg; x.beginPath(); x.roundRect(lx, ly - 10, 260, 10, 5); x.fill();
+      T("ゆっくり", lx - 10, ly, 20, 600, "rgba(255,255,255,.85)", "right"); T("速い", lx + 270, ly, 20, 600, "rgba(255,255,255,.85)", "left");
+    }
+    return c;
   }
   async function shareVideo() {
     if (!lastExport) return;
@@ -1892,6 +2068,8 @@
     refreshShow();
     $("fly-empty").hidden = media.length > 0;
     $("fly-pace-row").hidden = !route.times;
+    $("fly-title").placeholder = titleInfo().title;   // 空欄なら自動（いちばん高い山の名前）
+    media.forEach(function (m) { m.inset = null; m.insetSharp = false; });
     status(route.source === "gpx"
       ? "GPX を読み込みました（" + fmtDist(route.len) + (route.times ? "・時刻あり" : "・時刻なし") + (route.ele ? "・標高あり" : "") + "）。"
       : "");
@@ -1933,6 +2111,8 @@
     $("fly-auto-pick").addEventListener("click", function () { autoPick(sp.show.rec[1]); renderList(); sp.show = buildShow(); sp.t = posterT(); refreshShow(); });
     $("fly-use-all").addEventListener("click", function () { useAll(); renderList(); sp.show = buildShow(); sp.t = posterT(); refreshShow(); });
     $("fly-pace").addEventListener("change", function () { renderAt(sp.t, true); });
+    var titleTimer = null;
+    $("fly-title").addEventListener("input", function () { clearTimeout(titleTimer); titleTimer = setTimeout(function () { sp.show = buildShow(); renderAt(sp.t, false); }, 250); });
     $("fly-result-close").addEventListener("click", function () { $("fly-result").hidden = true; $("fly-video").pause(); });
     $("fly-play").addEventListener("click", function () { if (sp.playing) pauseSp(); else playSp(); });
     var seekTimer = null, posPending = false;
@@ -1958,7 +2138,7 @@
     $("fly-list").addEventListener("input", function (e) {
       var r = e.target.closest("[data-pos]"); if (!r) return;
       var m = media[Number(r.dataset.pos)];
-      m.d = Number(r.value) / 1000 * route.len; m.placed = "manual"; m.manualFor = route.id; m.pov = null;
+      m.d = Number(r.value) / 1000 * route.len; m.placed = "manual"; m.manualFor = route.id; m.pov = null; m.inset = null; m.insetSharp = false;
       r.closest(".fly-edit").querySelector("p").textContent = placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
       // 動かしている間も、その写真の場面を画面に出す（組み直しは 1 コマに 1 回まで）
       if (posPending) return;
