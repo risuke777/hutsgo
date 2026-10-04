@@ -4,91 +4,130 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>3D の山行ふりかえり（試作）| HutsGo Lab</title>
+<title>山ムービー | HutsGo</title>
+<meta name="description" content="歩いた山を、3D の地図と写真でショート動画に。登録なし、写真は端末の外に出ません。">
+<meta name="theme-color" content="#16241d">
 <meta name="hutsgo-api" content="{{ API_URL }}">
 <meta name="hutsgo-lang" content="ja">
+<link rel="manifest" href="{{ BASE }}/lab/flyover/manifest.webmanifest">
 <link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ BASE }}/static/lab/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="山ムービー">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="{{ BASE }}/static/flyover.css">
 </head>
 <body>
 <main class="fly">
   <header class="fly-head">
-    <p class="fly-kicker"><a href="{{ BASE }}/">HutsGo</a> Lab ・試作</p>
-    <h1>歩いた道を、3D でふりかえる</h1>
-    <p class="fly-privacy">GPX・写真・動画は端末の外に出ません。</p>
+    <p class="fly-brand"><a href="{{ BASE }}/">HutsGo</a><span class="fly-beta">β</span></p>
+    <h1>歩いた山を、ショート動画に</h1>
   </header>
 
-  <section class="fly-controls" aria-label="設定">
-    <div class="fly-source" role="group" aria-label="道のデータ">
-      <label class="fly-field">ルート
-        <select id="fly-route"></select>
-      </label>
-      <label class="fly-field fly-file">GPX
-        <input type="file" id="fly-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml">
-      </label>
+  <section class="fly-stage" aria-label="作る動画">
+    <div class="fly-phone">
+      <div id="fly-map" aria-hidden="true"></div>
+      <canvas id="fly-out" width="720" height="1280" aria-label="作る動画の画面"></canvas>
+      <div id="fly-loading" class="fly-overlay fly-loading" role="status">
+        <span class="fly-spinner" aria-hidden="true"></span>
+        <p>山の地図を用意しています</p>
+      </div>
+      <div id="fly-empty" class="fly-overlay fly-empty" hidden>
+        <p class="fly-empty-lead">写真や動画を入れると、<br>ここがあなたの山の動画になります</p>
+        <button type="button" class="fly-btn fly-btn-primary fly-btn-lg" data-pick="fly-files">写真・動画を選ぶ</button>
+        <p class="fly-empty-note">登録なし。写真は端末の外に出ません。</p>
+      </div>
+      <div id="fly-progress" class="fly-overlay fly-progress" hidden>
+        <p id="fly-progress-label">動画を作っています</p>
+        <div class="fly-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="fly-bar-fill"></span></div>
+        <p id="fly-progress-sub" class="fly-progress-sub">画面を開いたままにしてください</p>
+        <button type="button" id="fly-cancel" class="fly-btn fly-btn-ghost">やめる</button>
+      </div>
     </div>
-    <label class="fly-field fly-file">写真・動画
-      <input type="file" id="fly-files" accept="image/*,video/*" multiple>
-    </label>
-    <ol id="fly-list" class="fly-list" aria-live="polite"></ol>
-    <fieldset class="fly-energy">
-      <legend>エネルギー収支</legend>
+    <div class="fly-player">
+      <button type="button" id="fly-play" class="fly-round fly-play" aria-label="再生">
+        <svg class="i-play" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        <svg class="i-pause" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
+      </button>
+      <input type="range" id="fly-seek" class="fly-seek" min="0" max="1000" value="0" step="1" aria-label="場面を選ぶ">
+      <span id="fly-time" class="fly-time">0:00 / 0:20</span>
+    </div>
+  </section>
+
+  <section class="fly-controls" aria-label="動画の中身">
+    <div class="fly-step">
+      <h2>写真・動画</h2>
+      <p class="fly-hint">★ を付けた 1 枚が動画の最初に出ます。押すと場所を直せます。</p>
+      <ol id="fly-list" class="fly-grid" aria-live="polite"></ol>
+      <button type="button" class="fly-btn fly-btn-add" data-pick="fly-files">＋ 写真・動画を足す</button>
+      <input type="file" id="fly-files" accept="image/*,video/*" multiple hidden>
+    </div>
+
+    <div class="fly-step">
+      <h2>歩いた道</h2>
+      <div class="fly-route-row">
+        <select id="fly-route" aria-label="HutsGo のルート"></select>
+        <button type="button" class="fly-btn fly-btn-ghost" data-pick="fly-gpx">GPX を読む</button>
+        <input type="file" id="fly-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden>
+      </div>
+      <p class="fly-hint">YAMAP・ヤマレコ・Garmin などの GPX なら、撮影時刻から写真の場所も合わせます。</p>
+    </div>
+
+    <div class="fly-step">
+      <h2>長さ</h2>
+      <div class="fly-chips" role="radiogroup" aria-label="動画の長さ">
+        <button type="button" role="radio" data-len="10">10 秒</button>
+        <button type="button" role="radio" data-len="20">20 秒</button>
+        <button type="button" role="radio" data-len="30">30 秒</button>
+        <button type="button" role="radio" data-len="60">60 秒</button>
+      </div>
+      <select id="fly-len" hidden><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="60">60</option></select>
+    </div>
+
+    <details class="fly-step fly-energy">
+      <summary>＋ 山ごはんとカロリー<span>任意</span></summary>
+      <p class="fly-hint">消費と補給を動画の最後に出します。山では消費の 7〜8 割を食べるのが目安です。</p>
       <div class="fly-row">
         <label class="fly-field">体重 kg<input type="number" id="fly-weight" min="20" max="200" step="1" value="60" inputmode="numeric"></label>
         <label class="fly-field">荷物 kg<input type="number" id="fly-pack" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
         <label class="fly-field">行動時間 h<input type="number" id="fly-hours" min="0" max="100" step="0.5" placeholder="自動" inputmode="decimal"></label>
       </div>
-      <label class="fly-field fly-file">山ごはん
-        <input type="file" id="fly-food" accept="image/*" multiple>
-      </label>
-      <button type="button" id="fly-food-add" class="fly-btn fly-btn-small">写真なしで足す</button>
       <ol id="fly-food-list" class="fly-list fly-food-list"></ol>
+      <div class="fly-food-buttons">
+        <button type="button" class="fly-btn fly-btn-ghost" data-pick="fly-food">＋ 写真から</button>
+        <button type="button" id="fly-food-add" class="fly-btn fly-btn-ghost">＋ 写真なしで</button>
+      </div>
+      <input type="file" id="fly-food" accept="image/*" multiple hidden>
       <p id="fly-energy-sum" class="fly-note" aria-live="polite"></p>
-    </fieldset>
-    <div class="fly-buttons">
-      <label class="fly-field fly-len">長さ
-        <select id="fly-len">
-          <option value="10">10 秒</option><option value="20" selected>20 秒</option>
-          <option value="30">30 秒</option><option value="60">60 秒</option>
-        </select>
-      </label>
-      <button type="button" id="fly-preview" class="fly-btn">プレビュー</button>
-      <button type="button" id="fly-record" class="fly-btn fly-btn-primary">動画に書き出す</button>
-    </div>
+    </details>
+
     <p id="fly-status" class="fly-status" role="status"></p>
   </section>
 
-  <section class="fly-stage" aria-label="3D の地図">
-    <div class="fly-phone">
-      <div id="fly-map" aria-hidden="true"></div>
-      <canvas id="fly-out" width="720" height="1280" aria-label="作る動画"></canvas>
-    </div>
-    <div class="fly-player">
-      <button type="button" id="fly-play" class="fly-round fly-play" aria-label="再生">
-        <svg class="i-play" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-        <svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg>
-      </button>
-      <input type="range" id="fly-seek" class="fly-seek" min="0" max="1000" value="0" step="1" aria-label="場面を選ぶ">
-      <span id="fly-time" class="fly-time">0:00 / 0:20</span>
-      <button type="button" id="fly-add" class="fly-round fly-add" aria-label="写真・動画を足す">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 4 7.5 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-3.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" fill="currentColor"/></svg>
-      </button>
+  <section id="fly-result" class="fly-result" hidden aria-labelledby="fly-result-h">
+    <div class="fly-result-card">
+      <h2 id="fly-result-h">できました</h2>
+      <video id="fly-video" controls playsinline loop></video>
+      <div class="fly-result-buttons">
+        <button type="button" id="fly-share" class="fly-btn fly-btn-primary fly-btn-lg" hidden>共有する</button>
+        <a id="fly-download" class="fly-btn fly-btn-lg" download>保存する</a>
+      </div>
+      <p class="fly-hint">音は入っていません。Instagram や TikTok で好きな曲を付けてください。</p>
+      <p id="fly-format" class="fly-note"></p>
+      <button type="button" id="fly-result-close" class="fly-btn fly-btn-ghost">閉じる</button>
     </div>
   </section>
-
-  <section id="fly-result" class="fly-result" hidden>
-    <h2>できあがり</h2>
-    <video id="fly-video" controls playsinline></video>
-    <p><a id="fly-download" class="fly-btn fly-btn-primary" download>保存する</a></p>
-    <p id="fly-format" class="fly-note"></p>
-  </section>
-
 
   <footer class="fly-foot">
-    <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>　試作</p>
+    <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a></p>
   </footer>
 </main>
+
+<nav class="fly-actions" aria-label="動画を作る">
+  <button type="button" id="fly-preview" class="fly-btn fly-btn-lg">プレビュー</button>
+  <button type="button" id="fly-record" class="fly-btn fly-btn-primary fly-btn-lg">動画を作る</button>
+</nav>
+
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.min.js"></script>
 <script src="{{ BASE }}/static/site.js" defer></script>

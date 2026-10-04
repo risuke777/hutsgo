@@ -1220,6 +1220,13 @@ def stamp_lastmod():
 (DIST / "lab" / "flyover").mkdir(parents=True, exist_ok=True)
 (DIST / "lab" / "flyover" / "routes.json").write_text(
     json.dumps(list(FLY_ROUTES.values()), ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+(DIST / "lab" / "flyover" / "manifest.webmanifest").write_text(json.dumps({
+    "name": "山ムービー（HutsGo）", "short_name": "山ムービー", "lang": "ja",
+    "description": "歩いた山を、3D の地図と写真でショート動画に",
+    "start_url": f"{BASE}/lab/flyover/", "scope": f"{BASE}/lab/flyover/", "display": "standalone",
+    "background_color": "#16241d", "theme_color": "#16241d",
+    "icons": [{"src": f"{BASE}/static/lab/icon-{n}.png", "sizes": f"{n}x{n}", "type": "image/png"} for n in (192, 512)]},
+    ensure_ascii=False, indent=1), encoding="utf-8")
 (DIST / "lab" / "flyover" / "index.html").write_text(
     env.get_template("lab_flyover.html").render(BASE=BASE, API_URL=API_URL, SITE_URL=SITE_URL), encoding="utf-8")
 

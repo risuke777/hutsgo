@@ -246,13 +246,14 @@
     }
     place();
     renderList();
+    if (!sp.playing) { sp.show = buildShow(); sp.t = posterT(); }
     refreshShow();
     var imgs = media.filter(function (m) { return m.kind === "image"; }), withGps = imgs.filter(function (m) { return m.gps; }).length;
     var withTime = imgs.filter(function (m) { return m.local != null || m.utc != null; }).length;
     status(!added ? "読み込めるファイルがありませんでした。"
       : imgs.length && !withGps
         ? "写真 " + imgs.length + " 枚とも位置情報がありません（スマホのブラウザは写真を渡す前に位置情報を外すことがあります）。"
-          + (withTime ? "撮影時刻はあります。" : "") + "一覧のつまみで場所を合わせられます。"
+          + (withTime ? "撮影時刻はあります。" : "") + "写真を押すと場所を合わせられます。"
         : "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。");
   }
   function videoThumb(el) {
@@ -335,28 +336,44 @@
     return why + "・" + how + nearTxt;
   }
   function fmtOffset(ms) { var s = ms < 0 ? "-" : "+", a = Math.abs(ms) / 60000; return s + Math.floor(a / 60) + ":" + String(a % 60).padStart(2, "0"); }
+  var openIdx = -1;   // 編集欄を開いている写真
+  function badgeOf(m) {
+    if (m.placed === "gps") return ["位置", ""];
+    if (m.placed === "time") return ["時刻", ""];
+    if (m.placed === "manual") return ["手動", ""];
+    return ["目安", " is-warn"];
+  }
   function renderList() {
     var ol = $("fly-list"); ol.innerHTML = "";
-    media.concat(failed).forEach(function (m) {
+    media.forEach(function (m, i) {
       var li = document.createElement("li");
-      var th = document.createElement("img"); th.alt = ""; if (m.thumb) th.src = m.thumb;
-      li.appendChild(th);
-      var t = document.createElement("div"); t.innerHTML = "<span></span><small></small>";
-      t.firstChild.textContent = m.name; t.lastChild.textContent = m.err ? "読めませんでした（" + m.err + "）" : placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
-      li.appendChild(t);
-      if (!m.err) {
-        // 道の上の位置を手で合わせるつまみ（位置情報が外された写真のため）
-        var pos = document.createElement("input");
-        pos.type = "range"; pos.min = "0"; pos.max = "1000"; pos.className = "fly-pos"; pos.dataset.pos = String(media.indexOf(m));
-        pos.value = String(Math.round(m.d / route.len * 1000)); pos.setAttribute("aria-label", m.name + " の道の上の位置");
-        t.appendChild(pos);
-        var star = document.createElement("button");
-        star.type = "button"; star.className = "fly-star" + (m.star ? " is-on" : ""); star.dataset.star = String(media.indexOf(m));
-        star.textContent = m.star ? "★" : "☆"; star.setAttribute("aria-label", "冒頭に使う"); star.setAttribute("aria-pressed", String(!!m.star));
-        li.appendChild(star);
-      }
+      if (m.kind === "video") li.className = "is-video";
+      if (i === openIdx) li.className += " is-open";
+      var card = document.createElement("button");
+      card.type = "button"; card.className = "fly-card"; card.dataset.open = String(i);
+      card.setAttribute("aria-label", m.name + "（場所を直す）"); card.setAttribute("aria-expanded", String(i === openIdx));
+      var im = document.createElement("img"); im.alt = ""; if (m.thumb) im.src = m.thumb; card.appendChild(im);
+      var bd = badgeOf(m), badge = document.createElement("span"); badge.className = "fly-badge" + bd[1]; badge.textContent = bd[0]; card.appendChild(badge);
+      li.appendChild(card);
+      var star = document.createElement("button");
+      star.type = "button"; star.className = "fly-star" + (m.star ? " is-on" : ""); star.dataset.star = String(i);
+      star.textContent = m.star ? "★" : "☆"; star.setAttribute("aria-label", "最初に出す"); star.setAttribute("aria-pressed", String(!!m.star));
+      li.appendChild(star);
       ol.appendChild(li);
+      if (i === openIdx) {
+        var ed = document.createElement("li"); ed.className = "fly-edit";
+        var tx = document.createElement("p"); tx.textContent = placeText(m) + (m.dir != null ? "・撮影方向あり" : ""); ed.appendChild(tx);
+        var pos = document.createElement("input");
+        pos.type = "range"; pos.min = "0"; pos.max = "1000"; pos.className = "fly-pos"; pos.dataset.pos = String(i);
+        pos.value = String(Math.round(m.d / route.len * 1000)); pos.setAttribute("aria-label", "道の上の場所");
+        ed.appendChild(pos);
+        var bx = document.createElement("div"); bx.className = "fly-edit-buttons";
+        var rm = document.createElement("button"); rm.type = "button"; rm.className = "fly-btn fly-btn-ghost"; rm.dataset.rmMedia = String(i); rm.textContent = "外す";
+        bx.appendChild(rm); ed.appendChild(bx);
+        ol.appendChild(ed);
+      }
     });
+    if ($("fly-empty")) $("fly-empty").hidden = media.length > 0 || sp.playing || !$("fly-loading").hidden;
   }
 
   // ------------------------------------------------------------------ タイルの先読み（読み込みの遅れ・灰色の抜け対策）
@@ -703,6 +720,10 @@
   function fmtT(t) { return Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0"); }
 
   var sp = { show: null, t: 0, playing: false, last: null };
+  function posterT() {   // 最初に見せる場面: ハイライトがあればその中ほど、無ければ線が描き終わった所（題字が見える）
+    var ev = sp.show.ev, h = ev[0];
+    return h.m ? (h.t0 + h.t1) / 2 : Math.max(0, ev[1].t1 - 0.05);
+  }
   function refreshShow() {   // 写真・長さ・★・位置が変わったら組み直し、今の場面を描き直す
     if (!route || !map || busy) return;
     sp.show = buildShow();
@@ -737,12 +758,14 @@
   function renderAt(t, sharp) {
     var st = showState(sp.show, t);
     applyFrame(st, false); syncVideo(st, t, false); draw(st); updateTime();
+    if ($("fly-loading") && !$("fly-loading").hidden) map.once("render", function () { $("fly-loading").hidden = true; $("fly-empty").hidden = media.length > 0 || sp.playing; });
     if (sharp && st.photoAlpha < 1) settle(4000).then(function () { if (!sp.playing && sp.t === t) draw(st); });   // 読み込みが済んだら細かい絵で描き直す
   }
   function playSp() {
     if (!sp.show || busy) return;
     if (sp.t >= sp.show.total - 0.05) sp.t = 0;
     sp.playing = true; sp.last = null; aimPitch = null; aimWant = null; lastAhead = -1e9;
+    $("fly-empty").hidden = true;
     $("fly-play").classList.add("is-playing"); $("fly-play").setAttribute("aria-label", "一時停止");
     requestAnimationFrame(tickSp);
   }
@@ -750,6 +773,7 @@
     sp.playing = false;
     $("fly-play").classList.remove("is-playing"); $("fly-play").setAttribute("aria-label", "再生");
     media.forEach(function (m) { if (m.el && !m.el.paused) m.el.pause(); });
+    $("fly-empty").hidden = media.length > 0 || busy;
   }
   function tickSp(now) {
     if (!sp.playing) return;
@@ -1101,8 +1125,9 @@
     var k = st.e.kind;
     if (k === "hook") {
       shade(0.35, 0.75);
-      var a = Math.min(1, st.f * 5);
-      ctx.save(); ctx.globalAlpha = a;
+      ctx.save();
+      var z = 1 + 0.06 * (1 - easeOut(Math.min(1, st.f * 2)));
+      ctx.translate(W / 2, H * 0.6); ctx.scale(z, z); ctx.translate(-W / 2, -H * 0.6);
       text(info.date, W / 2, H * 0.50, 30, 600, "#fff", "center");
       text(info.title, W / 2, H * 0.50 + 92, info.title.length > 7 ? 70 : 92, 800, "#fff", "center");
       if (info.sub) text(info.sub, W / 2, H * 0.50 + 150, 44, 700, "#fff", "center");
@@ -1176,7 +1201,8 @@
     show.chosen.forEach(function (m) { want("photo", 15, Math.max(0, m.d - 500), m.d + 2500, 1); });
     var t0 = Date.now(), total = queue.length + inflight || 1;
     while ((queue.length || inflight) && Date.now() - t0 < 30000) {
-      status("地図を準備中… " + Math.round((1 - (queue.length + inflight) / total) * 100) + "%");
+      if (exportCancel) throw new Error("cancel");
+      progress("地図を用意しています", (1 - (queue.length + inflight) / total) * 0.999, null);
       await new Promise(function (ok) { setTimeout(ok, 250); });
     }
   }
@@ -1216,7 +1242,8 @@
       vf.close();
       if (failedEnc) throw failedEnc;
       if (enc.encodeQueueSize > 8) await new Promise(function (ok) { setTimeout(ok, 0); });
-      if (i % 6 === 0) status("書き出し中… " + Math.round(i / N * 100) + "%");
+      if (exportCancel) throw new Error("cancel");
+      if (i % 3 === 0) progress("動画を作っています", (i + 1) / N, t0);
     }
     await enc.flush();
     muxer.finalize();
@@ -1259,29 +1286,61 @@
     pauseSp(); sp.t = 0; refreshShow();
     setTimeout(playSp, 500);
   }
+  var exportCancel = false, lastExport = null;
+  function progress(label, frac, t0) {   // 動画の上に進み具合と残りの目安
+    $("fly-progress-label").textContent = label;
+    var pct = Math.max(0, Math.min(100, Math.round(frac * 100)));
+    $("fly-bar-fill").style.transform = "scaleX(" + (pct / 100) + ")";
+    $("fly-progress").querySelector(".fly-bar").setAttribute("aria-valuenow", String(pct));
+    if (t0 && frac > 0.04) {
+      var left = (Date.now() - t0) / 1000 * (1 - frac) / frac;
+      $("fly-progress-sub").textContent = pct + "%・あと約 " + (left < 60 ? Math.max(5, Math.round(left / 5) * 5) + " 秒" : Math.round(left / 60) + " 分") + "（画面を開いたままにしてください）";
+    } else {
+      $("fly-progress-sub").textContent = pct + "%（画面を開いたままにしてください）";
+    }
+  }
   async function exportVideo() {
     if (busy) return;
-    pauseSp(); busy = true; setButtons(false);
+    pauseSp(); busy = true; exportCancel = false; setButtons(false);
+    $("fly-empty").hidden = true; $("fly-progress").hidden = false; progress("地図を用意しています", 0, null);
+    var lock = null;
+    try { if (navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) { lock = null; }   // 書き出し中に画面が消えると止まるため
     try {
       var show = buildShow(), tPrep = Date.now();
       await prepareTiles(show);
       tPrep = (Date.now() - tPrep) / 1000;
       var res = await encodeFrames(show);
+      if (!res) { progress("この端末では実時間で録画します", 0, null); res = await recordRealtime(show); }
       res.prep = tPrep;
-      if (!res) { status("この端末は 1 コマずつの書き出しに対応していないため、実時間で録画します…"); res = await recordRealtime(show); }
-      var url = URL.createObjectURL(res.blob), ext = /mp4/.test(res.mime) ? "mp4" : "webm";
-      $("fly-video").src = url;
-      $("fly-download").href = url; $("fly-download").download = "hutsgo-" + (route.source === "gpx" ? "gpx" : route.id) + "." + ext;
-      $("fly-format").textContent = Math.round(res.sec) + " 秒・" + (res.blob.size / 1048576).toFixed(1) + "MB・" + res.mime + (res.took ? "・作成 " + Math.round(res.took + (res.prep || 0)) + " 秒（準備 " + Math.round(res.prep || 0) + "）" : "")
-        + (ext === "webm" ? "（MP4 で録れませんでした。Instagram などに上げるときは変換が要ることがあります）" : "");
+      var ext = /mp4/.test(res.mime) ? "mp4" : "webm", name = "hutsgo-" + (route.source === "gpx" ? "yama" : route.id) + "." + ext;
+      if (lastExport) URL.revokeObjectURL(lastExport.url);
+      lastExport = { blob: res.blob, name: name, url: URL.createObjectURL(res.blob), type: res.blob.type || (ext === "mp4" ? "video/mp4" : "video/webm") };
+      $("fly-video").src = lastExport.url;
+      $("fly-download").href = lastExport.url; $("fly-download").download = name;
+      var file = null;
+      try { file = new File([res.blob], name, { type: lastExport.type }); } catch (e) { file = null; }
+      var canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+      $("fly-share").hidden = !canShare;
+      document.querySelector(".fly-result-buttons").classList.toggle("is-single", !canShare);
+      $("fly-format").textContent = Math.round(res.sec) + " 秒・" + (res.blob.size / 1048576).toFixed(1) + "MB" + (res.took ? "・作成 " + Math.round(res.took + (res.prep || 0)) + " 秒" : "")
+        + (res.timeouts ? "・地図の読み込みが間に合わなかったコマ " + res.timeouts : "")
+        + (ext === "webm" ? "（MP4 で作れませんでした。Instagram などでは変換が要ることがあります）" : "");
       $("fly-result").hidden = false;
-      status("できました。");
+      status("");
       track("flyover_export");
     } catch (e) {
-      status("うまく動きませんでした: " + (e && e.message || e));
+      status(String(e && e.message) === "cancel" ? "やめました。" : "うまく作れませんでした: " + (e && e.message || e));
     }
+    if (lock) try { lock.release(); } catch (e) { /* もう外れている */ }
+    $("fly-progress").hidden = true;
     busy = false; setButtons(true);
     renderAt(sp.t, true);
+    $("fly-empty").hidden = media.length > 0 || !$("fly-loading").hidden;
+  }
+  async function shareVideo() {
+    if (!lastExport) return;
+    try { await navigator.share({ files: [new File([lastExport.blob], lastExport.name, { type: lastExport.type })], title: "山ムービー" }); }
+    catch (e) { if (e && e.name !== "AbortError") status("共有できませんでした。「保存する」から保存してください。"); }
   }
   function setButtons(on) { ["fly-record", "fly-preview", "fly-play"].forEach(function (id) { var b = $(id); if (b) b.disabled = !on; }); }
   function track(ev) {
@@ -1306,7 +1365,9 @@
     await overview();
     stageMap(true);
     renderEnergy();   // 登り下りは標高の断面を測った後でないと出せない
+    sp.show = buildShow(); sp.t = posterT();
     refreshShow();
+    $("fly-empty").hidden = media.length > 0;
     status(route.source === "gpx"
       ? "GPX を読み込みました（" + fmtDist(route.len) + (route.times ? "・時刻あり" : "・時刻なし") + (route.ele ? "・標高あり" : "") + "）。"
       : "");
@@ -1332,7 +1393,16 @@
       catch (err) { status("GPX を読めませんでした: " + (err && err.message || err)); }
     });
     $("fly-files").addEventListener("change", function (e) { addFiles(Array.prototype.slice.call(e.target.files)); e.target.value = ""; });
-    $("fly-add").addEventListener("click", function () { $("fly-files").click(); });
+    // 隠したファイル選択を、見た目の整ったボタンから開く
+    document.addEventListener("click", function (e) { var b = e.target.closest("[data-pick]"); if (b) $(b.dataset.pick).click(); });
+    // 長さ: ボタンで選ぶ（中身は隠した select）
+    var chips = document.querySelectorAll(".fly-chips [data-len]");
+    var markLen = function () { chips.forEach(function (c) { c.setAttribute("aria-checked", String(c.dataset.len === $("fly-len").value)); }); };
+    chips.forEach(function (c) { c.addEventListener("click", function () { $("fly-len").value = c.dataset.len; markLen(); $("fly-len").dispatchEvent(new Event("change")); }); });
+    markLen();
+    $("fly-cancel").addEventListener("click", function () { exportCancel = true; });
+    $("fly-share").addEventListener("click", shareVideo);
+    $("fly-result-close").addEventListener("click", function () { $("fly-result").hidden = true; $("fly-video").pause(); });
     $("fly-play").addEventListener("click", function () { if (sp.playing) pauseSp(); else playSp(); });
     var seekTimer = null;
     $("fly-seek").addEventListener("input", function (e) {
@@ -1340,17 +1410,28 @@
       renderAt(sp.t, false);
       clearTimeout(seekTimer); seekTimer = setTimeout(function () { renderAt(sp.t, true); }, 250);
     });
-    $("fly-len").addEventListener("change", function () { pauseSp(); sp.t = 0; refreshShow(); });
+    $("fly-len").addEventListener("change", function () { pauseSp(); sp.show = buildShow(); sp.t = posterT(); refreshShow(); });
     // 道の上の位置を手で合わせる
     $("fly-list").addEventListener("input", function (e) {
       var r = e.target.closest("[data-pos]"); if (!r) return;
       var m = media[Number(r.dataset.pos)];
       m.d = Number(r.value) / 1000 * route.len; m.placed = "manual"; m.manualFor = route.id; m.pov = null;
-      r.parentNode.querySelector("small").textContent = placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
+      r.closest(".fly-edit").querySelector("p").textContent = placeText(m) + (m.dir != null ? "・撮影方向あり" : "");
     });
     $("fly-list").addEventListener("change", function (e) {
       if (!e.target.closest("[data-pos]")) return;
-      media.sort(function (a, b) { return a.d - b.d; }); renderList(); refreshShow();
+      var m = media[Number(e.target.dataset.pos)];
+      media.sort(function (a, b) { return a.d - b.d; }); openIdx = media.indexOf(m); renderList(); refreshShow();
+    });
+    // 写真を押すと場所の編集欄を開く／外す
+    $("fly-list").addEventListener("click", function (e) {
+      var o = e.target.closest("[data-open]"), r = e.target.closest("[data-rm-media]");
+      if (o) { var i = Number(o.dataset.open); openIdx = openIdx === i ? -1 : i; renderList(); return; }
+      if (r) {
+        var m = media.splice(Number(r.dataset.rmMedia), 1)[0];
+        if (m && m.url) URL.revokeObjectURL(m.url);
+        openIdx = -1; renderList(); refreshShow();
+      }
     });
     $("fly-record").addEventListener("click", exportVideo);
     bindEnergy();
@@ -1359,7 +1440,7 @@
     $("fly-list").addEventListener("click", function (e) {
       var b = e.target.closest("[data-star]"); if (!b) return;
       var m = media[Number(b.dataset.star)]; var on = !m.star;
-      media.forEach(function (x) { x.star = false; }); m.star = on; renderList(); sp.t = 0; refreshShow();
+      media.forEach(function (x) { x.star = false; }); m.star = on; renderList(); sp.show = buildShow(); sp.t = posterT(); refreshShow();
     });
     window.HutsGoFlyover = {
       map: map, play: playSp, pause: pauseSp, seekT: function (t) { pauseSp(); sp.t = t; renderAt(t, true); },
