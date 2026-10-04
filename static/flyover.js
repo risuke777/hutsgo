@@ -229,8 +229,10 @@
           m.el = document.createElement("video");
           m.el.src = m.url; m.el.muted = true; m.el.playsInline = true; m.el.preload = "auto";
           await new Promise(function (ok) { m.el.onloadeddata = ok; m.el.onerror = ok; setTimeout(ok, 8000); });
-          m.dur = Math.min(VIDEO_MAX_SEC, m.el.duration || VIDEO_MAX_SEC);
+          m.full = m.el.duration && isFinite(m.el.duration) ? m.el.duration : VIDEO_MAX_SEC;
+          m.dur = Math.min(VIDEO_MAX_SEC, m.full);
           m.thumb = videoThumb(m.el);
+          analyzeLater(m);
         } else {
           var exRaw = readExif(await f.slice(0, 256 * 1024).arrayBuffer()), ex = exRaw || {};
           m.exif = !!exRaw;
@@ -256,11 +258,76 @@
           + (withTime ? "撮影時刻はあります。" : "") + "写真を押すと場所を合わせられます。"
         : "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。");
   }
-  function videoThumb(el) {
+  // 動画の「いちばん良い場面」: 0.5 秒ごとに小さく取り出し、ピント（輪郭の強さ）・明るさ・色・動きで点数を付ける。
+  // 手ぶれ（画面全体が大きく動く）と、撮り始め・撮り終わり（ポケットの出し入れ）は下げる。点数は動画を足した後で裏で出す
+  var analyzing = Promise.resolve();
+  function analyzeLater(m) {
+    analyzing = analyzing.then(function () { return analyzeVideo(m); }).catch(function () {}).then(function () {
+      if (media.indexOf(m) < 0) return;
+      if (openIdx === media.indexOf(m)) renderList();
+      refreshShow();
+    });
+  }
+  async function analyzeVideo(m) {
+    var el = document.createElement("video");
+    el.src = m.url; el.muted = true; el.playsInline = true; el.preload = "auto";
+    await new Promise(function (ok) { el.onloadeddata = ok; el.onerror = ok; setTimeout(ok, 8000); });
+    var full = el.duration && isFinite(el.duration) ? el.duration : 0;
+    if (!full || !el.videoWidth) return;
+    var n = Math.min(90, Math.max(2, Math.round(full / 0.5))), step = full / n;
+    var c = document.createElement("canvas"); c.width = 64; c.height = 36;
+    var x = c.getContext("2d", { willReadFrequently: true }), prev = null, raw = [], strip = [];
+    for (var i = 0; i < n; i++) {
+      var t = Math.min(full - 0.05, (i + 0.5) * step);
+      await seek(el, t);
+      x.drawImage(el, 0, 0, 64, 36);
+      var d = x.getImageData(0, 0, 64, 36).data, Y = new Float32Array(64 * 36), sat = 0, mean = 0;
+      for (var q = 0, j = 0; q < d.length; q += 4, j++) {
+        var r = d[q] / 255, g = d[q + 1] / 255, b = d[q + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+        Y[j] = 0.299 * r + 0.587 * g + 0.114 * b; mean += Y[j]; sat += mx ? (mx - mn) / mx : 0;
+      }
+      mean /= Y.length; sat /= Y.length;
+      var lap = 0, cnt = 0;
+      for (var yy = 1; yy < 35; yy++) for (var xx = 1; xx < 63; xx++) {
+        var k = yy * 64 + xx; lap += Math.abs(4 * Y[k] - Y[k - 1] - Y[k + 1] - Y[k - 64] - Y[k + 64]); cnt++;
+      }
+      var motion = 0;
+      if (prev) { for (var z = 0; z < Y.length; z++) motion += Math.abs(Y[z] - prev[z]); motion /= Y.length; }
+      prev = Y;
+      raw.push({ t: t, sharp: lap / cnt, mean: mean, sat: sat, motion: motion });
+      if (strip.length < Math.floor((i + 1) * 8 / n)) strip.push(videoThumb(el, 80, 80));
+    }
+    var maxS = Math.max.apply(null, raw.map(function (o) { return o.sharp; })) || 1;
+    var maxC = Math.max.apply(null, raw.map(function (o) { return o.sat; })) || 1;
+    m.scores = raw.map(function (o) {
+      var sc = 0.45 * o.sharp / maxS + 0.25 * (1 - Math.abs(o.mean - 0.5) * 2) + 0.2 * o.sat / maxC + 0.1 * Math.min(1, o.motion / 0.04);
+      if (o.motion > 0.12) sc -= (o.motion - 0.12) * 4;          // 手ぶれ・振り回し
+      if (o.t < 0.4 || o.t > full - 0.4) sc -= 0.3;               // 撮り始めと撮り終わり
+      return { t: o.t, s: sc };
+    });
+    m.full = full; m.strip = strip;
+    el.removeAttribute("src"); el.load();
+  }
+  function bestStart(m, len) {   // len 秒を切り出すとき、点数の平均がいちばん高い始まり
+    if (!m.scores || !m.full || m.full <= len) return 0;
+    var best = 0, bestS = -Infinity, step = m.full / m.scores.length;
+    for (var st = 0; st <= m.full - len + 1e-6; st += step / 2) {
+      var sum = 0, n = 0;
+      m.scores.forEach(function (o) { if (o.t >= st && o.t <= st + len) { sum += o.s; n++; } });
+      if (n && sum / n > bestS) { bestS = sum / n; best = st; }
+    }
+    return Math.round(best * 10) / 10;
+  }
+  function vstart(m) {   // 動画のどこから使うか: 手で選んだ場面、無ければおすすめ
+    if (!m || m.kind !== "video") return 0;
+    var room = Math.max(0, (m.full || m.dur || 0) - (m.clipLen || 0));
+    return Math.max(0, Math.min(room, m.clipManual != null ? m.clipManual : (m.autoStart || 0)));
+  }
+  function videoThumb(el, tw, th) {
     try {
-      var c = document.createElement("canvas"); c.width = 96; c.height = 96;
+      var c = document.createElement("canvas"); c.width = tw || 96; c.height = th || 96;
       var s = Math.min(el.videoWidth, el.videoHeight) || 1;
-      c.getContext("2d").drawImage(el, (el.videoWidth - s) / 2, (el.videoHeight - s) / 2, s, s, 0, 0, 96, 96);
+      c.getContext("2d").drawImage(el, (el.videoWidth - s) / 2, (el.videoHeight - s) / 2, s, s, 0, 0, c.width, c.height);
       return c.toDataURL("image/jpeg", 0.8);
     } catch (e) { return ""; }
   }
@@ -343,6 +410,39 @@
     if (m.placed === "manual") return ["手動", ""];
     return ["目安", " is-warn"];
   }
+  function clipText(m) {
+    var a = vstart(m), b = a + (m.clipLen || m.dur || 0);
+    var sec = function (x) { return x < 60 ? x.toFixed(1) : fmtT(x); };
+    return "使う場面 " + sec(a) + "〜" + sec(Math.min(b, m.full || b)) + " 秒" + (m.clipManual != null ? "（手で選択）" : m.scores ? "（おすすめ）" : "（場面を調べています…）");
+  }
+  function trimUi(m, i) {
+    var box = document.createElement("div"); box.className = "fly-trim";
+    var lab = document.createElement("p"); lab.className = "fly-trim-label"; lab.textContent = clipText(m); box.appendChild(lab);
+    var strip = document.createElement("div"); strip.className = "fly-strip";
+    (m.strip || []).forEach(function (u) { var im = document.createElement("img"); im.alt = ""; im.src = u; strip.appendChild(im); });
+    var win = document.createElement("span"); win.className = "fly-win"; strip.appendChild(win);
+    box.appendChild(strip);
+    var full = m.full || m.dur || 1, len = Math.min(full, m.clipLen || m.dur || 1);
+    var place = function () { win.style.left = (vstart(m) / full * 100) + "%"; win.style.width = (len / full * 100) + "%"; };
+    place();
+    var r = document.createElement("input");
+    r.type = "range"; r.className = "fly-clip"; r.dataset.clip = String(i); r.min = "0"; r.step = "0.1";
+    r.max = String(Math.max(0, Math.floor((full - len) * 10) / 10)); r.value = String(vstart(m)); r.disabled = full - len < 0.1;
+    r.setAttribute("aria-label", "動画の使う場面");
+    box.appendChild(r);
+    if (m.clipManual != null) {
+      var au = document.createElement("button"); au.type = "button"; au.className = "fly-btn fly-btn-ghost fly-clip-auto"; au.dataset.clipAuto = String(i);
+      au.textContent = "おすすめに戻す"; box.appendChild(au);
+    }
+    box._place = place;
+    return box;
+  }
+  function showClip(m) {   // 選んだ場面をすぐ画面で見せる（その動画の場面へ移って止める）
+    var e = sp.show && sp.show.ev.find(function (x) { return x.kind === "photo" && x.m === m; });
+    if (!e) return;
+    pauseSp(); sp.t = e.t0 + (e.t1 - e.t0) * (e.fin === false ? 0.02 : 0.24);
+    renderAt(sp.t, false);
+  }
   function renderList() {
     var ol = $("fly-list"); ol.innerHTML = "";
     media.forEach(function (m, i) {
@@ -367,6 +467,7 @@
         pos.type = "range"; pos.min = "0"; pos.max = "1000"; pos.className = "fly-pos"; pos.dataset.pos = String(i);
         pos.value = String(Math.round(m.d / route.len * 1000)); pos.setAttribute("aria-label", "道の上の場所");
         ed.appendChild(pos);
+        if (m.kind === "video") ed.appendChild(trimUi(m, i));
         var bx = document.createElement("div"); bx.className = "fly-edit-buttons";
         var rm = document.createElement("button"); rm.type = "button"; rm.className = "fly-btn fly-btn-ghost"; rm.dataset.rmMedia = String(i); rm.textContent = "外す";
         bx.appendChild(rm); ed.appendChild(bx);
@@ -396,6 +497,8 @@
     });
   }
   var TILE = { photo: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", dem: "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png",
+               eox: "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg",
+               demw: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
                vec: "https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf" };
   function tileXY(lat, lon, z) {
     var n = Math.pow(2, z);
@@ -417,10 +520,12 @@
     for (var d = Math.max(0, d0); d <= Math.min(route.len, d1) + step; d += step) {
       var p = at(route, Math.min(d, route.len)), t = tileXY(p[0], p[1], z);
       for (var dx = -r; dx <= r; dx++) for (var dy = -r; dy <= r; dy++) {
-        var key = (t[0] + dx) + "/" + (t[1] + dy);
+        var n = Math.pow(2, z), tx = ((t[0] + dx) % n + n) % n, ty = t[1] + dy;   // 経度は一周させ、緯度の端の外は読まない
+        if (ty < 0 || ty >= n) continue;
+        var key = tx + "/" + ty;
         if (seen[key]) continue;
         seen[key] = true;
-        var url = TILE[kind].replace("{z}", z).replace("{x}", t[0] + dx).replace("{y}", t[1] + dy);
+        var url = TILE[kind].replace("{z}", z).replace("{x}", tx).replace("{y}", ty);
         if (!store.has(url) && queue.indexOf(url) < 0) queue.push(url);
       }
     }
@@ -428,15 +533,17 @@
   }
   function prefetchBase() {   // ルートを開いたとき: 標高と、下敷きの粗い写真を道全体で（数十枚）
     queue = [];
-    [9, 10, 11, 12].forEach(function (z) { want("dem", z, 0, route.len, 1); });
-    [10, 11, 12, 13].forEach(function (z) { want("photo", z, 0, route.len, 1); });
+    var jp = REGION === "jp";
+    [9, 10, 11, 12].forEach(function (z) { want(jp ? "dem" : "demw", z, 0, route.len, 1); });
+    [10, 11, 12, 13].forEach(function (z) { want(jp ? "photo" : "eox", z, 0, route.len, 1); });
   }
   var lastAhead = -1e9;
   function prefetchAhead(d) {   // 再生中: 現在地から先 3.5km の細かい写真（500m 進むごとに足す）
     if (Math.abs(d - lastAhead) < 500) return;
     lastAhead = d;
-    want("photo", 14, d, d + 4000, 1);
-    want("photo", 15, d, d + 2000, 0);
+    var ph = REGION === "jp" ? "photo" : "eox";
+    want(ph, 14, d, d + 4000, 1);
+    want(ph, 15, d, d + 2000, 0);
   }
 
   // ------------------------------------------------------------------ 地図
@@ -452,28 +559,38 @@
         // 地理院が配っている日本語フォント（地理院地図 Vector と同じもの）
         glyphs: "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
         sources: {
+          // 海外と、地球から寄る場面のための世界の素材。日本では下に敷くだけで、地理院の写真がその上に重なる
+          // EOxCloudless は非商用なら無料（CC BY-NC-SA 4.0）。商用で出すときは EOX の有料ライセンスか別の写真に替える
+          eox: { type: "raster", tiles: ["gsic://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg"], tileSize: 256, maxzoom: 15,
+                   attribution: "EOxCloudless 2025 (Contains modified Copernicus Sentinel data 2025)" },
+          "dem-w": { type: "raster-dem", tiles: ["gsic://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12, encoding: "terrarium",
+                     attribution: "Terrain Tiles (AWS Open Data)" },
+          "dem-w-hs": { type: "raster-dem", tiles: ["gsic://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12, encoding: "terrarium" },
+          ofm: { type: "vector", url: "https://tiles.openfreemap.org/planet" },
           // 注記は z14 までで足りる（それより細かい段は数が多く、読み込みで書き出しが遅くなる）
           gsiv: { type: "vector", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf"], minzoom: 4, maxzoom: 14, attribution: "国土地理院" },
           photo: { type: "raster", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 16,
                    attribution: "国土地理院" },
           // 地理院の標高 PNG: 標高 = (R×2^16 + G×2^8 + B) × 0.01 m
           // 標高は z12 まで（約 30m 格子）。z14 まで使うと動くたびに地形の細かさが切り替わって山がちらつく
-          dem: { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
+          dem: { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, minzoom: 6, maxzoom: 12,
                  encoding: "custom", redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0 },
           "photo-lo": { type: "raster", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 13 },
-          "dem-hs": { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 12,
+          "dem-hs": { type: "raster-dem", tiles: ["gsic://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"], tileSize: 256, minzoom: 6, maxzoom: 12,
                       encoding: "custom", redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0 },
           world: { type: "geojson", data: { type: "Feature", geometry: { type: "Polygon", coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]] } } }
         },
         layers: [
+          { id: "eox", type: "raster", source: "eox", paint: { "raster-saturation": 0.1, "raster-contrast": 0.1, "raster-fade-duration": 0 } },
           // 下敷き: 粗い写真（z13 まで）。枚数が少なくすぐ揃うので、細かい写真が届く前も灰色にならない
           // 地理院の航空写真は z13 以下と z14 以上で元の写真が違い、z13 以下はかなり暗い（燕岳付近で平均 RGB 40,75,67 と 103,129,123）。
           // そのままだと細かい写真に切り替わるたびに山の色が変わるので、下敷きを明るく持ち上げて色をそろえる
-          { id: "photo-lo", type: "raster", source: "photo-lo", paint: { "raster-saturation": -0.05, "raster-contrast": -0.1, "raster-brightness-min": 0.2, "raster-fade-duration": 0 } },
+          { id: "photo-lo", type: "raster", source: "photo-lo", minzoom: 8, paint: { "raster-saturation": -0.05, "raster-contrast": -0.1, "raster-brightness-min": 0.2, "raster-fade-duration": 0 } },
           // 航空写真の色: 少し彩度とコントラストを上げ、くすみを取る（地理院の写真は撮影時期で色がばらつく）
-          { id: "photo", type: "raster", source: "photo", paint: { "raster-saturation": 0.18, "raster-contrast": 0.14, "raster-brightness-min": 0.02, "raster-fade-duration": 400 } },
+          { id: "photo", type: "raster", source: "photo", minzoom: 8, paint: { "raster-saturation": 0.18, "raster-contrast": 0.14, "raster-brightness-min": 0.02, "raster-fade-duration": 400 } },
           // 日の当たり方: 太陽の方位から影を落とす（地形用とは別の標高ソースを使う。同じソースを共有すると描画が乱れることがある）
-          { id: "hs", type: "hillshade", source: "dem-hs", paint: { "hillshade-illumination-anchor": "map", "hillshade-illumination-direction": 315, "hillshade-exaggeration": 0.3 } },
+          { id: "hs", type: "hillshade", source: "dem-hs", minzoom: 8, paint: { "hillshade-illumination-anchor": "map", "hillshade-illumination-direction": 315, "hillshade-exaggeration": 0.3 } },
+          { id: "hs-w", type: "hillshade", source: "dem-w-hs", layout: { visibility: "none" }, paint: { "hillshade-illumination-anchor": "map", "hillshade-illumination-direction": 315, "hillshade-exaggeration": 0.3 } },
           // 朝夕の赤み・夜の暗さを全体に薄く重ねる
           { id: "tint", type: "fill", source: "world", paint: { "fill-color": "#ff9a55", "fill-opacity": 0 } }
         ],
@@ -482,7 +599,9 @@
       center: [137.69, 36.36], zoom: 11, pitch: 0
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "top-right");
-    return new Promise(function (ok) { map.on("load", ok); });
+    // 日本の外・海の上などタイルが無い所の 404 はエラーにしない（下の層がそのまま見える）
+    map.on("error", function (e) { var m = e && e.error && e.error.message || ""; if (!/HTTP 40[034]/.test(m)) console.error(e && e.error || e); });
+    return new Promise(function (ok) { map.on("load", function () { try { map.setProjection({ type: "globe" }); } catch (e) { /* 地球儀の無い版 */ } ok(); }); });
   }
   var DONE = "#1FB5E8", REST = "#E4572E", lastHere = null;   // 通った所 / これから
   function setRouteOnMap() {
@@ -521,13 +640,69 @@
   }
   var markers = [];   // 地図上のピンは使わない（画面にはいつも動画と同じ絵を出す）
 
+  // 日本は地理院（写真・標高・注記）、海外は世界の素材（EOX・AWS・OpenStreetMap）。道の中心がどちらにあるかで決める
+  var REGION = "jp";
+  function demSrc() { return REGION === "jp" ? "dem" : "dem-w"; }
+  function setRegion() {
+    var la = route.line.map(function (q) { return q[0]; }), lo = route.line.map(function (q) { return q[1]; });
+    var cla = (Math.min.apply(null, la) + Math.max.apply(null, la)) / 2, clo = (Math.min.apply(null, lo) + Math.max.apply(null, lo)) / 2;
+    REGION = cla > 24 && cla < 46 && clo > 122 && clo < 154 ? "jp" : "world";
+    var vis = function (id, on) { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none"); };
+    ["photo-lo", "photo", "hs", "gsi-anno", "gsi-trail"].forEach(function (id) { vis(id, REGION === "jp"); });
+    ["hs-w", "ofm-hut"].forEach(function (id) { vis(id, REGION === "world"); });
+    var tr = map.getTerrain && map.getTerrain();
+    if (tr && tr.source !== demSrc()) { map.setTerrain(null); map.setTerrain({ source: demSrc(), exaggeration: tr.exaggeration }); }
+  }
+  // 海外の山頂と山小屋: OpenStreetMap（OpenFreeMap のタイル）から、道の近くのものを拾う
+  async function worldPlaces() {
+    // 地図の画面に出ているかどうかに左右されないよう、道が通るタイルを直接読む（山頂は z13 を道の両側 1 枚まで、山小屋は z14 に
+    // しか入っていないので z14 の道が通る所だけ。多くても 60 枚ずつ）
+    var src = map.getSource("ofm"), tpl = src && src.tiles && src.tiles[0], id = route.id;
+    if (!tpl) return;
+    var name = function (pr) { return String(pr["name:ja"] || pr.name_int || pr.name || "").split(/ [-–\/] /)[0].trim(); };
+    var read = function (z, r, layer) {
+      var keys = {}, step = 40075000 * Math.cos(route.line[0][0] * rad) / Math.pow(2, z) / 2;
+      for (var d = 0; d <= route.len + step; d += step) {
+        var q = at(route, Math.min(d, route.len)), t = tileXY(q[0], q[1], z);
+        for (var dx = -r; dx <= r; dx++) for (var dy = -r; dy <= r; dy++) keys[(t[0] + dx) + "/" + (t[1] + dy)] = [t[0] + dx, t[1] + dy];
+      }
+      return Promise.all(Object.keys(keys).slice(0, 60).map(function (k) {
+        var t = keys[k];
+        return getTile(tpl.replace("{z}", z).replace("{x}", t[0]).replace("{y}", t[1]))
+          .then(function (buf) { return vecPoints(buf.slice(0), z, t[0], t[1], layer); }).catch(function () { return []; });
+      })).then(function (a) { return [].concat.apply([], a); });
+    };
+    var got = await Promise.all([read(13, 1, "mountain_peak"), read(14, 0, "poi")]);
+    if (!route || route.id !== id) return;
+    var seen = {}, peaks = [], hutsW = [];
+    got[0].forEach(function (f) {
+      var nm = name(f.p), ele = Number(f.p.ele);
+      if (!nm || !ele || seen[nm]) return;
+      var pj = project([f.lat, f.lon], route); if (pj.off > 2500) return;
+      seen[nm] = true;
+      peaks.push({ kind: "peak", name: { ja: nm, en: nm }, lat: f.lat, lon: f.lon, elev: Math.round(ele), d: pj.d, off: pj.off });
+    });
+    got[1].forEach(function (f) {
+      if (f.p.subclass !== "alpine_hut" && f.p.subclass !== "wilderness_hut") return;
+      var nm = name(f.p); if (!nm || seen[nm]) return;
+      var pj = project([f.lat, f.lon], route); if (pj.off > 800) return;
+      seen[nm] = true;
+      hutsW.push({ id: null, kind: "hut", name: { ja: nm, en: nm }, lat: f.lat, lon: f.lon, elev: null, d: pj.d });
+    });
+    peaks.sort(function (a, b) { return b.elev - a.elev; });
+    route.peaks = peaks.slice(0, 18);
+    route.stops = (route.stops || []).filter(function (s) { return s.id != null; }).concat(hutsW);
+    setLabelsOnMap();
+  }
+
   async function overview() {   // 道全体を見せ、そのあいだに標高の断面を測る（GPX に標高があればそれを使う）
     map.setTerrain(null);
     var b = new maplibregl.LngLatBounds();
     route.line.forEach(function (p) { b.extend([p[1], p[0]]); });
     map.fitBounds(b, { padding: { top: 90, bottom: 230, left: 40, right: 40 }, duration: 0, pitch: 0, bearing: 0 });
-    map.setTerrain({ source: "dem", exaggeration: 1 });
+    map.setTerrain({ source: demSrc(), exaggeration: 1 });
     await settle(8000);
+    if (REGION === "world") await worldPlaces();
     if (!route.ele) {
       var N = 160, prof = [];
       for (var i = 0; i <= N; i++) {
@@ -536,7 +711,7 @@
       }
       route.profile = prof.some(function (x) { return x != null; }) ? prof : null;
     }
-    map.setTerrain({ source: "dem", exaggeration: EXAG });
+    map.setTerrain({ source: demSrc(), exaggeration: EXAG });
   }
   var timeouts = 0;
   function settle(ms) {   // 地形と航空写真の読み込みが済むまで待つ。打ち切ったら数える（崩れたコマが混ざった印）
@@ -582,10 +757,13 @@
       map.setPaintProperty(id, "raster-brightness-max", ramp(a, [[-10, 0.3], [-3, 0.55], [5, 0.92], [20, 1]]));
       map.setPaintProperty(id, "raster-saturation", ramp(a, [[-6, -0.45], [5, 0.05], [20, 0.1]]));
     });
-    map.setPaintProperty("hs", "hillshade-illumination-direction", s.az);
-    map.setPaintProperty("hs", "hillshade-exaggeration", ramp(a, [[-6, 0.15], [3, 0.7], [15, 0.45], [50, 0.25]]));
-    map.setPaintProperty("hs", "hillshade-highlight-color", "rgba(255," + Math.round(lerp(255, 196, warm)) + "," + Math.round(lerp(255, 120, warm)) + "," + (0.18 + 0.25 * warm).toFixed(2) + ")");
-    map.setPaintProperty("hs", "hillshade-shadow-color", "rgba(" + Math.round(lerp(20, 30, night)) + ",30," + Math.round(lerp(40, 70, night)) + ",0.6)");
+    ["hs", "hs-w"].forEach(function (id) {
+      map.setPaintProperty(id, "hillshade-illumination-direction", s.az);
+      map.setPaintProperty(id, "hillshade-exaggeration", ramp(a, [[-6, 0.15], [3, 0.7], [15, 0.45], [50, 0.25]]));
+      map.setPaintProperty(id, "hillshade-highlight-color", "rgba(255," + Math.round(lerp(255, 196, warm)) + "," + Math.round(lerp(255, 120, warm)) + "," + (0.18 + 0.25 * warm).toFixed(2) + ")");
+      map.setPaintProperty(id, "hillshade-shadow-color", "rgba(" + Math.round(lerp(20, 30, night)) + ",30," + Math.round(lerp(40, 70, night)) + ",0.6)");
+    });
+    ["eox"].forEach(function (id) { map.setPaintProperty(id, "raster-brightness-max", ramp(a, [[-10, 0.3], [-3, 0.55], [5, 0.92], [20, 1]])); });
     map.setPaintProperty("tint", "fill-color", warm > night ? "#ff9a55" : "#0b1d3a");
     map.setPaintProperty("tint", "fill-opacity", Math.max(warm * 0.1, night * 0.4));
     var sky = { top: mix(mix("#6f9fcb", "#e0855a", warm), "#0b1730", night), bottom: mix(mix("#dfe8ee", "#ffc794", warm), "#26385a", night) };
@@ -615,6 +793,11 @@
     };
   }
   function annoFromTile(buf, z, x, y) {
+    return vecPoints(buf, z, x, y, "Anno").map(function (f) {
+      return { code: Number(f.p.vt_code), text: f.p.vt_text == null ? "" : String(f.p.vt_text), lat: f.lat, lon: f.lon };
+    });
+  }
+  function vecPoints(buf, z, x, y, want) {   // ベクトルタイルの 1 層から、点（の最初の座標）と属性を取り出す
     var R = pbfReader(buf), out = [];
     R.fields(0, buf.byteLength, function (f, w, layer) {
       if (f !== 3 || w !== 2) return;
@@ -622,11 +805,11 @@
       R.fields(layer[0], layer[1], function (lf, lw, lv) {
         if (lf === 1) name = R.str(lv);
         else if (lf === 3) keys.push(R.str(lv));
-        else if (lf === 4) { var val = null; R.fields(lv[0], lv[1], function (vf, vw, vv) { if (vf === 1) val = R.str(vv); else if (vf >= 4 && vf <= 6) val = vv; }); vals.push(val); }
+        else if (lf === 4) { var val = null; R.fields(lv[0], lv[1], function (vf, vw, vv) { if (vf === 1) val = R.str(vv); else if (vf === 4 || vf === 5) val = vv; else if (vf === 6) val = vv % 2 ? -(vv + 1) / 2 : vv / 2; }); vals.push(val); }
         else if (lf === 5) extent = lv;
         else if (lf === 2) feats.push(lv);
       });
-      if (name !== "Anno") return;
+      if (name !== want) return;
       feats.forEach(function (fr) {
         var tags = [], geom = [];
         R.fields(fr[0], fr[1], function (ff, fw, fv) { if (ff === 2) tags = R.packed(fv); if (ff === 4) geom = R.packed(fv); });
@@ -634,7 +817,7 @@
         if (geom.length < 3) return;
         var zz = function (n) { return (n >>> 1) ^ -(n & 1); }, px = zz(geom[1]), py = zz(geom[2]), n2 = Math.pow(2, z);
         var lon = (x + px / extent) / n2 * 360 - 180, lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + py / extent) / n2))) / rad;
-        out.push({ code: Number(props.vt_code), text: props.vt_text == null ? "" : String(props.vt_text), lat: lat, lon: lon });
+        out.push({ p: props, lat: lat, lon: lon });
       });
     });
     return out;
@@ -712,7 +895,25 @@
 
   // ------------------------------------------------------------------ 動画のプレーヤー（作る動画をそのまま流す・止める・スライドで場面を選ぶ）
   // 記録を残すための「道をたどる再生」はやめ、画面にはいつも書き出す動画と同じ絵を出す
-  function localMs(utc) { return utc + (tz ? tz.ms : -new Date(utc).getTimezoneOffset() * 60000); }
+  function localMs(utc) { return utc + (tz ? tz.ms : REGION === "world" && route ? placeTzMs(utc) : -new Date(utc).getTimezoneOffset() * 60000); }
+  // 海外で写真に時差の手がかりが無いとき: 歩いた場所の時差を大まかに（端末の時差だと、日本で見ると日本時間になってしまう）
+  // 欧州と北米は夏時間も入れる。ほかは経度から。山の多い所（ネパール・インド）は個別に
+  function placeTzMs(utc) {
+    var la = route.line[0][0], lo = route.line[0][1], H = 3600000, y = new Date(utc).getUTCFullYear();
+    var lastSun = function (m) { var d = new Date(Date.UTC(y, m + 1, 0)); return Date.UTC(y, m, d.getUTCDate() - d.getUTCDay()); };
+    var nthSun = function (m, n) { var d = new Date(Date.UTC(y, m, 1)); return Date.UTC(y, m, 1 + (7 - d.getUTCDay()) % 7 + 7 * (n - 1)); };
+    if (la > 26 && la < 31 && lo > 80 && lo < 88.3) return 5.75 * H;
+    if (la > 6 && la < 36 && lo > 68 && lo <= 80) return 5.5 * H;
+    if (la > 35 && la < 72 && lo > -11 && lo < 32) {
+      var base = (lo < -6 || (la > 49.5 && lo < 2)) ? 0 : lo >= 22 ? 2 : 1;
+      return (base + (utc >= lastSun(2) + H && utc < lastSun(9) + H ? 1 : 0)) * H;
+    }
+    if (la > 24 && la < 70 && lo > -170 && lo < -50) {
+      var b = Math.round(lo / 15) * H;
+      return b + (utc >= nthSun(2, 2) - b + 2 * H && utc < nthSun(10, 1) - b + H ? H : 0);
+    }
+    return Math.round(lo / 15) * H;
+  }
   function fmtDate(utc) { var d = new Date(localMs(utc)); return d.getUTCFullYear() + "/" + String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + String(d.getUTCDate()).padStart(2, "0") + "(" + JA_DOW[d.getUTCDay()] + ")"; }
   function fmtClock(utc) { var d = new Date(localMs(utc)); return d.getUTCHours() + ":" + String(d.getUTCMinutes()).padStart(2, "0"); }
   function fmtClockNaive(local) { var d = new Date(local); return (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + " " + d.getUTCHours() + ":" + String(d.getUTCMinutes()).padStart(2, "0"); }
@@ -729,6 +930,15 @@
     sp.show = buildShow();
     sp.t = Math.min(sp.t, sp.show.total - 0.001);
     renderAt(sp.t, true);
+    noteMedia();
+  }
+  function noteMedia() {   // 写真が多くて早送りになるときだけ、そう伝える
+    var el = $("fly-media-note"), sh = sp.show;
+    if (!el || !sh) return;
+    var fast = media.length > 1 && sh.perPhoto < 0.9;
+    el.hidden = !fast;
+    if (fast) el.textContent = "入れた " + media.length + " 本をすべて使い、" + sh.stops + " か所にまとめています。1 枚 約 " + sh.perPhoto.toFixed(1)
+      + " 秒の早送りです" + (Number($("fly-len").value) < 60 ? "（長くするとゆっくり見せられます）" : "") + "。";
   }
   function updateTime() {
     $("fly-seek").value = String(Math.round(sp.t / sp.show.total * 1000));
@@ -742,7 +952,7 @@
   function syncVideo(st, t, playing) {   // 動画の場面では、動画の再生位置を場面の時間に合わせる
     media.forEach(function (m) { if (m.el && m !== st.m && !m.el.paused) m.el.pause(); });
     if (!(st.m && st.m.kind === "video" && st.photoAlpha > 0)) return;
-    var el = st.m.el, want = Math.max(0, Math.min(st.e.kind === "hook" ? t : t - st.e.t0, (el.duration || 1) - 0.05));
+    var el = st.m.el, want = Math.max(0, Math.min(vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0), (el.duration || 1) - 0.05));
     if (playing) {
       if (el.paused) { el.currentTime = want; el.play().catch(function () {}); }
       else if (Math.abs(el.currentTime - want) > 0.35) el.currentTime = want;
@@ -758,6 +968,10 @@
   function renderAt(t, sharp) {
     var st = showState(sp.show, t);
     applyFrame(st, false); syncVideo(st, t, false); draw(st); updateTime();
+    // 動画の場面は、動画の頭出しが済んでから描き直す（止めた絵が前の位置のままにならないように）
+    if (st.m && st.m.kind === "video" && st.photoAlpha > 0 && st.m.el.seeking) {
+      st.m.el.addEventListener("seeked", function () { if (!sp.playing && sp.t === t) draw(st); }, { once: true });
+    }
     if ($("fly-loading") && !$("fly-loading").hidden) map.once("render", function () { $("fly-loading").hidden = true; $("fly-empty").hidden = media.length > 0 || sp.playing; });
     if (sharp && st.photoAlpha < 1) settle(4000).then(function () { if (!sp.playing && sp.t === t) draw(st); });   // 読み込みが済んだら細かい絵で描き直す
   }
@@ -895,6 +1109,9 @@
                    layout: { "text-field": ["get", "vt_text"], "text-font": ["NotoSansJP-Regular"], "text-size": 11.5, "text-padding": 6,
                              "symbol-sort-key": ["case", ["in", ["get", "vt_code"], ["literal", [673, 681]]], 0, 1] },
                    paint: Object.assign({}, halo, { "text-color": "rgba(255,255,255,0.92)" }) });
+    map.addLayer({ id: "ofm-hut", type: "symbol", source: "ofm", "source-layer": "poi", minzoom: 11, layout: { visibility: "none",
+                     "text-field": ["coalesce", ["get", "name:ja"], ["get", "name_int"], ["get", "name"]], "text-font": ["NotoSansJP-Regular"], "text-size": 11.5, "text-padding": 6 },
+                   filter: ["==", ["get", "subclass"], "alpine_hut"], paint: Object.assign({}, halo, { "text-color": "rgba(255,255,255,0.92)" }) });
     map.addLayer({ id: "peak-label", type: "symbol", source: "peaks",
                    layout: { "text-field": ["concat", "▲ ", ["get", "label"]], "text-font": ["NotoSansJP-Regular"], "text-size": 13, "text-anchor": "bottom",
                              "text-line-height": 1.15, "symbol-sort-key": ["-", 0, ["get", "elev"]], "text-padding": 8 },
@@ -943,52 +1160,62 @@
     return media.find(function (m) { return m.star; }) || media.find(function (m) { return m.kind === "video"; })
       || media.slice().sort(function (a, b) { return (eleAt(b.d) || 0) - (eleAt(a.d) || 0); })[0] || null;
   }
-  // 入れる写真を選ぶ: 選んだ長さの 6 割まで。込み合った所から間引き、道の上に散らばるようにする（★は残す）
-  function chooseMedia(budget, per) {
-    var list = media.slice().sort(function (a, b) { return a.d - b.d; });
-    var cost = function (l) { return l.reduce(function (s, m) { return s + per(m); }, 0); };
-    while (list.length && cost(list) > budget * 0.6) {
-      var worst = -1, gap = Infinity;
-      list.forEach(function (m, i) {
-        if (m.star && list.length > 1) return;
-        var g = Math.min(i ? m.d - list[i - 1].d : Infinity, i < list.length - 1 ? list[i + 1].d - m.d : Infinity);
-        if (g < gap) { gap = g; worst = i; }
-      });
-      list.splice(worst < 0 ? 0 : worst, 1);
-    }
-    return list;
-  }
   function buildShow() {
     var T = Number(($("fly-len") || {}).value) || 20, s = T <= 10 ? 0.7 : T <= 20 ? 0.9 : 1;
     var hl = highlight();
     var en = energy(), hook = (hl ? 1.4 : 1.0) * s, draw = 1.3 * s, swoop = 1.1 * s, outro = (2.2 + (en && foods.length ? 1.3 : 0)) * s;
-    var budget = T - hook - draw - swoop - outro;
-    var per = function (m) { return 0.9 * s + (m.kind === "video" ? Math.min(m.dur, 3 * s) : 1.7 * s) + 0.6 * s; };
-    var chosen = chooseMedia(budget, per);
-    var used = chosen.reduce(function (a, m) { return a + per(m); }, 0), flyT = Math.max(budget * 0.4, budget - used);
+    var budget = T - hook - 1.8 * s - draw - swoop - outro;
+    // 入れた写真・動画はすべて使う。入りきらなければ、①1 枚ずつの時間を縮め（下限まで）、②それでも足りなければ道の上で
+    // 近いものどうしを 1 か所にまとめる（降りる・戻るを 1 回にして、写真をテンポよく切り替える）。道を飛ぶ時間は 3 割残す
+    var chosen = media.slice().sort(function (a, b) { return a.d - b.d; });
+    var pw = function (m) { return m.kind === "video" ? Math.min(m.full || m.dur || 3, 3 * s) : 1.7 * s; };
+    var pmin = function (m) { return m.kind === "video" ? 0.8 : 0.4; };
+    var A = budget * 0.7, groups = chosen.map(function (m) { return [m]; });
+    var need = function (k) { return groups.length * 1.5 * s * k + chosen.reduce(function (a, m) { return a + Math.max(pmin(m), pw(m) * k); }, 0); };
+    while (groups.length > 1 && need(0.5) > A) {
+      var gi = 0, gap = Infinity;
+      for (var i = 0; i < groups.length - 1; i++) {
+        var g = groups[i + 1][0].d - groups[i][groups[i].length - 1].d;
+        if (g < gap) { gap = g; gi = i; }
+      }
+      groups.splice(gi, 2, groups[gi].concat(groups[gi + 1]));
+    }
+    var k = 1;
+    if (need(1) > A) { var lo = 0.05, hi = 1; for (var it = 0; it < 30; it++) { var mid = (lo + hi) / 2; if (need(mid) <= A) lo = mid; else hi = mid; } k = lo; }
+    var flyT = Math.max(budget * 0.3, budget - need(k));
     var ev = [], t = 0, push = function (o, dur) { o.t0 = t; o.t1 = t + dur; ev.push(o); t += dur; };
     push({ kind: "hook", m: hl }, hook);
+    push({ kind: "globe" }, 1.8 * s);   // 宇宙から、その山へ一気に寄る
     push({ kind: "draw" }, draw);
     push({ kind: "swoop" }, swoop);
     var v = route.len / flyT, d = 0;
-    chosen.forEach(function (m) {
-      var dt = (m.d - d) / v;
-      if (dt > 0.05) push({ kind: "fly", d0: d, d1: m.d }, dt);
-      d = m.d;
-      push({ kind: "approach", m: m, d0: d, d1: d }, 0.9 * s);
-      push({ kind: "photo", m: m, d0: d, d1: d }, m.kind === "video" ? Math.min(m.dur, 3 * s) : 1.7 * s);
-      push({ kind: "back", m: m, d0: d, d1: d }, 0.6 * s);
+    groups.forEach(function (g) {
+      var m0 = g[0], mL = g[g.length - 1], dt = (m0.d - d) / v;
+      if (dt > 0.05) push({ kind: "fly", d0: d, d1: m0.d }, dt);
+      push({ kind: "approach", m: m0, d0: m0.d, d1: m0.d }, 0.9 * s * k);
+      g.forEach(function (m, j) {
+        var dur = Math.max(pmin(m), pw(m) * k);
+        if (m.kind === "video") { m.clipLen = dur; m.autoStart = bestStart(m, dur); }
+        // まとめた写真のあいだはフェードせずに切り替える（最初だけ 3D から溶け、最後だけ 3D へ戻る）
+        push({ kind: "photo", m: m, d0: m.d, d1: m.d, fin: j === 0, fout: j === g.length - 1 }, dur);
+      });
+      push({ kind: "back", m: mL, d0: mL.d, d1: mL.d }, 0.6 * s * k);
+      d = mL.d;
     });
     if (route.len - d > 1) push({ kind: "fly", d0: d, d1: route.len }, Math.max(0.3, (route.len - d) / v));
     push({ kind: "outro" }, outro);
     // 足し合わせで選んだ長さを超えたら、飛ぶ区間を縮めて合わせる
     if (t > T) {
       var over = t - T, flys = ev.filter(function (e) { return e.kind === "fly"; }), ft = flys.reduce(function (a, e) { return a + e.t1 - e.t0; }, 0);
-      var k = Math.max(0.2, (ft - over) / (ft || 1)); t = 0;
-      ev.forEach(function (e) { var dur = (e.t1 - e.t0) * (e.kind === "fly" ? k : 1); e.t0 = t; e.t1 = t + dur; t += dur; });
+      var kf = Math.max(0.2, (ft - over) / (ft || 1)); t = 0;
+      ev.forEach(function (e) { var dur = (e.t1 - e.t0) * (e.kind === "fly" ? kf : 1); e.t0 = t; e.t1 = t + dur; t += dur; });
     }
+    // 写真がとても多いとき（下限まで縮めても入らない）は、全体を選んだ長さに収める
+    if (t > T + 0.01) { var sq = T / t; t = 0; ev.forEach(function (e) { var dur = (e.t1 - e.t0) * sq; e.t0 = t; e.t1 = t + dur; t += dur; }); }
+    var photos = ev.filter(function (e) { return e.kind === "photo"; });
     var info = titleInfo(); info.energy = en;
-    return { ev: ev, total: t, info: info, chosen: chosen };
+    return { ev: ev, total: t, info: info, chosen: chosen, stops: groups.length,
+             perPhoto: photos.length ? photos.reduce(function (a, e) { return a + e.t1 - e.t0; }, 0) / photos.length : 0 };
   }
 
   // カメラ: 道中は「ならした軌道」の上を進む（細かいくねりを追わない）。写真では撮影地点に立って撮った向きを見る
@@ -1060,6 +1287,12 @@
     var e = show.ev.find(function (x) { return t >= x.t0 && t < x.t1; }) || show.ev[show.ev.length - 1];
     var f = Math.max(0, Math.min(1, (t - e.t0) / ((e.t1 - e.t0) || 1))), st = { e: e, f: f, d: 0, line: 1, photoAlpha: 0, hud: 0, m: e.m || null };
     if (e.kind === "hook") { st.cam = overviewCam(0); st.line = 0; st.photoAlpha = e.m ? 1 : 0; }
+    else if (e.kind === "globe") {
+      // 地球全体からその山の上空へ。ズームは対数なので、線形に動かすと寄るほど速く感じる
+      var oc = overviewCam(0), k2 = ease(f);
+      st.cam = { center: oc.center, zoom: lerp(1.4, oc.zoom, k2), pitch: lerp(0, oc.pitch, k2 * k2), bearing: lerp(30, oc.bearing, k2), elevation: lerp(0, oc.elevation || 0, k2) };
+      st.line = 0; st.drawing = true; st.space = 1 - k2;
+    }
     else if (e.kind === "draw") { st.cam = overviewCam(8 * f); st.line = easeOut(f); st.drawing = true; }
     else if (e.kind === "swoop") { var k = ease(f); st.cam = mixCam(overviewCam(8), flyCam(0, false), k); st.hud = k; }
     else if (e.kind === "fly") { st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1; }
@@ -1067,7 +1300,7 @@
     else if (e.kind === "photo") {
       st.d = e.d0; var pc = povCam(e.m);
       st.cam = { center: pc.center, zoom: pc.zoom, pitch: pc.pitch, bearing: pc.bearing + 3 * f, elevation: pc.elevation };
-      st.photoAlpha = Math.min(1, f / 0.22, (1 - f) / 0.18);   // 3D から本物の写真へ溶け、最後に 3D へ戻る
+      st.photoAlpha = Math.min(1, e.fin === false ? 1 : f / 0.22, e.fout === false ? 1 : (1 - f) / 0.18);   // 3D から本物の写真へ溶け、最後に 3D へ戻る
     }
     else if (e.kind === "back") { st.d = e.d0; st.cam = mixCam(povCam(e.m), flyCam(e.d0, false), ease(f)); st.hud = f; }
     else { st.d = route.len; st.cam = mixCam(flyCam(route.len, false), overviewCam(8 + 25 * f), ease(f)); st.outro = true; }
@@ -1089,8 +1322,8 @@
     map.setPaintProperty("route-halo", "line-opacity", pov ? 0 : 0.85);
     var showDot = !(st.drawing || st.e.kind === "hook" || st.outro || pov);
     // 冒頭と締めは大きな文字を重ねるので、地図の文字（山名・注記）は消す
-    var labelsOn = !(st.e.kind === "hook" || st.outro);
-    ["peak-label", "gsi-anno"].forEach(function (id) { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", labelsOn ? "visible" : "none"); });
+    var labelsOn = !(st.e.kind === "hook" || st.e.kind === "globe" || st.outro);
+    ["peak-label", REGION === "jp" ? "gsi-anno" : "ofm-hut"].forEach(function (id) { if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", labelsOn ? "visible" : "none"); });
     ["here", "here-halo"].forEach(function (id) { map.setLayoutProperty(id, "visibility", showDot ? "visible" : "none"); });
   }
 
@@ -1119,6 +1352,7 @@
       var sky = ctx.createLinearGradient(0, 0, 0, H * 0.55);
       sky.addColorStop(0, skyPaint.top); sky.addColorStop(1, skyPaint.bottom);
       ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+      if (st.space) { ctx.save(); ctx.globalAlpha = Math.min(1, st.space * 1.5); ctx.fillStyle = "#05080d"; ctx.fillRect(0, 0, W, H); ctx.restore(); }   // 宇宙
       ctx.drawImage(map.getCanvas(), 0, 0, W, H);
     }
     if (st.photoAlpha > 0 && st.m) drawFull(st.m, st.photoAlpha, st.f);
@@ -1181,7 +1415,8 @@
     }
     ctx.save(); ctx.globalAlpha = 0.8;
     text("HutsGo", W - 40, SAFE_TOP - 22, 24, 800, "#fff", "right");
-    text("地図: 国土地理院", 40, SAFE_BOTTOM + 34, 18, 500, "rgba(255,255,255,.85)", "left");
+    text(REGION === "jp" ? "地図: 国土地理院・EOxCloudless 2025（Copernicus Sentinel）" : "EOxCloudless 2025（Copernicus Sentinel）・© OpenStreetMap・AWS Terrain Tiles",
+         40, SAFE_BOTTOM + 34, 16, 500, "rgba(255,255,255,.85)", "left");
     ctx.restore();
   }
 
@@ -1195,10 +1430,12 @@
   // 書き出し前の準備: 飛ぶ道筋と写真の地点の地図を先に読む（読み込みを待つ時間を書き出しの外に出す）
   async function prepareTiles(show) {
     queue = [];
-    want("photo", 14, 0, route.len, 1);
-    want("photo", 15, 0, route.len, 0);
-    [11, 12, 13, 14].forEach(function (z) { want("vec", z, 0, route.len, 1); });   // 地図の文字（注記）
-    show.chosen.forEach(function (m) { want("photo", 15, Math.max(0, m.d - 500), m.d + 2500, 1); });
+    var ph = REGION === "jp" ? "photo" : "eox";
+    [2, 3, 4, 5, 6, 7, 8, 9].forEach(function (z) { want("eox", z, 0, 0, 1); });   // 地球から寄る場面
+    want(ph, 14, 0, route.len, 1);
+    want(ph, 15, 0, route.len, 0);
+    if (REGION === "jp") [11, 12, 13, 14].forEach(function (z) { want("vec", z, 0, route.len, 1); });   // 地図の文字（注記）
+    show.chosen.forEach(function (m) { want(ph, 15, Math.max(0, m.d - 500), m.d + 2500, 1); });
     var t0 = Date.now(), total = queue.length + inflight || 1;
     while ((queue.length || inflight) && Date.now() - t0 < 30000) {
       if (exportCancel) throw new Error("cancel");
@@ -1235,7 +1472,7 @@
         setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
         await settle(6000);
       }
-      if (st.m && st.m.kind === "video" && st.photoAlpha > 0) await seek(st.m.el, st.e.kind === "hook" ? t : t - st.e.t0);
+      if (st.m && st.m.kind === "video" && st.photoAlpha > 0) await seek(st.m.el, vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0));
       compose(st, show);
       var vf = new VideoFrame(out, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
       enc.encode(vf, { keyFrame: i % (FPS * 2) === 0 });
@@ -1262,7 +1499,7 @@
           if (st.e.kind === "fly" || st.e.kind === "swoop") aim(st.cam, at(route, st.d), 1.2, 6); else keepAbove(st.cam);
           setLine(st); showProgress(st.d); applyLight(st.d); prefetchAhead(st.d);
         }
-        if (st.m && st.m.kind === "video" && st.photoAlpha > 0 && st.m.el.paused) { st.m.el.currentTime = 0; st.m.el.play().catch(function () {}); }
+        if (st.m && st.m.kind === "video" && st.photoAlpha > 0 && st.m.el.paused) { st.m.el.currentTime = vstart(st.m); st.m.el.play().catch(function () {}); }
         if (st.photoAlpha < 1) { map.once("render", function () { compose(st, show); }); map.triggerRepaint(); } else compose(st, show);
         if (t < show.total) requestAnimationFrame(tick); else setTimeout(function () { if (rec) rec.stop(); resolve(); }, 200);
       }
@@ -1356,10 +1593,12 @@
     route = prepRoute(r); route._pv = null; route.profile = null; lastLight = null; overviewCamCache = null;
     await loadHuts();
     await nearbyHuts();
-    prefetchBase(); lastAhead = -1e9;
-    try { route.peaks = await loadPeaks(); } catch (e) { route.peaks = []; }
     setRouteOnMap();
     if (Q.get("nolabels") !== "1") setLabelsOnMap();   // 試験用: 文字なしで速さを比べる
+    setRegion();
+    prefetchBase(); lastAhead = -1e9;
+    try { route.peaks = REGION === "jp" ? await loadPeaks() : []; } catch (e) { route.peaks = []; }
+    if (map.getSource("peaks")) setLabelsOnMap();
     place(); renderList(); renderEnergy();
     status("地形を読み込んでいます…");
     await overview();
@@ -1411,6 +1650,18 @@
       clearTimeout(seekTimer); seekTimer = setTimeout(function () { renderAt(sp.t, true); }, 250);
     });
     $("fly-len").addEventListener("change", function () { pauseSp(); sp.show = buildShow(); sp.t = posterT(); refreshShow(); });
+    // 動画の使う場面を手で選ぶ（動かすとすぐ画面に出す）
+    $("fly-list").addEventListener("input", function (e) {
+      var c = e.target.closest("[data-clip]"); if (!c) return;
+      var m = media[Number(c.dataset.clip)];
+      m.clipManual = Number(c.value);
+      var box = c.closest(".fly-trim"); box.querySelector(".fly-trim-label").textContent = clipText(m); box._place && box._place();
+      showClip(m);
+    });
+    $("fly-list").addEventListener("change", function (e) {
+      if (!e.target.closest("[data-clip]")) return;
+      renderList();
+    });
     // 道の上の位置を手で合わせる
     $("fly-list").addEventListener("input", function (e) {
       var r = e.target.closest("[data-pos]"); if (!r) return;
@@ -1425,7 +1676,8 @@
     });
     // 写真を押すと場所の編集欄を開く／外す
     $("fly-list").addEventListener("click", function (e) {
-      var o = e.target.closest("[data-open]"), r = e.target.closest("[data-rm-media]");
+      var o = e.target.closest("[data-open]"), r = e.target.closest("[data-rm-media]"), au = e.target.closest("[data-clip-auto]");
+      if (au) { var mm = media[Number(au.dataset.clipAuto)]; mm.clipManual = null; renderList(); showClip(mm); return; }
       if (o) { var i = Number(o.dataset.open); openIdx = openIdx === i ? -1 : i; renderList(); return; }
       if (r) {
         var m = media.splice(Number(r.dataset.rmMedia), 1)[0];
@@ -1446,7 +1698,7 @@
       map: map, play: playSp, pause: pauseSp, seekT: function (t) { pauseSp(); sp.t = t; renderAt(t, true); },
       // 試験用: 道の d の地点を指定の傾きで狙い、遮られたまま残ったかを返す
       sun: function (ms, lat, lon) { return sunPos(ms, lat, lon); },
-      timeline: function () { var sh = buildShow(); return { total: sh.total, kinds: sh.ev.map(function (e) { return e.kind; }), info: sh.info, chosen: sh.chosen.length }; },
+      timeline: function () { var sh = buildShow(); return { total: sh.total, kinds: sh.ev.map(function (e) { return e.kind; }), ts: sh.ev.map(function (e) { return [e.t0, e.t1]; }), info: sh.info, chosen: sh.chosen.length }; },
       pov: function (i) { var m = media[i]; m.pov = null; return povCam(m); },
       flyDebug: async function (d) {
         var cam = flyCam(d, true); map.jumpTo(cam); await settle(15000);
@@ -1464,9 +1716,9 @@
       here: function () { return lastHere; },
       gradient: function () { return JSON.stringify(map.getPaintProperty("route", "line-gradient")); },
       state: function () {
-        return { route: route.id, source: route.source, len: route.len, t: sp.t, total: sp.show && sp.show.total, playing: sp.playing, tz: tz && tz.ms,
-                 hutsNear: (route.stops || []).filter(function (s) { return s.kind === "hut"; }).map(function (s) { return s.id; }),
-                 media: media.map(function (m) { return { name: m.name, placed: m.placed, d: m.d, exif: !!m.exif }; }), profile: !!(route.ele || route.profile),
+        return { route: route.id, region: REGION, source: route.source, len: route.len, t: sp.t, total: sp.show && sp.show.total, playing: sp.playing, tz: tz && tz.ms,
+                 hutsNear: (route.stops || []).filter(function (s) { return s.kind === "hut"; }).map(function (s) { return s.id != null ? s.id : s.name.ja; }),
+                 media: media.map(function (m) { return { name: m.name, placed: m.placed, d: m.d, exif: !!m.exif, clip: m.kind === "video" ? vstart(m) : null, scored: !!m.scores }; }), profile: !!(route.ele || route.profile),
                  time: $("fly-time").textContent, list: $("fly-list").textContent, energy: energy(), foods: foods.length,
                  energyText: $("fly-energy-sum").textContent,
                  peaks: (route.peaks || []).map(function (p) { return p.name.ja + (p.elev ? ":" + p.elev : ""); }), light: lastLight,

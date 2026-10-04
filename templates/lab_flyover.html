@@ -57,8 +57,9 @@
   <section class="fly-controls" aria-label="動画の中身">
     <div class="fly-step">
       <h2>写真・動画</h2>
-      <p class="fly-hint">★ を付けた 1 枚が動画の最初に出ます。押すと場所を直せます。</p>
+      <p class="fly-hint">入れたものはすべて使います。★ の 1 枚が動画の最初に。押すと場所や動画の使う場面を直せます。</p>
       <ol id="fly-list" class="fly-grid" aria-live="polite"></ol>
+      <p id="fly-media-note" class="fly-hint fly-media-note" hidden></p>
       <button type="button" class="fly-btn fly-btn-add" data-pick="fly-files">＋ 写真・動画を足す</button>
       <input type="file" id="fly-files" accept="image/*,video/*" multiple hidden>
     </div>
@@ -119,7 +120,9 @@
   </section>
 
   <footer class="fly-foot">
-    <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a></p>
+    <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>（日本）／
+      <a href="https://cloudless.eox.at" target="_blank" rel="noopener">EOxCloudless 2025</a>（Contains modified Copernicus Sentinel data 2025）・
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>（<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>）・Terrain Tiles（AWS Open Data）</p>
   </footer>
 </main>
 

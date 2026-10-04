@@ -138,3 +138,13 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 
 .fly-foot{font-size:.75rem;color:var(--faint)}
 .fly-foot a{color:inherit}
+
+/* 動画の使う場面 */
+.fly-trim{margin-top:.55rem;padding-top:.5rem;border-top:1px solid var(--line)}
+.fly-trim .fly-trim-label{margin:0 0 .35rem;font-size:.8rem;color:var(--ink)}
+.fly-strip{position:relative;display:flex;height:44px;border-radius:6px;overflow:hidden;background:#dfe5e1}
+.fly-strip img{flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block}
+.fly-win{position:absolute;top:0;bottom:0;border:3px solid var(--moss);border-radius:6px;box-shadow:0 0 0 999px rgba(0,0,0,.38);pointer-events:none}
+.fly-clip{width:100%;margin-top:.4rem;accent-color:var(--moss)}
+.fly-clip-auto{min-height:34px;padding:.25rem .7rem;font-size:.8rem;margin-top:.2rem}
+.fly-media-note{margin-top:.5rem}
