@@ -1852,7 +1852,10 @@
   function openShareSheet() {
     if (busy) return;
     pauseSp();
-    $("fly-card-img").src = makeCard().toDataURL("image/jpeg", 0.85);
+    // 画像は開いたときに作る（作る前は img を置かない）
+    var box = $("fly-card-box"), img = $("fly-card-img");
+    if (!img) { img = document.createElement("img"); img.id = "fly-card-img"; img.className = "fly-card-preview"; img.alt = "共有用の画像（★ の写真に道と記録）"; box.appendChild(img); }
+    img.src = makeCard().toDataURL("image/jpeg", 0.85);
     $("fly-sheet").hidden = false;
   }
   async function shareVideo() {

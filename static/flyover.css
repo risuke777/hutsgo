@@ -171,3 +171,4 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-clip-auto{min-height:34px;padding:.25rem .7rem;font-size:.8rem;margin-top:.2rem}
 .fly-media-note{margin-top:.5rem}
 .fly-share-open{width:52px;height:52px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.fly-card-box{width:100%}
