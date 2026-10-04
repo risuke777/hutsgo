@@ -79,18 +79,38 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-grid:empty{display:none}
 .fly-grid > li{position:relative}
 .fly-card{position:relative;display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#dfe5e1;cursor:pointer;border:0;padding:0;width:100%}
-.fly-card img{width:100%;height:100%;object-fit:cover;display:block}
+.fly-card{background:#1c2a23}
+.fly-card img{width:100%;height:100%;object-fit:contain;display:block}
 .fly-grid li.is-open .fly-card{outline:3px solid var(--moss);outline-offset:-3px}
 .fly-badge{position:absolute;left:5px;bottom:5px;font-size:.66rem;font-weight:700;padding:.08rem .4rem;border-radius:999px;background:rgba(22,36,29,.78);color:#fff}
 .fly-badge.is-warn{background:rgba(180,68,44,.92)}
 .fly-star{position:absolute;right:4px;top:4px;z-index:1;width:32px;height:32px;border:0;border-radius:999px;background:rgba(22,36,29,.55);color:#fff;font-size:1rem;line-height:1;cursor:pointer}
 .fly-star.is-on{background:var(--accent);color:#16241d}
-.fly-grid li.is-video .fly-card::after{content:"▶";position:absolute;right:8px;bottom:6px;color:#fff;font-size:.8rem;text-shadow:0 1px 3px #000}
+.fly-ico{position:absolute;right:5px;bottom:5px;width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.92);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.fly-dur{position:absolute;left:5px;top:5px;font-size:.66rem;font-weight:700;padding:.08rem .4rem;border-radius:999px;background:rgba(22,36,29,.78);color:#fff}
+.fly-grid li.is-skip .fly-card img{opacity:.35;filter:grayscale(1)}
+.fly-badge.is-off{background:rgba(91,104,97,.95)}
+.fly-pick-row{margin:-.2rem 0 .7rem;padding:.55rem .65rem;border-radius:10px;background:#f6f8f6;border:1px solid var(--line)}
+.fly-pick-row .fly-hint{margin:0 0 .45rem}
+.fly-pick-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
+.fly-pick-buttons .fly-btn{min-height:38px;padding:.3rem .8rem;font-size:.84rem}
+.fly-pick-buttons .fly-btn[hidden]{display:none}
+.fly-check{display:flex;align-items:center;gap:.45rem;font-size:.86rem;margin:.1rem 0 .5rem;min-height:36px;cursor:pointer}
+.fly-check[hidden]{display:none}
+.fly-check input{width:20px;height:20px;accent-color:var(--moss)}
+.fly-help{font-size:.84rem;border-top:1px solid var(--line);padding-top:.4rem}
+.fly-help summary{cursor:pointer;font-weight:700;color:var(--moss);min-height:32px;display:flex;align-items:center}
+.fly-help dl{margin:.3rem 0;display:grid;grid-template-columns:auto 1fr;gap:.35rem .7rem}
+.fly-help dt{font-weight:700}
+.fly-help dd{margin:0;color:var(--soft)}
+.fly-help p{margin:.3rem 0 0;color:var(--soft)}
+.fly-card-preview{width:100%;max-height:52vh;object-fit:contain;border-radius:14px;background:#000}
 .fly-edit{grid-column:1/-1;background:#f6f8f6;border:1px solid var(--line);border-radius:10px;padding:.6rem .7rem}
 .fly-edit p{margin:0 0 .35rem;font-size:.8rem;color:var(--soft)}
 .fly-edit .fly-pos{width:100%;accent-color:var(--moss)}
-.fly-edit-buttons{display:flex;justify-content:flex-end;margin-top:.3rem}
-.fly-edit-buttons .fly-btn{min-height:36px;padding:.3rem .8rem;font-size:.82rem;color:var(--danger)}
+.fly-edit-buttons{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-top:.3rem}
+.fly-edit-buttons .fly-btn{min-height:36px;padding:.3rem .8rem;font-size:.82rem}
+.fly-edit-buttons .fly-rm-media{color:var(--danger)}
 .fly-btn-add{width:100%;border-style:dashed}
 
 /* 道 */
@@ -99,7 +119,9 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 
 /* 長さ */
 .fly-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
-.fly-chips button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;cursor:pointer;color:var(--ink)}
+.fly-chips button{min-height:52px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;cursor:pointer;color:var(--ink);display:grid;place-content:center;gap:.05rem;line-height:1.2}
+.fly-chips button small{font-size:.66rem;font-weight:600;color:var(--soft)}
+.fly-chips button[aria-checked="true"] small{color:rgba(255,255,255,.8)}
 .fly-chips button[aria-checked="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 
 /* 山ごはん */
@@ -121,7 +143,7 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-food-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
 
 /* 下の操作バー（いつも見える） */
-.fly-actions{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:1fr 1.6fr;gap:.6rem;
+.fly-actions{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:1fr 1.6fr auto;gap:.6rem;align-items:center;
   padding:.6rem .9rem calc(.6rem + env(safe-area-inset-bottom));background:rgba(243,245,242,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
 @media (min-width:821px){.fly-actions{left:50%;right:auto;width:520px;transform:translateX(-50%);border:1px solid var(--line);border-radius:18px 18px 0 0}}
 
@@ -148,3 +170,4 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-clip{width:100%;margin-top:.4rem;accent-color:var(--moss)}
 .fly-clip-auto{min-height:34px;padding:.25rem .7rem;font-size:.8rem;margin-top:.2rem}
 .fly-media-note{margin-top:.5rem}
+.fly-share-open{width:52px;height:52px;background:var(--card);color:var(--ink);border:1px solid var(--line)}

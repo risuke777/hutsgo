@@ -57,9 +57,15 @@
   <section class="fly-controls" aria-label="動画の中身">
     <div class="fly-step">
       <h2>写真・動画</h2>
-      <p class="fly-hint">入れたものはすべて使います。★ の 1 枚が動画の最初に。押すと場所や動画の使う場面を直せます。</p>
+      <p class="fly-hint">★ の 1 本が動画の最初に。その日の写真をまとめて選んでも、歩いた時間の外で撮ったものは自動で外します。</p>
       <ol id="fly-list" class="fly-grid" aria-live="polite"></ol>
-      <p id="fly-media-note" class="fly-hint fly-media-note" hidden></p>
+      <div id="fly-pick-row" class="fly-pick-row" hidden>
+        <p id="fly-media-note" class="fly-hint"></p>
+        <div class="fly-pick-buttons">
+          <button type="button" id="fly-auto-pick" class="fly-btn fly-btn-ghost">おまかせで絞る</button>
+          <button type="button" id="fly-use-all" class="fly-btn fly-btn-ghost">全部使う</button>
+        </div>
+      </div>
       <button type="button" class="fly-btn fly-btn-add" data-pick="fly-files">＋ 写真・動画を足す</button>
       <input type="file" id="fly-files" accept="image/*,video/*" multiple hidden>
     </div>
@@ -72,15 +78,27 @@
         <input type="file" id="fly-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden>
       </div>
       <p class="fly-hint">YAMAP・ヤマレコ・Garmin などの GPX なら、撮影時刻から写真の場所も合わせます。</p>
+      <label id="fly-pace-row" class="fly-check" hidden><input type="checkbox" id="fly-pace" checked> 歩いた道をペースで色分け（標準タイムと比べた速さ）</label>
+      <details class="fly-help">
+        <summary>GPX の出し方</summary>
+        <dl>
+          <dt>YAMAP</dt><dd>活動日記を開き、「GPXデータ」の［エクスポート］。自分の記録は無料です。<a href="https://help.yamap.com/hc/ja/articles/900000916666" target="_blank" rel="noopener">公式ヘルプ</a></dd>
+          <dt>ヤマレコ</dt><dd>アプリは山行記録の右上のメニュー →「GPXファイルをダウンロード」。パソコンは「地図出力／その他の機能」→「GPXファイル」。<a href="https://www.yamareco.com/guide/faq/gpslog_dl/" target="_blank" rel="noopener">公式ガイド</a></dd>
+          <dt>Garmin</dt><dd>パソコンで connect.garmin.com のアクティビティを開き、右上の歯車 →「GPX にエクスポート」（スマホのアプリからは出せません）。</dd>
+          <dt>Strava</dt><dd>Web 版でアクティビティを開き、「…」→「GPX をエクスポート」（Web のみ）。</dd>
+          <dt>ジオグラフィカ</dt><dd>メニュー →「ファイル」→「トラック」で記録を選び、操作メニューの「GPX エクスポート」。</dd>
+        </dl>
+        <p>スマホに保存した GPX は「ファイル」アプリ（ダウンロード）に入ります。ファイルを選ぶ画面では GPX 以外も表示されることがあります（端末によって絞り込めません）。</p>
+      </details>
     </div>
 
     <div class="fly-step">
       <h2>長さ</h2>
       <div class="fly-chips" role="radiogroup" aria-label="動画の長さ">
-        <button type="button" role="radio" data-len="10">10 秒</button>
-        <button type="button" role="radio" data-len="20">20 秒</button>
-        <button type="button" role="radio" data-len="30">30 秒</button>
-        <button type="button" role="radio" data-len="60">60 秒</button>
+        <button type="button" role="radio" data-len="10">10 秒<small>2〜4 本</small></button>
+        <button type="button" role="radio" data-len="20">20 秒<small>4〜8 本</small></button>
+        <button type="button" role="radio" data-len="30">30 秒<small>6〜12 本</small></button>
+        <button type="button" role="radio" data-len="60">60 秒<small>10〜25 本</small></button>
       </div>
       <select id="fly-len" hidden><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="60">60</option></select>
     </div>
@@ -119,6 +137,19 @@
     </div>
   </section>
 
+  <section id="fly-sheet" class="fly-result" hidden aria-labelledby="fly-sheet-h">
+    <div class="fly-result-card">
+      <h2 id="fly-sheet-h">共有する</h2>
+      <img id="fly-card-img" class="fly-card-preview" alt="共有用の画像（★ の写真に道と記録）">
+      <div class="fly-result-buttons">
+        <button type="button" id="fly-card-share" class="fly-btn fly-btn-primary fly-btn-lg">画像を共有</button>
+        <button type="button" id="fly-card-video" class="fly-btn fly-btn-lg">動画を作って共有</button>
+      </div>
+      <p class="fly-hint">画像は ★ の写真に、歩いた道と記録を重ねたものです。</p>
+      <button type="button" id="fly-sheet-close" class="fly-btn fly-btn-ghost">閉じる</button>
+    </div>
+  </section>
+
   <footer class="fly-foot">
     <p>地図・山名: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>（日本）／
       <a href="https://cloudless.eox.at" target="_blank" rel="noopener">EOxCloudless 2025</a>（Contains modified Copernicus Sentinel data 2025）・
@@ -129,6 +160,9 @@
 <nav class="fly-actions" aria-label="動画を作る">
   <button type="button" id="fly-preview" class="fly-btn fly-btn-lg">プレビュー</button>
   <button type="button" id="fly-record" class="fly-btn fly-btn-primary fly-btn-lg">動画を作る</button>
+  <button type="button" id="fly-share-open" class="fly-round fly-share-open" aria-label="共有する">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
