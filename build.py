@@ -724,6 +724,7 @@ for lang, prefix in LOCALES:
     for t in trails_l:
         r = FLY_ROUTES.setdefault(t["id"], {
             "id": t["id"], "name": {}, "traced": t["legs_total"] > 0 and t["legs_traced"] == t["legs_total"],
+            "course_min": t["total_min"],   # 公式のコースタイムの合計（区間が欠けていれば None）。エネルギー収支の行動時間に使う
             "line": [[round(a, 6), round(b, 6)] for a, b in t["line_pts"]],
             "stops": [{"id": s["hut_id"] or s["trailhead_id"], "kind": "hut" if s["hut"] else "trailhead", "name": {},
                        "lat": p["lat"], "lon": p["lon"], "elev": p["elevation_m"]}

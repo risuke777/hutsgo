@@ -32,6 +32,20 @@
       <input type="file" id="fly-files" accept="image/*,video/*" multiple>
     </label>
     <ol id="fly-list" class="fly-list" aria-live="polite"></ol>
+    <fieldset class="fly-energy">
+      <legend>エネルギー収支</legend>
+      <div class="fly-row">
+        <label class="fly-field">体重 kg<input type="number" id="fly-weight" min="20" max="200" step="1" value="60" inputmode="numeric"></label>
+        <label class="fly-field">荷物 kg<input type="number" id="fly-pack" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
+        <label class="fly-field">行動時間 h<input type="number" id="fly-hours" min="0" max="100" step="0.5" placeholder="自動" inputmode="decimal"></label>
+      </div>
+      <label class="fly-field fly-file">山ごはん
+        <input type="file" id="fly-food" accept="image/*" multiple>
+      </label>
+      <button type="button" id="fly-food-add" class="fly-btn fly-btn-small">写真なしで足す</button>
+      <ol id="fly-food-list" class="fly-list fly-food-list"></ol>
+      <p id="fly-energy-sum" class="fly-note" aria-live="polite"></p>
+    </fieldset>
     <div class="fly-buttons">
       <label class="fly-field fly-len">長さ
         <select id="fly-len">

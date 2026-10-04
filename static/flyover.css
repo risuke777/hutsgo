@@ -83,3 +83,15 @@ h1{font-size:1.45rem;line-height:1.35;margin:.2rem 0 .5rem}
 /* 道の上の位置のつまみ */
 .fly-list li > div{flex:1;min-width:0}
 .fly-pos{display:block;width:100%;margin:.25rem 0 0;accent-color:var(--moss)}
+
+/* エネルギー収支 */
+.fly-energy{border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem .4rem;margin:0 0 .9rem;background:var(--card)}
+.fly-energy legend{font-weight:700;font-size:.9rem;padding:0 .3rem}
+.fly-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}
+.fly-row .fly-field{margin-bottom:.5rem}
+.fly-btn-small{padding:.3rem .8rem;font-size:.85rem;margin-bottom:.5rem}
+.fly-food-list li{gap:.4rem}
+.fly-food-list select{flex:1;min-width:0;font:inherit;font-size:.82rem;padding:.3rem;border:1px solid var(--line);border-radius:6px}
+.fly-food-list .fly-n{width:3.2rem}.fly-food-list .fly-kcal{width:4.6rem}
+.fly-food-list input{font:inherit;font-size:.82rem;padding:.3rem;border:1px solid var(--line);border-radius:6px}
+.fly-rm{border:0;background:none;font-size:1.1rem;color:var(--soft);cursor:pointer;padding:.1rem .3rem}
