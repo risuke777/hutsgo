@@ -232,7 +232,7 @@
           await new Promise(function (ok) { m.el.onloadeddata = ok; m.el.onerror = ok; setTimeout(ok, 8000); });
           m.el.style.cssText = "width:96px;height:96px;object-fit:cover";
           if (!m.el.videoWidth) { m.err = "この端末のブラウザでは再生できない形式の動画です（HEVC・HDR など。カメラの設定で「互換性優先」/ H.264 にすると使えます）"; }
-          else if (!(await primeVideo(m))) { m.err = "この端末のブラウザでは動画の絵を取り出せませんでした（HDR や HEVC の動画で起きます。カメラの設定で HDR を切るか「互換性優先」で撮ると使えます）"; }
+          else if (!(await primeVideo(m))) m.noFrame = true;   // 外さない（端末によって確かめ方が効かないことがある）。描けないときは地図を出す
           m.full = m.el.duration && isFinite(m.el.duration) ? m.el.duration : VIDEO_MAX_SEC;
           m.dur = Math.min(VIDEO_MAX_SEC, m.full);
           m.thumb = m.lastCv ? frameThumb(m.lastCv, m.lastCv.width, m.lastCv.height) : frameThumb(m.el, m.el.videoWidth, m.el.videoHeight);
@@ -264,6 +264,9 @@
         ? "写真 " + imgs.length + " 枚とも位置情報がありません（スマホのブラウザは写真を渡す前に位置情報を外すことがあります）。"
           + (withTime ? "撮影時刻はあります。" : "") + "写真を押すと場所を合わせられます。"
         : imgs.length ? "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。" : "置きました。");
+    var nf = media.filter(function (m) { return m.noFrame && !m.frameOK; });
+    if (nf.length) status($("fly-status").textContent + " " + nf.map(function (m) { return m.name; }).join("、")
+      + " は、この端末では絵を取り出せないかもしれません（HDR・HEVC の動画で起きます）。その場面は地図になります。カメラの設定で HDR を切ると確実です。");
     if (bad.length) status($("fly-status").textContent + " 使えなかったもの: " + bad.map(function (m) { return m.name + "（" + m.err + "）"; }).join("、"));
   }
   // 動画の「いちばん良い場面」: 0.5 秒ごとに小さく取り出し、ピント（輪郭の強さ）・明るさ・色・動きで点数を付ける。
@@ -354,8 +357,9 @@
   var probeCv = null;
   function hasPixels(src) {   // 小さく描いて、黒でも透明でもない点があるか
     try {
+      // willReadFrequently（CPU の画面）だと、Android でハードウェアで再生した動画の絵が黒になることがあるので使わない
       probeCv = probeCv || Object.assign(document.createElement("canvas"), { width: 16, height: 16 });
-      var x = probeCv.getContext("2d", { willReadFrequently: true });
+      var x = probeCv.getContext("2d");
       x.clearRect(0, 0, 16, 16); x.drawImage(src, 0, 0, 16, 16);
       var d = x.getImageData(0, 0, 16, 16).data;
       // 黒は (16,16,16) 前後で出ることがあるので、それより明るい点が少しでもあるかで見る
@@ -377,17 +381,18 @@
   // 入れたときに少しだけ再生して、絵が取り出せるかを確かめる（止めたままだと、Android では最初の絵が黒のことがある）
   async function primeVideo(m) {
     var el = m.el;
-    for (var tries = 0; tries < 2; tries++) {
+    m.lastAt = 0; keepFrame(m);   // 止めたままで取り出せる端末は、ここで済む
+    for (var tries = 0; tries < 2 && !m.frameOK; tries++) {
       if (tries) await seek(el, (el.duration || 2) / 2);   // 2 回目は真ん中で（撮り始めが本当に真っ暗な動画もある）
-      try { await el.play(); } catch (e) { /* 自動再生できない端末: 止めたままの絵で確かめる */ }
+      var played = el.play();
+      if (played && played.catch) played.catch(function () { /* 自動再生できない端末: 止めたままの絵で確かめる */ });
       await new Promise(function (ok) {
         var done = false, fin = function () { if (!done) { done = true; ok(); } };
         if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(function () { setTimeout(fin, 60); }); else el.addEventListener("timeupdate", fin, { once: true });
-        setTimeout(fin, 2500);
+        setTimeout(fin, 1200);
       });
       el.pause();
       m.lastAt = 0; keepFrame(m);
-      if (m.frameOK) break;
     }
     try { el.currentTime = 0; } catch (e) { /* そのまま */ }
     return !!m.frameOK;
@@ -579,6 +584,7 @@
       var ico = document.createElement("span"); ico.className = "fly-ico"; ico.setAttribute("aria-hidden", "true");
       ico.innerHTML = m.kind === "video" ? ICON_CUT : ICON_EDIT; card.appendChild(ico);
       if (m.kind === "video") { var du = document.createElement("span"); du.className = "fly-dur"; du.textContent = "▶ " + fmtT(m.full || m.dur || 0); card.appendChild(du); }
+      if (m.kind === "video" && m.noFrame && !m.frameOK) { li.className += " is-noframe"; card.title = "この端末では動画の絵を取り出せないことがあります（HDR・HEVC）。出せないときは地図を出します"; }
       li.appendChild(card);
       var star = document.createElement("button");
       star.type = "button"; star.className = "fly-star" + (m.star ? " is-on" : ""); star.dataset.star = String(i);

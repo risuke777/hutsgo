@@ -188,3 +188,4 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 /* 見出しは句読点の後だけで折り返す */
 .nb{display:inline-block}
 .fly-energy summary{flex-wrap:nowrap;white-space:nowrap}
+.fly-grid li.is-noframe .fly-card{outline:2px dashed rgba(180,68,44,.9);outline-offset:-2px}
