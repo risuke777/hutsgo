@@ -1514,7 +1514,8 @@
       st.line = 0; st.drawing = true; st.space = 1 - k2;
     }
     else if (e.kind === "draw") { st.cam = overviewCam(8 * f); st.line = easeOut(f); st.drawing = true; }
-    else if (e.kind === "swoop") { var k = ease(f); st.cam = mixCam(overviewCam(8), flyCam(0, false), k); st.hud = k; }
+    // 降りる場面: 題字は前半で消え、標高の数字は後半で出る（同じ場所で重ならないように）
+    else if (e.kind === "swoop") { var k = ease(f); st.cam = mixCam(overviewCam(8), flyCam(0, false), k); st.hud = Math.max(0, (f - 0.5) * 2); }
     else if (e.kind === "fly") { st.d = e.d0 + (e.d1 - e.d0) * f; st.cam = flyCam(st.d, true); st.hud = 1; }
     else if (e.kind === "approach") {
       // 上の枠: 道の上から撮影地点の視点へ寄る（ピンを立てる）。下の地図: 道を進み続ける
@@ -1747,7 +1748,7 @@
       ctx.restore();
     } else if (k === "draw" || k === "swoop") {
       shade(0.4, 0.3);
-      ctx.save(); ctx.globalAlpha = k === "draw" ? 1 : 1 - st.f;
+      ctx.save(); ctx.globalAlpha = k === "draw" ? 1 : Math.max(0, 1 - st.f * 2);
       text(info.title + (info.sub ? " " + info.sub : ""), W / 2, SAFE_TOP + 40, 44, 800, "#fff", "center");
       text(info.stats.join("  ·  "), W / 2, SAFE_TOP + 92, 28, 600, "#fff", "center");
       ctx.restore();
