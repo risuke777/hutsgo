@@ -232,12 +232,12 @@
           await new Promise(function (ok) { m.el.onloadeddata = ok; m.el.onerror = ok; setTimeout(ok, 8000); });
           m.el.style.cssText = "width:96px;height:96px;object-fit:cover";
           if (!m.el.videoWidth) { m.err = "この端末のブラウザでは再生できない形式の動画です（HEVC・HDR など。カメラの設定で「互換性優先」/ H.264 にすると使えます）"; }
+          else if (!(await primeVideo(m))) { m.err = "この端末のブラウザでは動画の絵を取り出せませんでした（HDR や HEVC の動画で起きます。カメラの設定で HDR を切るか「互換性優先」で撮ると使えます）"; }
           m.full = m.el.duration && isFinite(m.el.duration) ? m.el.duration : VIDEO_MAX_SEC;
           m.dur = Math.min(VIDEO_MAX_SEC, m.full);
-          m.thumb = frameThumb(m.el, m.el.videoWidth, m.el.videoHeight);
-          if (m.el.videoWidth) keepFrame(m);
+          m.thumb = m.lastCv ? frameThumb(m.lastCv, m.lastCv.width, m.lastCv.height) : frameThumb(m.el, m.el.videoWidth, m.el.videoHeight);
           m.aspect = m.el.videoWidth && m.el.videoHeight ? m.el.videoWidth / m.el.videoHeight : 9 / 16;
-          m.q = frameScore(m.el, m.el.videoWidth, m.el.videoHeight);
+          m.q = m.lastCv ? frameScore(m.lastCv, m.lastCv.width, m.lastCv.height) : 0.5;
           analyzeLater(m);
         } else {
           var exRaw = readExif(await f.slice(0, 256 * 1024).arrayBuffer()), ex = exRaw || {};
@@ -263,7 +263,7 @@
       : imgs.length && !withGps
         ? "写真 " + imgs.length + " 枚とも位置情報がありません（スマホのブラウザは写真を渡す前に位置情報を外すことがあります）。"
           + (withTime ? "撮影時刻はあります。" : "") + "写真を押すと場所を合わせられます。"
-        : "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。");
+        : imgs.length ? "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。" : "置きました。");
     if (bad.length) status($("fly-status").textContent + " 使えなかったもの: " + bad.map(function (m) { return m.name + "（" + m.err + "）"; }).join("、"));
   }
   // 動画の「いちばん良い場面」: 0.5 秒ごとに小さく取り出し、ピント（輪郭の強さ）・明るさ・色・動きで点数を付ける。
@@ -343,18 +343,54 @@
     return vbinEl;
   }
   // 絵を描ける状態か（動画は頭出しが済んで絵があるときだけ）。描けないときは地図を出す（黒い画面や前の絵が残るのを防ぐ）
+  // 動画の絵が描けるか: 端末によっては、再生できても絵を取り出すと黒や透明になる（HDR・HEVC をハードウェアで再生するとき）。
+  // その絵を描くと写真の枠が白く抜けるので、中身のある絵だけを使う。無いときは地図を出す
   function mediaReady(m) {
     if (!m) return false;
     if (m.kind !== "video") return !!m.img;
-    return vidLive(m) || !!m.lastCv;   // 頭出し中は、最後に描けた絵で代わりにする
+    return (vidLive(m) && m.liveOK !== false) || !!(m.lastCv && m.frameOK);   // 頭出し中は、最後に描けた絵で代わりにする
   }
   function vidLive(m) { return m.el.readyState >= 2 && m.el.videoWidth > 0 && !m.el.seeking; }
+  var probeCv = null;
+  function hasPixels(src) {   // 小さく描いて、黒でも透明でもない点があるか
+    try {
+      probeCv = probeCv || Object.assign(document.createElement("canvas"), { width: 16, height: 16 });
+      var x = probeCv.getContext("2d", { willReadFrequently: true });
+      x.clearRect(0, 0, 16, 16); x.drawImage(src, 0, 0, 16, 16);
+      var d = x.getImageData(0, 0, 16, 16).data;
+      // 黒は (16,16,16) 前後で出ることがあるので、それより明るい点が少しでもあるかで見る
+      var n = 0;
+      for (var i = 0; i < d.length; i += 4) if (d[i + 3] > 0 && d[i] + d[i + 1] + d[i + 2] > 75) n++;
+      return n >= 3;
+    } catch (e) { return false; }
+  }
   function keepFrame(m) {   // 動画の今の絵を取っておく（次に頭出しで絵が無くなっても、これを出す）
     var now = performance.now();
     if (m.lastCv && now - (m.lastAt || 0) < 150) return;
+    m.lastAt = now;
+    m.liveOK = hasPixels(m.el);
+    if (!m.liveOK) return;   // 中身の無い絵で、前に取っておいた絵を上書きしない
     var c = m.lastCv || (m.lastCv = document.createElement("canvas")), sc = Math.min(1, 720 / Math.max(m.el.videoWidth, m.el.videoHeight));
     c.width = Math.round(m.el.videoWidth * sc); c.height = Math.round(m.el.videoHeight * sc);
-    try { c.getContext("2d").drawImage(m.el, 0, 0, c.width, c.height); m.lastAt = now; } catch (e) { /* まだ描けない */ }
+    try { c.getContext("2d").drawImage(m.el, 0, 0, c.width, c.height); m.frameOK = true; } catch (e) { /* まだ描けない */ }
+  }
+  // 入れたときに少しだけ再生して、絵が取り出せるかを確かめる（止めたままだと、Android では最初の絵が黒のことがある）
+  async function primeVideo(m) {
+    var el = m.el;
+    for (var tries = 0; tries < 2; tries++) {
+      if (tries) await seek(el, (el.duration || 2) / 2);   // 2 回目は真ん中で（撮り始めが本当に真っ暗な動画もある）
+      try { await el.play(); } catch (e) { /* 自動再生できない端末: 止めたままの絵で確かめる */ }
+      await new Promise(function (ok) {
+        var done = false, fin = function () { if (!done) { done = true; ok(); } };
+        if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(function () { setTimeout(fin, 60); }); else el.addEventListener("timeupdate", fin, { once: true });
+        setTimeout(fin, 2500);
+      });
+      el.pause();
+      m.lastAt = 0; keepFrame(m);
+      if (m.frameOK) break;
+    }
+    try { el.currentTime = 0; } catch (e) { /* そのまま */ }
+    return !!m.frameOK;
   }
   function frameThumb(src, sw, sh) {   // 縦横比を保った小さな絵（一覧で縦か横かが分かる）
     try {
@@ -1575,8 +1611,8 @@
   // 余白は同じ写真をぼかして埋める
   function drawMedia(m, x, y, w, h, alpha, k) {
     var live = m.kind === "video" && vidLive(m);
-    if (live) keepFrame(m);
-    var src = m.kind === "video" ? (live ? m.el : m.lastCv) : m.img;
+    if (live) { keepFrame(m); if (m.liveOK === false) live = false; }
+    var src = m.kind === "video" ? (live ? m.el : (m.frameOK ? m.lastCv : null)) : m.img;
     if (!src) return;
     var sw = m.kind === "video" ? (live ? m.el.videoWidth : src.width) : m.img.width, sh = m.kind === "video" ? (live ? m.el.videoHeight : src.height) : m.img.height;
     if (!sw || !sh || alpha <= 0) return;
