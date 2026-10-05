@@ -1111,7 +1111,7 @@
     var g = fx.createRadialGradient(150, 150, 112, 150, 150, 150); g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
     fx.globalCompositeOperation = "destination-in"; fx.fillStyle = g; fx.fillRect(0, 0, 300, 300); fx.globalCompositeOperation = "source-over";
   }
-  function needInset(st) { return st.e.kind === "media" && st.m && !st.m.inset; }
+  function needInset(st) { return false; }   // 右下の小さな 3D 地図はやめた（写真のピンを道の地図に立てる）
   function mapNeeded(st) { return st.photoAlpha < 1 || !mediaReady(st.m); }
   // 読み込みを待たずに 1 コマ（再生・プレビュー・速く作る）。alive() が偽になったら途中でやめる
   async function liveFrame(st, t, playing, show, alive) {
@@ -1126,9 +1126,6 @@
   // 読み込みを待って 1 コマ（書き出し・止めたときの描き直し）。alive() が偽になったら途中でやめる
   async function settledFrame(st, t, show, live, alive) {
     alive = alive || function () { return true; };
-    if (st.e.kind === "media" && st.m && !st.m.insetSharp) {
-      map.jumpTo(insetCam(st.m)); setLine(st, "inset"); await settle(6000); if (!alive()) return false; grabInset(st.m, true);
-    }
     if (st.top) { keepAbove(st.top); setLine(st, "top"); await settle(6000); if (!alive()) return false; grabTop(st.m); }
     if (mapNeeded(st)) {
       if (moving(st)) aim(st.cam, at(route, st.d), live ? 90 : 30 / FPS); else keepAbove(st.cam);
@@ -1596,6 +1593,52 @@
     }
     ctx.restore();
   }
+  // 写真のピン（YAMAP のような丸いサムネイル）: 出し終えた写真・動画のピンを道の地図に立てていく。今の写真は青い縁で少し大きく
+  function pinThumb(m) {
+    if (m.pinCv) return m.pinCv;
+    var src = m.kind === "video" ? m.lastCv : m.img; if (!src) return null;
+    var c = document.createElement("canvas"); c.width = c.height = 120;
+    var sw = src.width, sh = src.height, sc = Math.max(120 / sw, 120 / sh);
+    c.getContext("2d").drawImage(src, (120 - sw * sc) / 2, (120 - sh * sc) / 2, sw * sc, sh * sc);
+    return (m.pinCv = c);
+  }
+  var pinsDrawn = 0;
+  function drawMapPins(st, show, top, sy) {
+    var i = show.ev.indexOf(st.e), k = st.e.kind;
+    if (i < 0 || k === "hook" || k === "globe" || k === "draw" || k === "swoop") return;
+    var c = map.getCanvas(), cw = c.clientWidth || 360, ch = c.clientHeight || 640, CH = c.height, seen = [], list = [];
+    for (var j = 0; j <= i; j++) {
+      var e = show.ev[j];
+      if (e.kind !== "media" || seen.indexOf(e.m) >= 0) continue;
+      seen.push(e.m);
+      var cur = j === i, q = map.project(pinLL(e.m)), px = q.x / cw * W, py = top > 0 ? top + (q.y / ch * CH - sy) * H / CH : q.y / ch * H;
+      if (px < -60 || px > W + 60 || py < top + 30 || py > H + 60) continue;
+      list.push({ x: px, y: py, m: e.m, cur: cur, sc: cur ? 1.15 * easeOut(Math.min(1, st.f * 4)) : 0.9 });
+    }
+    list.sort(function (a, b) { return (a.cur - b.cur) || (a.y - b.y); });   // 手前（下）と今の写真を上に重ねる
+    pinsDrawn = list.length;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, H - top); ctx.clip();
+    list.forEach(function (p2) { drawPhotoPin(p2.x, p2.y, p2.m, p2.sc, p2.cur); });
+    ctx.restore();
+  }
+  function drawPhotoPin(x, y, m, sc, cur) {
+    var th = pinThumb(m); if (!th || sc <= 0) return;
+    var R2 = 30 * sc, cy = y - 14 * sc - R2;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+    ctx.fillStyle = cur ? "#1FB5E8" : "#fff";
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 11 * sc, cy + R2 * 0.7); ctx.lineTo(x + 11 * sc, cy + R2 * 0.7); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(x, cy, R2 + 4.5 * sc, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.save(); ctx.beginPath(); ctx.arc(x, cy, R2, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(th, x - R2, cy - R2, 2 * R2, 2 * R2); ctx.restore();
+    if (m.kind === "video") {   // 動画のしるし
+      var bx = x + R2 * 0.72, by = cy + R2 * 0.72;
+      ctx.beginPath(); ctx.arc(bx, by, 11 * sc, 0, Math.PI * 2); ctx.fillStyle = "rgba(22,36,29,.85)"; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(bx - 3.5 * sc, by - 5.5 * sc); ctx.lineTo(bx + 5.5 * sc, by); ctx.lineTo(bx - 3.5 * sc, by + 5.5 * sc);
+      ctx.closePath(); ctx.fillStyle = "#fff"; ctx.fill();
+    }
+    ctx.restore();
+  }
   function drawPin(x, y, sc, a) {   // 撮影地点のピン（カメラのしるし）
     if (a <= 0) return;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(sc, sc);
@@ -1665,10 +1708,13 @@
       sky.addColorStop(0, skyPaint.top); sky.addColorStop(1, skyPaint.bottom);
       ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
       if (st.space) { ctx.save(); ctx.globalAlpha = Math.min(1, st.space * 1.5); ctx.fillStyle = "#05080d"; ctx.fillRect(0, 0, W, H); ctx.restore(); }   // 宇宙
+      var sySrc = 0;
       if (sk > 0) {   // 下の地図: 現在地を中心に切り出す（縦横比は変えない）
         var mc = map.getCanvas(), CH = mc.height, sh2 = (H - top) / H * CH;
-        if (sh2 >= 1) ctx.drawImage(mc, 0, Math.max(0, Math.min(CH - sh2, dotY() * CH - sh2 / 2)), mc.width, sh2, 0, top, W, H - top);
+        sySrc = Math.max(0, Math.min(CH - sh2, dotY() * CH - sh2 / 2));
+        if (sh2 >= 1) ctx.drawImage(mc, 0, sySrc, mc.width, sh2, 0, top, W, H - top);
       } else ctx.drawImage(map.getCanvas(), 0, 0, W, H);
+      drawMapPins(st, show, sk > 0 ? top : 0, sySrc);
     }
     if (pa > 0) drawMedia(st.m, 0, 0, W, H, pa, st.f);
     if (isAppr && sk > 0) {   // 上の枠: 撮影地点へ寄る絵（ピンを中心に切り出す）
@@ -1719,7 +1765,7 @@
       ctx.fillStyle = gc; ctx.fillRect(0, top - 200, W, 200);
       if (tm != null) text(fmtClock(tm), 44, top - 66, 52, 800, "#fff", "left");
       text((nr && Math.abs(nr.d - mm.d) < 1500 ? nr.name.ja + "  " : "") + (em != null ? Math.round(em).toLocaleString() + "m" : ""), 46, top - 24, 28, 700, "#fff", "left");
-      if (mm.insetF) {   // 右下: 撮影地点を中心にした 3D 地図とピン。縁はぼかして、写真の上に半透明で浮かせる
+      if (false && mm.insetF) {   // （やめた）右下: 撮影地点を中心にした 3D 地図
         var S2 = 270, ix = W - S2 - 6, iy = top - S2 - 10, ia = 0.9 * Math.min(1, 1 - (st.fromTop || 0)), cx2 = ix + S2 / 2, cy2 = iy + S2 / 2;
         ctx.save(); ctx.globalAlpha = ia;
         var sg = ctx.createRadialGradient(cx2, cy2 + 22, 20, cx2, cy2 + 22, S2 * 0.5);   // 下に落ちる影（浮いて見える）
@@ -1798,13 +1844,7 @@
       progress("地図を用意しています", (1 - (queue.length + inflight) / total) * 0.8, null);
       await new Promise(function (ok) { setTimeout(ok, 250); });
     }
-    // 写真の右下の小さな 3D 地図を、読み込みを待ってきれいに作っておく
-    var list = show.chosen.filter(function (m) { return !m.insetSharp; });
-    for (var i = 0; i < list.length; i++) {
-      if (exportCancel) throw new Error("cancel");
-      progress("地図を用意しています", 0.8 + 0.2 * i / list.length, null);
-      map.jumpTo(insetCam(list[i])); setLine(showState(show, 0), "inset"); await settle(6000); grabInset(list[i], true);
-    }
+
   }
   function stageMap(on) {   // 書き出し・プレビューの間だけ、地図を 360×640 の 2 倍（720×1280）に固定する
     map.setPixelRatio(on ? W / 360 : Math.min(2, window.devicePixelRatio || 1)); map.resize();
@@ -2318,7 +2358,7 @@
       here: function () { return lastHere; },
       gradient: function () { return JSON.stringify(map.getPaintProperty("route", "line-gradient")); },
       state: function () {
-        return { route: route.id, region: REGION, source: route.source, len: route.len, t: sp.t, total: sp.show && sp.show.total, playing: sp.playing, tz: tz && tz.ms,
+        return { route: route.id, region: REGION, pins: pinsDrawn, source: route.source, len: route.len, t: sp.t, total: sp.show && sp.show.total, playing: sp.playing, tz: tz && tz.ms,
                  hutsNear: (route.stops || []).filter(function (s) { return s.kind === "hut"; }).map(function (s) { return s.id != null ? s.id : s.name.ja; }),
                  media: media.map(function (m) { return { name: m.name, placed: m.placed, d: m.d, exif: !!m.exif, clip: m.kind === "video" ? vstart(m) : null, scored: !!m.scores }; }), profile: !!(route.ele || route.profile),
                  time: $("fly-time").textContent, list: $("fly-list").textContent, energy: energy(), foods: foods.length,
