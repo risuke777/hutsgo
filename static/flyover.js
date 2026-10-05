@@ -235,6 +235,7 @@
           m.full = m.el.duration && isFinite(m.el.duration) ? m.el.duration : VIDEO_MAX_SEC;
           m.dur = Math.min(VIDEO_MAX_SEC, m.full);
           m.thumb = frameThumb(m.el, m.el.videoWidth, m.el.videoHeight);
+          if (m.el.videoWidth) keepFrame(m);
           m.aspect = m.el.videoWidth && m.el.videoHeight ? m.el.videoWidth / m.el.videoHeight : 9 / 16;
           m.q = frameScore(m.el, m.el.videoWidth, m.el.videoHeight);
           analyzeLater(m);
@@ -345,7 +346,15 @@
   function mediaReady(m) {
     if (!m) return false;
     if (m.kind !== "video") return !!m.img;
-    return m.el.readyState >= 2 && m.el.videoWidth > 0;
+    return vidLive(m) || !!m.lastCv;   // 頭出し中は、最後に描けた絵で代わりにする
+  }
+  function vidLive(m) { return m.el.readyState >= 2 && m.el.videoWidth > 0 && !m.el.seeking; }
+  function keepFrame(m) {   // 動画の今の絵を取っておく（次に頭出しで絵が無くなっても、これを出す）
+    var now = performance.now();
+    if (m.lastCv && now - (m.lastAt || 0) < 150) return;
+    var c = m.lastCv || (m.lastCv = document.createElement("canvas")), sc = Math.min(1, 720 / Math.max(m.el.videoWidth, m.el.videoHeight));
+    c.width = Math.round(m.el.videoWidth * sc); c.height = Math.round(m.el.videoHeight * sc);
+    try { c.getContext("2d").drawImage(m.el, 0, 0, c.width, c.height); m.lastAt = now; } catch (e) { /* まだ描けない */ }
   }
   function frameThumb(src, sw, sh) {   // 縦横比を保った小さな絵（一覧で縦か横かが分かる）
     try {
@@ -1133,11 +1142,20 @@
   function mediaOn(st) { return !!(st.m && (st.photoAlpha > 0 || st.split > 0)); }
   function syncVideo(st, t, playing) {   // 動画の場面では、動画の再生位置を場面の時間に合わせる
     media.forEach(function (m) { if (m.el && m !== st.m && !m.el.paused) m.el.pause(); });
-    if (!(st.m && st.m.kind === "video" && mediaOn(st))) return;
-    var el = st.m.el, want = Math.max(0, Math.min(vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0), (el.duration || 1) - 0.05));
+    if (!(st.m && st.m.kind === "video")) return;
+    var el = st.m.el;
+    // 撮影地点へ寄っている間は、動画を使う場面の頭で止めて待つ（場面に入ってから頭出しすると、絵が出るまで間が空く）
+    if (st.e.kind === "approach") {
+      if (!el.paused) el.pause();
+      if (!el.seeking && Math.abs(el.currentTime - vstart(st.m)) > 0.15) el.currentTime = vstart(st.m);
+      return;
+    }
+    if (!mediaOn(st)) return;
+    var want = Math.max(0, Math.min(vstart(st.m) + (st.e.kind === "hook" ? t : t - st.e.t0), (el.duration || 1) - 0.05));
     if (playing) {
-      if (el.paused) { el.currentTime = want; el.play().catch(function () {}); }
-      else if (Math.abs(el.currentTime - want) > 0.35) el.currentTime = want;
+      // 再生中は動画の速さに任せる。少しのずれで頭出しし直すと、そのたびに絵が消える（遅い端末ほど繰り返す）
+      if (el.paused) { if (Math.abs(el.currentTime - want) > 0.3 && !el.seeking) el.currentTime = want; el.play().catch(function () {}); }
+      else if (!el.seeking && Math.abs(el.currentTime - want) > 1.5) el.currentTime = want;
     } else {
       if (!el.paused) el.pause();
       if (Math.abs(el.currentTime - want) > 0.05) el.currentTime = want;
@@ -1174,10 +1192,16 @@
   }
   function tickSp(now) {
     if (!sp.playing) return;
-    var dt = sp.last == null ? 0 : Math.min(0.1, (now - sp.last) / 1000);
+    // 1 コマが重い端末でも実時間に合わせる（大きく飛ぶのは、画面を離れて戻ったときだけ）
+    var dt = sp.last == null ? 0 : Math.min(0.5, (now - sp.last) / 1000);
     sp.last = now;
     sp.t = Math.min(sp.show.total, sp.t + dt);
     var st = showState(sp.show, Math.min(sp.t, sp.show.total - 0.001));
+    // 動画の場面では、動画の再生位置を時計にする（動画とずれて頭出しし直すことがない）
+    if (st.e.kind === "media" && st.m && st.m.kind === "video" && !st.m.el.paused && vidLive(st.m)) {
+      var vt = st.e.t0 + st.m.el.currentTime - vstart(st.m);
+      if (vt > st.e.t0 && vt < st.e.t1 && Math.abs(vt - sp.t) < 1.5) { sp.t = vt; st = showState(sp.show, sp.t); }
+    }
     liveFrame(st, sp.t, true, sp.show, function () { return sp.playing; }).then(function () {
       updateTime();
       if (!sp.playing) return;
@@ -1546,7 +1570,11 @@
   // 写真・動画を枠に入れる（ゆっくり寄る）。枠より大幅に横長なもの（横で撮った写真を縦の画面へ）は、切り落とさずに全体を見せ、
   // 余白は同じ写真をぼかして埋める
   function drawMedia(m, x, y, w, h, alpha, k) {
-    var src = m.kind === "video" ? m.el : m.img, sw = m.kind === "video" ? m.el.videoWidth : m.img.width, sh = m.kind === "video" ? m.el.videoHeight : m.img.height;
+    var live = m.kind === "video" && vidLive(m);
+    if (live) keepFrame(m);
+    var src = m.kind === "video" ? (live ? m.el : m.lastCv) : m.img;
+    if (!src) return;
+    var sw = m.kind === "video" ? (live ? m.el.videoWidth : src.width) : m.img.width, sh = m.kind === "video" ? (live ? m.el.videoHeight : src.height) : m.img.height;
     if (!sw || !sh || alpha <= 0) return;
     ctx.save(); ctx.globalAlpha = alpha; ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     if (sw / sh > (w / h) * 1.35) {
