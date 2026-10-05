@@ -1089,7 +1089,8 @@
   function pinLL(m) { var q = m.gps && project(m.gps, route).off < 300 ? m.gps : at(route, m.d); return [q[1], q[0]]; }
   function insetCam(m) {
     var ll = pinLL(m), b = m.dir != null ? m.dir : bearing(railAt(m.d - 800), railAt(m.d + 1600));
-    return { center: ll, zoom: 14.1, pitch: 52, bearing: b, elevation: groundAt(ll[0], ll[1], m.d) };
+    // 周りの山に対してどの辺りかが分かるよう、引いて斜めに見る
+    return { center: ll, zoom: 12.6, pitch: 50, bearing: b, elevation: groundAt(ll[0], ll[1], m.d) };
   }
   function pinScreen(m) { var c = map.getCanvas(), q = map.project(pinLL(m)); return [q.x / (c.clientWidth || 360), q.y / (c.clientHeight || 640)]; }
   // 次の描画を待つ。その場で描かせる（map.redraw）と、画像タイルの読み込みの列が壊れて MapLibre の中でエラーになる（v5.24）。
@@ -1104,6 +1105,11 @@
     var cv = m.inset || (m.inset = document.createElement("canvas")); cv.width = cv.height = 300;
     cv.getContext("2d").drawImage(c, sx, sy, S, S, 0, 0, 300, 300);
     m.insetPin = [(ps[0] * c.width - sx) / S * 300, (ps[1] * c.height - sy) / S * 300]; m.insetSharp = !!sharp;
+    // 縁をぼかした版（真ん中ははっきり、外へ向かって透ける）
+    var f = m.insetF || (m.insetF = document.createElement("canvas")); f.width = f.height = 300;
+    var fx = f.getContext("2d"); fx.clearRect(0, 0, 300, 300); fx.drawImage(cv, 0, 0);
+    var g = fx.createRadialGradient(150, 150, 112, 150, 150, 150); g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    fx.globalCompositeOperation = "destination-in"; fx.fillStyle = g; fx.fillRect(0, 0, 300, 300); fx.globalCompositeOperation = "source-over";
   }
   function needInset(st) { return st.e.kind === "media" && st.m && !st.m.inset; }
   function mapNeeded(st) { return st.photoAlpha < 1 || !mediaReady(st.m); }
@@ -1713,12 +1719,14 @@
       ctx.fillStyle = gc; ctx.fillRect(0, top - 200, W, 200);
       if (tm != null) text(fmtClock(tm), 44, top - 66, 52, 800, "#fff", "left");
       text((nr && Math.abs(nr.d - mm.d) < 1500 ? nr.name.ja + "  " : "") + (em != null ? Math.round(em).toLocaleString() + "m" : ""), 46, top - 24, 28, 700, "#fff", "left");
-      if (mm.inset) {   // 右下: 撮影地点を中心にした小さな 3D 地図とピン（どこで撮ったかが分かる）
-        var S2 = 210, ix = W - S2 - 26, iy = top - S2 - 26, ia = Math.min(1, 1 - (st.fromTop || 0));
+      if (mm.insetF) {   // 右下: 撮影地点を中心にした 3D 地図とピン。縁はぼかして、写真の上に半透明で浮かせる
+        var S2 = 270, ix = W - S2 - 6, iy = top - S2 - 10, ia = 0.9 * Math.min(1, 1 - (st.fromTop || 0)), cx2 = ix + S2 / 2, cy2 = iy + S2 / 2;
         ctx.save(); ctx.globalAlpha = ia;
-        ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 18; rr(ix, iy, S2, S2, 22); ctx.fillStyle = "#fff"; ctx.fill(); ctx.shadowBlur = 0;
-        ctx.save(); rr(ix + 4, iy + 4, S2 - 8, S2 - 8, 19); ctx.clip(); ctx.drawImage(mm.inset, ix + 4, iy + 4, S2 - 8, S2 - 8); ctx.restore();
-        if (mm.insetPin) drawPin(ix + 4 + mm.insetPin[0] / 300 * (S2 - 8), iy + 4 + mm.insetPin[1] / 300 * (S2 - 8), 0.8, 1);
+        var sg = ctx.createRadialGradient(cx2, cy2 + 22, 20, cx2, cy2 + 22, S2 * 0.5);   // 下に落ちる影（浮いて見える）
+        sg.addColorStop(0, "rgba(0,0,0,.35)"); sg.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = sg; ctx.fillRect(ix - 20, iy, S2 + 40, S2 + 40);
+        ctx.drawImage(mm.insetF, ix, iy, S2, S2);
+        if (mm.insetPin) drawPin(ix + mm.insetPin[0] / 300 * S2, iy + mm.insetPin[1] / 300 * S2, 0.75, 1);
         ctx.restore();
       }
     } else if (st.outro) {
