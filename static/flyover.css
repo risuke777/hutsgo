@@ -198,3 +198,14 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 /* 読み込み中のカード */
 .fly-pending .fly-card{background:#dfe5e1;cursor:default}
 .fly-pending-name{position:absolute;left:5px;right:5px;bottom:5px;z-index:1;font-size:.62rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+
+/* 共有されたリンクで開いたとき（見る画面） */
+.fly-viewer{display:grid;gap:.6rem;justify-items:stretch;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:var(--shadow)}
+.fly-viewer[hidden]{display:none}
+.fly-viewer-lead{margin:0;font-weight:800;font-size:1.05rem}
+.fly-viewer .fly-hint{margin:0}
+.is-viewer .fly-controls,.is-viewer .fly-actions,.is-viewer #fly-empty{display:none !important}
+.fly-go-row{margin:.2rem 0 0;font-size:.86rem;color:var(--soft);text-align:center}
+.fly-go-row[hidden]{display:none}
+.fly-go-row a{color:var(--moss);font-weight:700}
+#fly-link-share{width:100%;white-space:normal}

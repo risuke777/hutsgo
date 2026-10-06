@@ -54,6 +54,16 @@
     </div>
   </section>
 
+  <p id="fly-go-row" class="fly-go-row" hidden>この山のルート・アクセス・山小屋 → <a id="fly-go2" href="#">HutsGo で見る</a></p>
+
+  <section id="fly-viewer" class="fly-viewer" hidden aria-label="共有された山行">
+    <p class="fly-viewer-lead">共有された山行を 3D で再生しています</p>
+    <a id="fly-go" class="fly-btn fly-btn-primary fly-btn-lg" href="#" hidden>この山へ行く</a>
+    <p id="fly-go-note" class="fly-hint"></p>
+    <a class="fly-btn fly-btn-lg" href="./">自分の山で動画を作る</a>
+    <p class="fly-hint">写真と動画は共有されません（作った人の端末にだけあります）。</p>
+  </section>
+
   <section class="fly-controls" aria-label="動画の中身">
     <div class="fly-step">
       <h2>写真・動画</h2>
@@ -155,6 +165,8 @@
         <button type="button" id="fly-card-share" class="fly-btn fly-btn-primary fly-btn-lg">画像を共有</button>
         <button type="button" id="fly-card-video" class="fly-btn fly-btn-lg">動画を作って共有</button>
       </div>
+      <button type="button" id="fly-link-share" class="fly-btn fly-btn-ghost">リンクで共有（3D の道だけ・写真は入らない）</button>
+      <p id="fly-link-note" class="fly-hint" aria-live="polite"></p>
       <p class="fly-hint">動画の最後の場面を 1 枚にした画像です（縦長なので、ストーリーにそのまま使えます）。</p>
       <button type="button" id="fly-sheet-close" class="fly-btn fly-btn-ghost">閉じる</button>
     </div>

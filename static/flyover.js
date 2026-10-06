@@ -1558,6 +1558,7 @@
   ];
   var foods = [];
   function climbStats() {   // 登り・下りの累積（3m 未満の上下はならす）
+    if (route.shareClimb) return route.shareClimb;
     var N = 400, last = null, up = 0, down = 0;
     for (var i = 0; i <= N; i++) {
       var e = eleAt(route.len * i / N); if (e == null) continue;
@@ -1681,7 +1682,9 @@
     var lo2 = lo + Math.atan2(Math.sin(b) * Math.sin(dr) * Math.cos(la), Math.cos(dr) - Math.sin(la) * Math.sin(la2));
     return [la2 / rad, lo2 / rad];
   }
+  function trueLen() { return route.shareLen || route.len; }   // 共有リンクで開いた道は、元の GPX の長さ
   function gainUp() {   // 登った高さの合計（3m 未満の上下はならす）
+    if (route.shareClimb) return route.shareClimb.up;
     var N = 400, last = null, up = 0;
     for (var i = 0; i <= N; i++) {
       var e = eleAt(route.len * i / N); if (e == null) continue;
@@ -1706,7 +1709,7 @@
     }
     var g = gainUp(), custom = ((($("fly-title") || {}).value) || "").trim();
     return { title: custom || (top ? top.name.ja : route.name.ja), sub: !custom && top ? top.elev.toLocaleString() + "m" : "", date: date,
-             stats: [fmtDist(route.len), g ? "↑" + g.toLocaleString() + "m" : null, days > 1 ? days + " days" : durText()].filter(Boolean) };
+             stats: [fmtDist(trueLen()), g ? "↑" + g.toLocaleString() + "m" : null, days > 1 ? days + " days" : durText()].filter(Boolean) };
   }
   function highlight() {
     var u = usedMedia();
@@ -2159,7 +2162,7 @@
       if (!sk) shade(0.35 * st.hud, 0);
       ctx.save(); ctx.globalAlpha = st.hud * (sk > 0 && !st.exit ? Math.min(1, (H - top) / (H / 3)) : 1);
       if (e2 != null) text(Math.round(e2).toLocaleString() + "m", 44, hy, big, 800, "#fff", "left");
-      text(fmtDist(st.d) + (t2 != null ? "  ·  " + fmtClock(t2) : ""), 46, hy + (sk > 0 ? 38 : 46), sk > 0 ? 24 : 28, 700, "#fff", "left");
+      text(fmtDist(st.d * trueLen() / route.len) + (t2 != null ? "  ·  " + fmtClock(t2) : ""), 46, hy + (sk > 0 ? 38 : 46), sk > 0 ? 24 : 28, 700, "#fff", "left");
       ctx.restore();
       // 断面は道を進む場面だけ（画面を分けている間は下の地図が狭いので消す）
       if (k === "fly" || k === "media" || k === "swoop") drawProfile(st.d, st.hud * (1 - sk));
@@ -2413,7 +2416,7 @@
     T("HutsGo", CW - 60, 92, 40, 800, "#fff", "right");
     if (info.date) T(info.date, 60, 92, 34, 700, "#fff");
     T(info.title + (info.sub ? "  " + info.sub : ""), 60, 1130, info.title.length > 9 ? 56 : 68, 800, "#fff");
-    var stats = [["距離", fmtDist(route.len)], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
+    var stats = [["距離", fmtDist(trueLen())], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
     stats.forEach(function (st2, j) { var px = 60 + j * 330; T(st2[0], px, 1210, 30, 600, "rgba(255,255,255,.8)"); T(st2[1], px, 1280, 54, 800, "#fff"); });
     return c;
   }
@@ -2428,6 +2431,81 @@
     var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
     track("flyover_card");
+  }
+  // ---- 道のリンク（サーバーに何も置かない）: 道・標高・時刻・題字を圧縮して、リンクの # の後ろに入れる。
+  // 開いた人のブラウザで 3D の飛行を作り直す。写真と動画は入らない（作った人の端末から出ない）
+  var VIEWER = false;
+  function b64url(bytes) { var t = ""; for (var i = 0; i < bytes.length; i++) t += String.fromCharCode(bytes[i]); return btoa(t).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function unb64url(str) { var t = atob(str.replace(/-/g, "+").replace(/_/g, "/")), b = new Uint8Array(t.length); for (var i = 0; i < t.length; i++) b[i] = t.charCodeAt(i); return b; }
+  async function squeeze(bytes, back) {
+    var S = back ? window.DecompressionStream : window.CompressionStream;
+    var st = new Blob([bytes]).stream().pipeThrough(new S("deflate-raw"));
+    return new Uint8Array(await new Response(st).arrayBuffer());
+  }
+  async function routeLink() {
+    var base = location.origin + location.pathname, custom = (($("fly-title") || {}).value || "").trim();
+    if (route.source !== "gpx") return base + "#route=" + route.id + (custom ? "&t=" + encodeURIComponent(custom) : "");
+    var N = Math.min(400, route.line.length), la = [], lo = [], el = [], ti = [], pa = 0, po = 0, pe = 0, pt = null;
+    for (var i = 0; i < N; i++) {   // 距離で等間隔に 400 点まで（距離と登りは元の値を別に入れる）
+      var d = route.len * i / (N - 1), q = at(route, d), a = Math.round(q[0] * 1e5), b = Math.round(q[1] * 1e5);
+      la.push(a - pa); lo.push(b - po); pa = a; po = b;
+      var e = eleAt(d); e = e == null ? null : Math.round(e); el.push(e == null ? null : e - pe); if (e != null) pe = e;
+      var tm = timeAt(d); tm = tm == null ? null : Math.round(tm / 1000); ti.push(tm == null ? null : pt == null ? tm : tm - pt); if (tm != null) pt = tm;
+    }
+    var cs = climbStats();
+    var payload = JSON.stringify({ v: 1, n: route.name.ja, t: custom || undefined, L: Math.round(trueLen()), U: Math.round(cs.up), D: Math.round(cs.down),
+                                   la: la, lo: lo, e: el, ti: route.times ? ti : undefined });
+    var raw = new TextEncoder().encode(payload), z = null;
+    if (window.CompressionStream) { try { z = await squeeze(raw); } catch (e2) { z = null; } }
+    return base + "#v=" + (z ? "z." + b64url(z) : "j." + b64url(raw));
+  }
+  async function readLink() {
+    var h = location.hash, mr = /[#&]route=([a-z0-9_]+)/.exec(h), mt = /[#&]t=([^&]*)/.exec(h), mv = /[#&]v=([zj])\.([A-Za-z0-9_-]+)/.exec(h);
+    if (mr) return { route: mr[1], title: mt ? decodeURIComponent(mt[1]) : "" };
+    if (!mv) return null;
+    var bytes = unb64url(mv[2]);
+    if (mv[1] === "z") bytes = await squeeze(bytes, true);
+    var P = JSON.parse(new TextDecoder().decode(bytes)), line = [], ele = [], times = [], a = 0, b = 0, e = 0, t = null;
+    for (var i = 0; i < P.la.length; i++) {
+      a += P.la[i]; b += P.lo[i]; line.push([a / 1e5, b / 1e5]);
+      if (P.e && P.e[i] != null) { e += P.e[i]; ele.push(e); } else ele.push(null);
+      if (P.ti && P.ti[i] != null) { t = t == null ? P.ti[i] : t + P.ti[i]; times.push(t * 1000); } else times.push(null);
+    }
+    return { title: P.t || "", gpx: { id: "shared", source: "gpx", name: { ja: P.n, en: P.n }, traced: true, line: line,
+      shareLen: P.L || null, shareClimb: P.U != null ? { up: P.U, down: P.D || 0 } : null,
+      ele: ele.some(function (x) { return x != null; }) ? ele : null, times: P.ti ? times : null, stops: [] } };
+  }
+  // 「この山へ行く」: HutsGo のルートページ（同じ小屋を 2 軒以上通るルート）、無ければ道沿いの小屋を行程ボードへ
+  function goLink() {
+    if (!route) return null;
+    if (route.source !== "gpx") return { href: BASE + "/trails/" + route.id + "/", name: route.name.ja };
+    var ids = (route.stops || []).filter(function (x) { return x.kind === "hut" && x.id; }).map(function (x) { return x.id; });
+    if (!ids.length) return null;
+    var best = null, score = 0;
+    routes.forEach(function (r) {
+      var sc = (r.stops || []).filter(function (x) { return ids.indexOf(x.id) >= 0; }).length;
+      if (sc > score) { score = sc; best = r; }
+    });
+    if (best && score >= 2) return { href: BASE + "/trails/" + best.id + "/", name: best.name.ja };
+    var h0 = (route.stops || []).filter(function (x) { return x.id === ids[0]; })[0];
+    return { href: BASE + "/plan/#add=" + ids[0], name: h0 && h0.name ? h0.name.ja : "" };
+  }
+  function showGo() {   // 作る画面・見る画面の両方に「この山へ行く」
+    var g = goLink();
+    ["fly-go", "fly-go2"].forEach(function (id) { var a = $(id); if (a && g) a.href = g.href; });
+    if ($("fly-go-row")) $("fly-go-row").hidden = !g || VIEWER;
+    if ($("fly-go")) $("fly-go").hidden = !g;
+    if ($("fly-go-note")) $("fly-go-note").textContent = g ? (g.name ? g.name + "の" : "") + "ルート・アクセス・山小屋とテント場・予約の受付開始日" : "";
+  }
+  async function shareLink() {
+    var url = await routeLink(), info = titleInfo(), text = info.title + " を 3D で #山ムービー";
+    track("flyover_link");
+    if (navigator.share) {
+      try { await navigator.share({ title: "山ムービー", text: text, url: url }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    try { await navigator.clipboard.writeText(url); $("fly-link-note").textContent = "リンクをコピーしました。"; }
+    catch (e) { $("fly-link-note").textContent = url; }
   }
   var cardCanvas = null;
   async function endFrame() {   // 動画の最後の場面を、読み込みを待って 1 枚描く（縦 9:16、ストーリーにそのまま使える）
@@ -2518,7 +2596,7 @@
     T("HutsGo", CW - 56, 92, 40, 800, "#fff", "right");
     if (info.date) T(info.date, 56, 92, 34, 700, "#fff");
     T(info.title + (info.sub ? "  " + info.sub : ""), 56, 1110, info.title.length > 9 ? 56 : 70, 800, "#fff");
-    var stats = [["距離", fmtDist(route.len)], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
+    var stats = [["距離", fmtDist(trueLen())], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
     stats.forEach(function (st2, j) { var px2 = 56 + j * 330; T(st2[0], px2, 1196, 30, 600, "rgba(255,255,255,.8)"); T(st2[1], px2, 1268, 56, 800, "#fff"); });
     if (paceOn()) {   // ペースの凡例
       var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
@@ -2550,7 +2628,7 @@
     T("HutsGo", CW - 56, 92, 40, 800, "#fff", "right");
     if (info.date) T(info.date, 56, 92, 34, 700, "#fff");
     T(info.title + (info.sub ? "  " + info.sub : ""), 56, 1110, info.title.length > 9 ? 56 : 70, 800, "#fff");
-    var stats = [["距離", fmtDist(route.len)], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
+    var stats = [["距離", fmtDist(trueLen())], ["登り", g3 ? g3.toLocaleString() + " m" : "—"], ["行動時間", mh ? Math.floor(mh.h) + ":" + String(Math.round(mh.h % 1 * 60)).padStart(2, "0") : "—"]];
     stats.forEach(function (st2, j) { var px2 = 56 + j * 330; T(st2[0], px2, 1196, 30, 600, "rgba(255,255,255,.8)"); T(st2[1], px2, 1268, 56, 800, "#fff"); });
     if (paceOn()) {   // ペースの凡例
       var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
@@ -2594,10 +2672,11 @@
     refreshShow();
     $("fly-empty").hidden = media.length > 0;
     $("fly-pace-row").hidden = !route.times;
+    showGo();
     $("fly-title").placeholder = titleInfo().title;   // 空欄なら自動（いちばん高い山の名前）
     media.forEach(function (m) { m.inset = null; m.insetSharp = false; });
     status(route.source === "gpx"
-      ? "GPX を読み込みました（" + fmtDist(route.len) + (route.times ? "・時刻あり" : "・時刻なし") + (route.ele ? "・標高あり" : "") + "）。"
+      ? "GPX を読み込みました（" + fmtDist(trueLen()) + (route.times ? "・時刻あり" : "・時刻なし") + (route.ele ? "・標高あり" : "") + "）。"
       : "");
   }
   async function boot() {
@@ -2609,11 +2688,21 @@
       var o = document.createElement("option"); o.value = r.id;
       o.textContent = r.name.ja + (r.traced ? "" : "（線は目安）"); sel.appendChild(o);
     });
-    var want = Q.get("route") || "omote_ginza";
+    var link = null;
+    try { link = await readLink(); } catch (e) { link = null; }
+    var want = (link && link.route) || Q.get("route") || "omote_ginza";
     sel.value = routes.some(function (r) { return r.id === want; }) ? want : routes[0].id;
     status("地図を準備しています…");
     await initMap();
-    await useRoute(routes.find(function (r) { return r.id === sel.value; }));
+    if (link) {   // 共有されたリンク: 見る画面にして、そのまま流す
+      VIEWER = true; document.body.classList.add("is-viewer"); $("fly-viewer").hidden = false;
+      if (link.title) $("fly-title").value = link.title;
+      await useRoute(link.gpx || routes.find(function (r) { return r.id === sel.value; }));
+      track("flyover_view");
+      setTimeout(function () { sp.t = 0; playSp(); }, 600);
+    } else {
+      await useRoute(routes.find(function (r) { return r.id === sel.value; }));
+    }
     sel.addEventListener("change", function () { $("fly-gpx").value = ""; useRoute(routes.find(function (r) { return r.id === sel.value; })); });
     $("fly-gpx").addEventListener("change", async function (e) {
       var f = e.target.files[0]; if (!f) return;
@@ -2631,6 +2720,8 @@
     $("fly-cancel").addEventListener("click", function () { exportCancel = true; });
     $("fly-share").addEventListener("click", shareVideo);
     $("fly-share-open").addEventListener("click", openShareSheet);
+    $("fly-link-share").addEventListener("click", shareLink);
+    ["fly-go", "fly-go2"].forEach(function (id) { $(id).addEventListener("click", function () { track("flyover_go"); }); });
     $("fly-card-share").addEventListener("click", shareCard);
     $("fly-card-video").addEventListener("click", function () { $("fly-sheet").hidden = true; exportVideo(); });
     $("fly-sheet-close").addEventListener("click", function () { $("fly-sheet").hidden = true; });
@@ -2705,7 +2796,7 @@
       media.forEach(function (x) { x.star = false; }); m.star = on; renderList(); sp.show = buildShow(); sp.t = posterT(); refreshShow();
     });
     window.HutsGoFlyover = {
-      map: map, play: playSp, pause: pauseSp, seekT: function (t) { pauseSp(); sp.t = t; renderAt(t, true); },
+      map: map, link: routeLink, go: goLink, play: playSp, pause: pauseSp, seekT: function (t) { pauseSp(); sp.t = t; renderAt(t, true); },
       // 試験用: 道の d の地点を指定の傾きで狙い、遮られたまま残ったかを返す
       sun: function (ms, lat, lon) { return sunPos(ms, lat, lon); },
       timeline: function () { var sh = buildShow(); return { total: sh.total, kinds: sh.ev.map(function (e) { return e.kind; }), ts: sh.ev.map(function (e) { return [e.t0, e.t1]; }), info: sh.info, chosen: sh.chosen.length }; },
