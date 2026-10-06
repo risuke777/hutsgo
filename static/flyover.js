@@ -266,7 +266,7 @@
         : imgs.length ? "置きました（位置情報あり " + withGps + "/" + imgs.length + " 枚）。" : "置きました。");
     var nf = media.filter(function (m) { return m.noFrame && !m.frameOK && !m.dframes; });
     if (nf.length) status($("fly-status").textContent + " " + nf.map(function (m) { return m.name; }).join("、")
-      + " は、再生中の絵を取り出せない形式（HDR・HEVC など）のため、ファイルから絵を作っています。");
+      + " は、この端末ではそのまま絵を取り出せない形式（HDR・HEVC など）のため、変換しています。終わるまでこの画面のままお待ちください。");
     if (bad.length) status($("fly-status").textContent + " 使えなかったもの: " + bad.map(function (m) { return m.name + "（" + m.err + "）"; }).join("、"));
   }
   // 動画の「いちばん良い場面」: 0.5 秒ごとに小さく取り出し、ピント（輪郭の強さ）・明るさ・色・動きで点数を付ける。
@@ -391,61 +391,200 @@
       samples: trak.samples.map(function (x) { return { cts: x.cts / x.timescale, dts: x.dts / x.timescale, dur: x.duration / x.timescale, key: x.is_sync, off: x.offset, size: x.size }; }) };
     return m.demux;
   }
-  async function decodeClip(m, start, len) {   // start から len 秒を、毎秒 12 コマの絵にする（長い辺 640px、回転も直す）
+  // ---- 絵の作り方は 3 段: ①デコーダーの絵をそのまま描く ②黒くなる端末（HDR など）は、絵の生データを受け取って自分で色に直す
+  // ③デコーダーが読めない形式は、ffmpeg（WebAssembly、約 30MB を初回だけ読む）で使う場面だけ変換する
+  var YUVK = { bt709: [0.2126, 0.0722], bt2020: [0.2627, 0.0593], "bt2020-ncl": [0.2627, 0.0593], bt470bg: [0.299, 0.114], smpte170m: [0.299, 0.114] };
+  function pqToSdr(v) {   // HDR（PQ）の信号を、ふつうの画面の明るさへ大まかに直す
+    var m1 = 0.1593017578125, m2 = 78.84375, c1 = 0.8359375, c2 = 18.8515625, c3 = 18.6875;
+    var vp = Math.pow(Math.max(v, 0), 1 / m2), L = Math.pow(Math.max(vp - c1, 0) / (c2 - c3 * vp), 1 / m1) * 10000 / 203;
+    return Math.pow(L / (1 + L) * 1.6, 1 / 2.2);
+  }
+  async function copyFrame(fr, dw, dh) {   // ②: 絵の生データ（YUV / RGBA）から、dw×dh の小さな絵を作る
+    var vr = fr.visibleRect || { x: 0, y: 0, width: fr.codedWidth, height: fr.codedHeight }, vw = vr.width, vh = vr.height;
+    var fmt = fr.format, data, layout;
+    if (!fmt || !/^(I420|I420P10|I420P12|NV12|RGBA|RGBX|BGRA|BGRX)$/.test(fmt)) {
+      data = new Uint8Array(vw * vh * 4);
+      await fr.copyTo(data, { format: "RGBA", colorSpace: "srgb" });   // 変換はブラウザに任せる
+      fmt = "RGBA"; layout = [{ offset: 0, stride: vw * 4 }]; vr = { x: 0, y: 0, width: vw, height: vh };
+    } else {
+      data = new Uint8Array(fr.allocationSize()); layout = await fr.copyTo(data);
+    }
+    var img = new ImageData(dw, dh), o = img.data, dv = new DataView(data.buffer);
+    var cs = fr.colorSpace || {}, K = YUVK[cs.matrix] || (vh >= 720 ? YUVK.bt709 : YUVK.bt470bg), full = !!cs.fullRange, pq = cs.transfer === "pq";
+    var bits = /P12/.test(fmt) ? 12 : /P10/.test(fmt) ? 10 : 8, mx = (1 << bits) - 1, s8 = mx / 255, wide = bits > 8;
+    var rd = function (pl, x, y) { var L = layout[pl], i = L.offset + y * L.stride + x * (wide ? 2 : 1); return wide ? dv.getUint16(i, true) : data[i]; };
+    var Kr = K[0], Kb = K[1], Kg = 1 - Kr - Kb;
+    for (var oy = 0; oy < dh; oy++) {
+      var sy = vr.y + Math.min(vh - 1, Math.floor((oy + 0.5) * vh / dh));
+      for (var ox = 0; ox < dw; ox++) {
+        var sx = vr.x + Math.min(vw - 1, Math.floor((ox + 0.5) * vw / dw)), q = (oy * dw + ox) * 4, r, g, b;
+        if (fmt === "RGBA" || fmt === "RGBX" || fmt === "BGRA" || fmt === "BGRX") {
+          var i0 = layout[0].offset + sy * layout[0].stride + sx * 4, bgr = fmt[0] === "B";
+          o[q] = data[i0 + (bgr ? 2 : 0)]; o[q + 1] = data[i0 + 1]; o[q + 2] = data[i0 + (bgr ? 0 : 2)]; o[q + 3] = 255;
+          continue;
+        }
+        var Y = rd(0, sx, sy), cx = sx >> 1, cy = sy >> 1, U, V;
+        if (fmt === "NV12") { var Ln = layout[1], ii = Ln.offset + cy * Ln.stride + cx * 2; U = data[ii]; V = data[ii + 1]; }
+        else { U = rd(1, cx, cy); V = rd(2, cx, cy); }
+        var y = full ? Y / mx : (Y - 16 * s8) / (219 * s8), cb = full ? U / mx - 0.5 : (U - 128 * s8) / (224 * s8), cr = full ? V / mx - 0.5 : (V - 128 * s8) / (224 * s8);
+        r = y + 2 * (1 - Kr) * cr; b = y + 2 * (1 - Kb) * cb; g = (y - Kr * r - Kb * b) / Kg;
+        if (pq) { r = pqToSdr(r); g = pqToSdr(g); b = pqToSdr(b); }
+        o[q] = Math.max(0, Math.min(255, r * 255)); o[q + 1] = Math.max(0, Math.min(255, g * 255)); o[q + 2] = Math.max(0, Math.min(255, b * 255)); o[q + 3] = 255;
+      }
+    }
+    var c = document.createElement("canvas"); c.width = dw; c.height = dh; c.getContext("2d").putImageData(img, 0, 0);
+    return c;
+  }
+  function rotated(src, rot) {   // 縦で撮った動画の向きを直す
+    if (!rot) return src;
+    var c = document.createElement("canvas"); c.width = rot % 180 ? src.height : src.width; c.height = rot % 180 ? src.width : src.height;
+    var x = c.getContext("2d"); x.translate(c.width / 2, c.height / 2); x.rotate(rot * rad); x.drawImage(src, -src.width / 2, -src.height / 2);
+    return c;
+  }
+  async function decodeClip(m, start, len, prog) {   // ①②: start から len 秒を、毎秒 12 コマの絵にする（長い辺 640px、回転も直す）
     var D = await demux(m);
     if (!window.VideoDecoder) throw new Error("このブラウザは動画の分解に対応していません");
+    if (Q.get("decodeff") === "1") throw new Error("試験: ffmpeg で変換");
     var cfg = { codec: D.codec, codedWidth: D.w, codedHeight: D.h };
     if (D.desc) cfg.description = D.desc;
     var sup = await VideoDecoder.isConfigSupported(cfg);
-    if (!sup.supported) throw new Error("この端末は " + D.codec + " を読めません");
+    if (!sup.supported) throw new Error("この端末のデコーダーは " + D.codec + " を読めません");
     var S = D.samples, i0 = 0;
     for (var i = 0; i < S.length; i++) if (S[i].key && S[i].cts <= start + 0.001) i0 = i;
     var end = start + len + 0.1, frames = [], pend = [], last = -1, rot = D.rot, sc = 640 / Math.max(D.w, D.h);
-    var ow = Math.round((rot % 180 ? D.h : D.w) * sc), oh = Math.round((rot % 180 ? D.w : D.h) * sc), failed = null;
+    var dw = Math.round(D.w * sc), dh = Math.round(D.h * sc), failed = null, mode = Q.get("decodecopy") === "1" ? "copy" : null;
     var dec = new VideoDecoder({
       output: function (fr) {
         var t = fr.timestamp / 1e6;
         if (t < start - 0.05 || t > end || t - last < 1 / 12 - 0.005) { fr.close(); return; }
         last = t;
-        var c = document.createElement("canvas"); c.width = ow; c.height = oh;
-        var x = c.getContext("2d"); x.translate(ow / 2, oh / 2); x.rotate(rot * rad);
-        var dw = (rot % 180 ? oh : ow), dh = (rot % 180 ? ow : oh);
-        try { x.drawImage(fr, -dw / 2, -dh / 2, dw, dh); } catch (e) { /* 描けない絵は飛ばす */ }
-        fr.close();
-        frames.push({ t: t - start, cv: c });
+        if (mode !== "copy") {
+          var c = document.createElement("canvas"); c.width = dw; c.height = dh;
+          try { c.getContext("2d").drawImage(fr, 0, 0, dw, dh); } catch (e) { /* 描けない */ }
+          if (mode === null) mode = hasPixels(c) ? "draw" : "copy";   // 最初の 1 枚で決める
+          if (mode === "draw") { fr.close(); frames.push({ t: t - start, cv: rotated(c, rot) }); return; }
+        }
+        pend.push(copyFrame(fr, dw, dh).then(function (cv) { frames.push({ t: t - start, cv: rotated(cv, rot) }); })
+          .catch(function (e) { failed = failed || e; }).then(function () { fr.close(); }));
       },
       error: function (e) { failed = e; }
     });
     dec.configure(cfg);
-    for (var j = i0; j < S.length && S[j].dts <= end + 0.5; j++) {
+    var jEnd = S.length; for (var k = i0; k < S.length; k++) if (S[k].dts > end + 0.5) { jEnd = k; break; }
+    for (var j = i0; j < jEnd; j++) {
       if (failed) break;
       var data = await m.file.slice(S[j].off, S[j].off + S[j].size).arrayBuffer();
       dec.decode(new EncodedVideoChunk({ type: S[j].key ? "key" : "delta", timestamp: Math.round(S[j].cts * 1e6), duration: Math.round(S[j].dur * 1e6), data: data }));
       while (dec.decodeQueueSize > 6) await new Promise(function (ok) { setTimeout(ok, 5); });
+      if (prog) prog((j - i0 + 1) / (jEnd - i0));
     }
     if (!failed) await dec.flush().catch(function (e) { failed = e; });
+    await Promise.all(pend);
     try { dec.close(); } catch (e) { /* 閉じ済み */ }
     if (failed && !frames.length) throw failed;
     frames.sort(function (a, b) { return a.t - b.t; });
-    if (!frames.length || !hasPixels(frames[Math.floor(frames.length / 2)].cv)) throw new Error("分解しても絵が黒いままでした");
+    if (!frames.length || !hasPixels(frames[Math.floor(frames.length / 2)].cv)) throw new Error("デコードしても絵が黒いままでした");
     return frames;
+  }
+  // ③ ffmpeg（WebAssembly）で使う場面だけ JPEG のコマにする。部品は初めて要るときだけ読む（約 30MB）
+  var ffP = null, FFV = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/", FFC = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/";   // 働き手（worker）はモジュールとして動くので、本体も ESM 版
+  function loadScript(src) { return new Promise(function (ok, ng) { var sc = document.createElement("script"); sc.src = src; sc.onload = ok; sc.onerror = function () { ng(new Error("部品を読み込めませんでした")); }; document.head.appendChild(sc); }); }
+  async function blobUrl(url, type, onBytes) {   // 読み込みの進み具合を出しながら、同じ場所のファイルとして使えるようにする
+    var res = await fetch(url); if (!res.ok) throw new Error("部品を読み込めませんでした");
+    var total = Number(res.headers.get("content-length")) || 0, rdr = res.body && res.body.getReader(), parts = [], got = 0;
+    if (!rdr) return URL.createObjectURL(new Blob([await res.arrayBuffer()], { type: type }));
+    for (;;) { var r = await rdr.read(); if (r.done) break; parts.push(r.value); got += r.value.length; if (onBytes) onBytes(got, total); }
+    return URL.createObjectURL(new Blob(parts, { type: type }));
+  }
+  function loadFFmpeg(onMsg) {
+    if (ffP) return ffP;
+    ffP = (async function () {
+      if (!window.FFmpegWASM) await loadScript(FFV + "ffmpeg.js");
+      var ff = new FFmpegWASM.FFmpeg();
+      var mb = function (n) { return (n / 1048576).toFixed(0); };
+      await ff.load({
+        classWorkerURL: await blobUrl(FFV + "814.ffmpeg.js", "text/javascript"),
+        coreURL: await blobUrl(FFC + "ffmpeg-core.js", "text/javascript"),
+        wasmURL: await blobUrl(FFC + "ffmpeg-core.wasm", "application/wasm", function (g, t) { if (onMsg) onMsg("変換の部品を読み込み中 " + mb(g) + (t ? "/" + mb(t) : "") + "MB"); })
+      });
+      return ff;
+    })();
+    ffP.catch(function () { ffP = null; });
+    return ffP;
+  }
+  var ffQueue = Promise.resolve(), ffSeq = 0;
+  function ffmpegClip(m, start, len, prog, onMsg) {   // ffmpeg は 1 つずつ（同時に動かすとファイルがぶつかる）
+    if (onMsg) onMsg("変換の順番待ち");
+    var job = ffQueue.then(function () { return ffmpegClip1(m, start, len, prog, onMsg); });
+    ffQueue = job.catch(function () {});
+    return job;
+  }
+  async function ffmpegClip1(m, start, len, prog, onMsg) {
+    if (m.file.size > 400 * 1048576) throw new Error("動画が大きすぎて変換できません（400MB まで）");
+    var tag = "j" + (++ffSeq) + "_";
+    var ff = await loadFFmpeg(onMsg);
+    if (onMsg) onMsg("変換中");
+    var onP = function (e) { if (prog) prog(Math.max(0, Math.min(1, e.progress || 0))); };
+    ff.on("progress", onP);
+    try {
+      await ff.writeFile(tag + "in", new Uint8Array(await m.file.arrayBuffer()));
+      // 縦横の長い辺を 640px に。回転は ffmpeg が直す。HDR は色が浅くなるが絵は出る
+      await ff.exec(["-ss", String(Math.max(0, start)), "-i", tag + "in", "-t", String(len + 0.2), "-an",
+        "-vf", "fps=12,scale='if(gt(iw,ih),640,-2)':'if(gt(iw,ih),-2,640)'", "-q:v", "4", tag + "f%03d.jpg"]);
+      var names = (await ff.listDir("/")).map(function (e) { return e.name; }).filter(function (n) { return n.indexOf(tag + "f") === 0 && /\.jpg$/.test(n); }).sort();
+      var frames = [];
+      for (var i = 0; i < names.length; i++) {
+        var bmp = await createImageBitmap(new Blob([await ff.readFile(names[i])], { type: "image/jpeg" }));
+        var c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; c.getContext("2d").drawImage(bmp, 0, 0); bmp.close();
+        frames.push({ t: i / 12, cv: c });
+        await ff.deleteFile(names[i]);
+      }
+      if (!frames.length || !hasPixels(frames[Math.floor(frames.length / 2)].cv)) throw new Error("変換しても絵が出ませんでした");
+      return frames;
+    } finally {
+      ff.off("progress", onP);
+      try { await ff.deleteFile(tag + "in"); } catch (e) { /* 無い */ }
+    }
   }
   var decoding = {};
   function needDecode(m) { return m.kind === "video" && m.noFrame && !m.frameOK && !m.decodeErr; }
+  function setBusy(m, msg) {   // 一覧のカードに「変換中」を出す（一覧を作り直さずに文字だけ変える）
+    m.busyMsg = msg;
+    var i = media.indexOf(m), li = i >= 0 && document.querySelectorAll("#fly-list > li:not(.fly-edit)")[i];
+    if (!li) return;
+    var b = li.querySelector(".fly-busy");
+    if (!msg) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("span"); b.className = "fly-busy"; li.querySelector(".fly-card").appendChild(b); }
+    b.textContent = msg;
+  }
+  function busyStatus() {   // 下の案内: 変換している動画があれば、そう書く
+    var list = media.filter(function (m) { return m.busyMsg; });
+    if (list.length) status("動画を変換しています（" + list.map(function (m) { return m.name + "・" + m.busyMsg; }).join("、") + "）。この画面のままお待ちください。");
+  }
   function queueDecode(m) {   // 使う場面が決まったら（変わったら）作り直す
     if (!needDecode(m) || !m.clipLen) return null;
-    var st0 = vstart(m), key = st0.toFixed(2) + ":" + m.clipLen.toFixed(2);
+    var st0 = vstart(m), len = Math.max(m.clipLen, 1.5), key = st0.toFixed(2) + ":" + m.clipLen.toFixed(2);
     if (m.dkey === key) return null;
     if (decoding[m.url] && decoding[m.url].key === key) return decoding[m.url].p;
-    var pr = decodeClip(m, st0, Math.max(m.clipLen, 1.5)).then(function (fr) {
+    var pct = function (lab) { return function (f) { setBusy(m, lab + " " + Math.round(f * 100) + "%"); busyStatus(); }; };
+    setBusy(m, "変換中"); busyStatus();
+    var pr = decodeClip(m, st0, len, pct("変換中")).catch(function (e1) {
+      m.wcErr = e1 && e1.message || String(e1);
+      setBusy(m, "変換の準備中"); busyStatus();
+      return ffmpegClip(m, st0, len, pct("変換中"), function (msg) { setBusy(m, msg); busyStatus(); });
+    }).then(function (fr) {
       m.dframes = fr; m.dkey = key; m.dstart = st0;
       m.thumb = frameThumb(fr[0].cv, fr[0].cv.width, fr[0].cv.height); m.pinCv = null;
       if (!m.lastCv) { m.lastCv = fr[0].cv; }
+      setBusy(m, null);
+      status(m.name + " を変換しました。");
+      busyStatus();
       renderList(); if (!sp.playing && !busy) renderAt(sp.t, false);
     }).catch(function (e) {
+      setBusy(m, null);
       m.decodeErr = (e && e.message || String(e));
       var D = m.demux;
-      status(m.name + " は、この端末では絵にできませんでした（" + m.decodeErr + (D ? "・" + D.codec + "・" + D.w + "×" + D.h : "") + "）。この動画は使わずに作ります。");
+      status(m.name + " は、この端末では変換できませんでした（" + m.decodeErr + (m.wcErr ? "／" + m.wcErr : "") + (D ? "・" + D.codec + "・" + D.w + "×" + D.h : "") + "）。この動画は使わずに作ります。");
       renderList(); if (sp.show) refreshShow();
     }).then(function () { delete decoding[m.url]; });
     decoding[m.url] = { key: key, p: pr };
@@ -688,6 +827,7 @@
       var ico = document.createElement("span"); ico.className = "fly-ico"; ico.setAttribute("aria-hidden", "true");
       ico.innerHTML = m.kind === "video" ? ICON_CUT : ICON_EDIT; card.appendChild(ico);
       if (m.kind === "video") { var du = document.createElement("span"); du.className = "fly-dur"; du.textContent = "▶ " + fmtT(m.full || m.dur || 0); card.appendChild(du); }
+      if (m.busyMsg) { var bz = document.createElement("span"); bz.className = "fly-busy"; bz.textContent = m.busyMsg; card.appendChild(bz); }
       if (m.kind === "video" && m.decodeErr && !m.frameOK) { li.className += " is-noframe is-skip"; badge.textContent = "使えない"; badge.className = "fly-badge is-off"; card.title = m.decodeErr; }
       li.appendChild(card);
       var star = document.createElement("button");
@@ -1996,7 +2136,7 @@
   function exportMode() { var r = document.querySelector('input[name="fly-mode"]:checked'); return r ? r.value : "fast"; }
   async function prepareTiles(show, fast) {
     var waits = show.chosen.map(queueDecode).concat(Object.keys(decoding).map(function (k) { return decoding[k].p; })).filter(Boolean);
-    if (waits.length) { progress("動画を用意しています", 0, null); await Promise.all(waits); }
+    if (waits.length) { progress("動画を変換しています（終わったら続けて作ります）", 0, null); await Promise.all(waits); }
     queue = [];
     var ph = REGION === "jp" ? "photo" : "eox";
     [2, 3, 4, 5, 6, 7, 8, 9].forEach(function (z) { want("eox", z, 0, 0, 1); });   // 地球から寄る場面

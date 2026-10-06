@@ -189,3 +189,8 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .nb{display:inline-block}
 .fly-energy summary{flex-wrap:nowrap;white-space:nowrap}
 .fly-grid li.is-noframe .fly-card{outline:2px dashed rgba(180,68,44,.9);outline-offset:-2px}
+
+/* 動画を変換している間 */
+.fly-busy{position:absolute;inset:0;display:grid;place-items:center;padding:.3rem;text-align:center;font-size:.72rem;font-weight:800;line-height:1.3;color:#fff;background:rgba(22,36,29,.72)}
+.fly-busy::before{content:"";display:block;width:22px;height:22px;margin:0 auto .3rem;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:fly-spin .8s linear infinite}
+@media (prefers-reduced-motion:reduce){.fly-busy::before{animation:none}}
