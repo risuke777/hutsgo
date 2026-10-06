@@ -495,15 +495,20 @@ INSERT INTO operators (id, name_ja, website) VALUES
   ('minamialps_city', '南アルプス市営（芦安ファンクラブ・南アルプスゲートウェイ）', 'https://www.minamialps-yoyaku.jp/'),
   ('yamanashi_kotsu', '山梨交通', 'https://ykbus.jp/hirogawarasansou/');
 
+-- 座標は 2026-10-07 に運営者の GPS ログ（YAMAP、2023-09-30 の北岳山行）で直した。以前の値は北岳の南西に置かれていて、
+-- 広河原は約 4km、白根御池小屋は約 1.9km、肩の小屋は約 600m ずれていた（肩の小屋は山頂とほぼ同じ点だった）。
+-- 広河原の登山口＝ログの始点（標高はログの値）。白根御池小屋＝御池のそばで休んだ点。肩の小屋＝標高 3,000m 付近で休んだ点。
+-- 広河原山荘は登山口と同じ点に置いた（山荘の建物の位置そのものは未確認。登山口のすぐそば）。
+-- 北岳山荘はログに無いので、国土地理院の地図の注記「北岳山荘」に最も近い登山道上の点（注記から 137m）に置いた（以前の値は約 700m 東で道から外れていた）。建物の位置そのものは未確認。
 INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
 ('hirogawara_sanso','広河原山荘','Hirogawara Sanso','lodge','minami_alps','kitadake','yamanashi_kotsu',
- 35.658889,138.232222,NULL,NULL,'https://ykbus.jp/hirogawarasansou/','https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
+ 35.697347,138.270482,NULL,NULL,'https://ykbus.jp/hirogawarasansou/','https://ykbus.jp/hirogawarasansou/','2026-09-23','reported'),
 ('shirane_oike','白根御池小屋','Shirane-Oike Goya','mountain_hut','minami_alps','kitadake','minamialps_city',
- 35.669722,138.245556,2236,'official','https://shiraneoike.ashiyasu.com/','https://shiraneoike.ashiyasu.com/','2026-09-23','reported'),
+ 35.685576,138.252411,2236,'official','https://shiraneoike.ashiyasu.com/','https://shiraneoike.ashiyasu.com/','2026-09-23','reported'),
 ('kitadake_kata','北岳肩の小屋','Kitadake Kata-no-Koya','mountain_hut','minami_alps','kitadake',NULL,
- 35.674722,138.236944,3000,'official','https://minami-alpskankou.jp/?page_id=5666','https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
+ 35.679711,138.237757,3000,'official','https://minami-alpskankou.jp/?page_id=5666','https://minami-alpskankou.jp/?page_id=5666','2026-09-23','reported'),
 ('kitadake_sanso','北岳山荘','Kitadake Sanso','mountain_hut','minami_alps','kitadake','minamialps_city',
- 35.665000,138.239722,2900,'official','https://minami-alpskankou.jp/?page_id=5611','https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
+ 35.664050,138.231837,2900,'official','https://minami-alpskankou.jp/?page_id=5611','https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
 
 INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES
 ('hirogawara_sanso',2026,'open','2026-06-26','2026-11-03',NULL,1,'https://www.minamialps-yoyaku.jp/','090-2677-0828',
@@ -540,7 +545,7 @@ INSERT INTO hut_facilities (hut_id,water_available,shower,drying_room,source_url
 ('kitadake_sanso','free',NULL,NULL,'https://minami-alpskankou.jp/?page_id=5611','2026-09-23','reported');
 
 INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
-('hirogawara','広河原','Hirogawara',35.658889,138.232222,NULL,0,
+('hirogawara','広河原','Hirogawara',35.697347,138.270482,1527,0,
  'マイカー規制。芦安・奈良田からの乗合バス／タクシーで入る',
  'Closed to private cars: come by bus or share taxi from Ashiyasu or Naradagawa.');
 
@@ -749,3 +754,22 @@ INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,sourc
 ('karasawa','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',13,'涸沢（上高地）',5,'B','same','県の表は上高地からの往復','unverified'),
 ('okuhotaka','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',4,'奥穂高岳（上高地）＜涸沢＞',7,'C','same','県の表は上高地からの往復','unverified'),
 ('nishiho_kamikochi','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',33,'西穂高岳（上高地）',5,'D','same','県の表は上高地からの往復','unverified');
+
+-- ---------------------------------------------------------------
+-- 富士山（吉田ルート）。2026-10-07 追加。C4（対象地域）の変更記録は CONCEPT.md。
+-- 道の線と五合目の座標・標高は運営者の GPS ログ（YAMAP、2025-07-12〜13。五合目から八合目付近の山小屋に泊まり、
+-- 山頂でお鉢めぐりをして下山道で五合目へ）。泊まった山小屋は八合目付近（ログの標高で約 3,230m）だが、名前は未確認なので
+-- 小屋の行は作らない（A1）。剣ヶ峰の標高は国土地理院の値。交通・駐車場は未確認なので入れない。
+-- ---------------------------------------------------------------
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('fuji_subaru5','富士スバルライン五合目','Fuji Subaru Line 5th Station',35.394044,138.733504,2303,NULL,NULL,NULL);
+
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('fuji_yoshida','富士山（吉田ルート・五合目から）','Mount Fuji by the Yoshida trail',1,NULL,
+ '富士スバルライン五合目から吉田ルートを登り、八合目付近の山小屋に泊まる。翌日に山頂へ登り、お鉢めぐりで剣ヶ峰（3,776m）を回って、下山道で五合目へ戻る',
+ 'From the Fuji Subaru Line 5th Station up the Yoshida trail to a hut around the 8th station, then on to the summit, round the crater rim past Kengamine (3,776 m), and back down the descent trail.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('fuji_yoshida', 1,NULL,'fuji_subaru5',  NULL,0,NULL,NULL,NULL),
+('fuji_yoshida', 2,NULL,NULL,            NULL,0,'富士山（剣ヶ峰）','Mount Fuji (Kengamine)',3776),
+('fuji_yoshida', 3,NULL,'fuji_subaru5',  NULL,0,NULL,NULL,NULL);
