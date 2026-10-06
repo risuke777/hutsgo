@@ -194,3 +194,7 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-busy{position:absolute;inset:0;display:grid;place-items:center;padding:.3rem;text-align:center;font-size:.72rem;font-weight:800;line-height:1.3;color:#fff;background:rgba(22,36,29,.72)}
 .fly-busy::before{content:"";display:block;width:22px;height:22px;margin:0 auto .3rem;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:fly-spin .8s linear infinite}
 @media (prefers-reduced-motion:reduce){.fly-busy::before{animation:none}}
+
+/* 読み込み中のカード */
+.fly-pending .fly-card{background:#dfe5e1;cursor:default}
+.fly-pending-name{position:absolute;left:5px;right:5px;bottom:5px;z-index:1;font-size:.62rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
