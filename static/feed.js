@@ -84,6 +84,9 @@
     var list = items.filter(match);
     list.forEach(function (it) { feed.appendChild(card(it)); });
     $("fd-none").hidden = list.length > 0;
+    $("fd-count").textContent = String(list.length);
+    var act = ["nights", "access", "stamina"].filter(function (k) { return filt[k]; }).length;
+    $("fd-filter-n").hidden = !act; $("fd-filter-n").textContent = String(act);
     feed.scrollTop = 0; cur = null;
     observe();
   }
@@ -157,9 +160,10 @@
   $("fd-compare-close").addEventListener("click", function () { $("fd-compare").hidden = true; });
   document.querySelectorAll(".fd-chips").forEach(function (g) { g.querySelector("button").setAttribute("aria-checked", "true"); });
   keep();
-  // 上の帯の高さに合わせる（条件が 2 行・3 行になっても重ならない）
-  function fit() { document.documentElement.style.setProperty("--top-h", document.querySelector(".fd-top").offsetHeight + "px"); }
-  window.addEventListener("resize", fit); fit();
+  // 条件のパネル: 「条件」で開き、選ぶとその場で絞り、「◯ ルートを見る」で閉じる
+  function setPanel(open) { $("fd-filters").hidden = !open; $("fd-filter-open").setAttribute("aria-expanded", String(open)); }
+  $("fd-filter-open").addEventListener("click", function () { setPanel($("fd-filters").hidden); });
+  $("fd-filter-done").addEventListener("click", function () { setPanel(false); });
 
   fetch(BASE + "/lab/feed/feed.json").then(function (r) { return r.json(); }).then(function (d) {
     data = d;

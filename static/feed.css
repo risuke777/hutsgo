@@ -1,7 +1,7 @@
 /* ルートを選ぶ縦フィード（/lab/feed/）。サイト本体の CSS は読まない独立した 1 枚 */
 :root{
   --ink:#16241d;--soft:#5b6861;--line:#dfe5e1;--card:#fff;--bg:#0f1a15;
-  --moss:#2e6b4a;--accent:#e4a72e;--top-h:148px;
+  --moss:#2e6b4a;--accent:#e4a72e;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--card:#17231d;--ink:#e8efe9;--soft:#a9b6ae;--line:#2c3a33}}
 :root[data-theme="dark"]{--card:#17231d;--ink:#e8efe9;--soft:#a9b6ae;--line:#2c3a33}
@@ -11,29 +11,35 @@ body{margin:0;font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans 
 button{font:inherit}
 a{color:inherit}
 
-/* 上の帯: 条件 */
-.fd-top{position:fixed;left:0;right:0;top:0;z-index:5;padding:calc(.4rem + env(safe-area-inset-top)) .8rem .5rem;
-  background:linear-gradient(rgba(15,26,21,.96),rgba(15,26,21,.86));backdrop-filter:blur(8px)}
-.fd-bar{display:flex;align-items:center;gap:.6rem;min-height:40px}
+/* 上の帯: 1 行だけ。動画の上に薄く重ね、条件は「条件」から開く */
+.fd-top{position:fixed;left:0;right:0;top:0;z-index:5;padding:calc(.3rem + env(safe-area-inset-top)) .7rem .3rem;
+  background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,0));pointer-events:none}
+.fd-top > *{pointer-events:auto}
+.fd-bar{display:flex;align-items:center;gap:.45rem;min-height:40px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .fd-brand{font-weight:800;text-decoration:none;color:#bfe3cc;white-space:nowrap}
 .fd-beta{font-size:.62rem;margin-left:.2rem;padding:0 .3rem;border-radius:4px;background:rgba(255,255,255,.14);color:#fff;vertical-align:2px}
-.fd-h1{flex:1;margin:0;font-size:1.05rem;font-weight:800}
-.fd-saved{min-height:36px;padding:.2rem .8rem;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;white-space:nowrap}
-.fd-saved b{display:inline-block;min-width:1.2em;margin-left:.2rem;padding:0 .3rem;border-radius:999px;background:var(--accent);color:#16241d}
-.fd-filters{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.3rem .6rem;align-items:center;margin-top:.35rem}
+.fd-h1{flex:1;margin:0;font-size:.95rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fd-pill{display:inline-flex;align-items:center;gap:.3rem;min-height:36px;padding:.15rem .75rem;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;white-space:nowrap;backdrop-filter:blur(6px)}
+.fd-pill b{display:inline-block;min-width:1.2em;padding:0 .3rem;border-radius:999px;background:var(--accent);color:#16241d;text-align:center;font-size:.8rem}
+.fd-pill[aria-expanded="true"]{background:#fff;color:#16241d}
+/* 条件のパネル（開いたときだけ。動画の上に重ねる） */
+.fd-filters{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.45rem .6rem;align-items:center;margin-top:.35rem;padding:.7rem .8rem;border-radius:14px;
+  background:rgba(15,26,21,.94);backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.fd-filters[hidden]{display:none}
+.fd-done{grid-column:1/-1;min-height:42px;margin-top:.2rem;border:0;border-radius:999px;background:#fff;color:#16241d;font-weight:800;cursor:pointer}
 .fd-label{font-size:.72rem;font-weight:700;color:#a9c2b3;white-space:nowrap}
 .fd-chips{display:flex;gap:.35rem;overflow-x:auto;scrollbar-width:none}
 .fd-chips::-webkit-scrollbar{display:none}
 .fd-chips button{flex:none;min-height:32px;padding:.15rem .75rem;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#e8efe9;font-size:.84rem;cursor:pointer;white-space:nowrap}
 .fd-chips button[aria-checked="true"]{background:#fff;color:#16241d;border-color:#fff;font-weight:700}
-.fd-chips button:focus-visible,.fd-saved:focus-visible,.fd-act:focus-visible,.fd-btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.fd-chips button:focus-visible,.fd-pill:focus-visible,.fd-done:focus-visible,.fd-act:focus-visible,.fd-btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 /* 3D の再生（1 つだけ。カードの後ろに置き、ルートを切り替える） */
-.fd-player{position:fixed;left:0;right:0;top:var(--top-h);bottom:0;width:100%;height:calc(100% - var(--top-h));border:0;z-index:0;background:#0f1a15}
+.fd-player{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:0;background:#0f1a15}
 
 /* 縦フィード */
-.fd-feed{position:fixed;left:0;right:0;top:var(--top-h);bottom:0;z-index:2;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
-.fd-card{position:relative;height:calc(100svh - var(--top-h));scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden}
+.fd-feed{position:fixed;inset:0;z-index:2;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
+.fd-card{position:relative;height:100svh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden}
 /* 再生中でないカードは、道の形の絵で覆う（後ろの 3D は今のルートのものなので） */
 .fd-poster{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 30%,#2b4a3a,#0f1a15);transition:opacity .45s ease}
 .fd-poster svg{position:absolute;left:10%;top:12%;width:80%;height:52%}
@@ -52,7 +58,7 @@ a{color:inherit}
 .fd-act{display:grid;justify-items:center;gap:.15rem;width:52px;padding:0;border:0;background:none;color:#fff;font-size:.68rem;font-weight:700;text-decoration:none;cursor:pointer}
 .fd-act span.ic{display:grid;place-items:center;width:46px;height:46px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);font-size:1.25rem}
 .fd-act[aria-pressed="true"] span.ic{background:var(--accent);color:#16241d;border-color:var(--accent)}
-.fd-none{position:fixed;left:1rem;right:1rem;top:calc(var(--top-h) + 2rem);z-index:3;text-align:center;color:#d6e2da}
+.fd-none{position:fixed;left:1rem;right:1rem;top:5rem;z-index:3;text-align:center;color:#d6e2da}
 
 /* 比べるシート */
 .fd-sheet{position:fixed;inset:0;z-index:10;display:grid;place-items:end center;background:rgba(0,0,0,.55)}
@@ -68,3 +74,4 @@ a{color:inherit}
 .fd-btn{width:100%;min-height:44px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 @media (prefers-reduced-motion:reduce){.fd-poster{transition:none}.fd-feed{scroll-behavior:auto}}
 @media (min-width:700px){.fd-info{right:auto;max-width:560px}}
+.fd-pill b[hidden]{display:none}

@@ -2171,7 +2171,7 @@
       if (k === "fly" || k === "media" || k === "swoop") drawProfile(st.d, st.hud * (1 - sk));
     }
     ctx.save(); ctx.globalAlpha = 0.8;
-    text("HutsGo", W - 40, SAFE_TOP - 22, 24, 800, "#fff", "right");
+    if (!EMBED) text("HutsGo", W - 40, SAFE_TOP - 22, 24, 800, "#fff", "right");   // 埋め込み（フィード）では上の帯に名前がある
     ctx.restore();
     // 出典は画面のいちばん下に小さく（SNS の画面では文字の下に隠れても、動画には残る）
     ctx.save(); ctx.globalAlpha = 0.6;

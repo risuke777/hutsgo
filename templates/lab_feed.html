@@ -16,9 +16,10 @@
   <div class="fd-bar">
     <a class="fd-brand" href="{{ BASE }}/">HutsGo<span class="fd-beta">β</span></a>
     <h1 class="fd-h1">ルートを選ぶ</h1>
-    <button type="button" id="fd-compare-open" class="fd-saved" aria-label="保存したルートを比べる">保存 <b id="fd-saved-n">0</b></button>
+    <button type="button" id="fd-filter-open" class="fd-pill" aria-expanded="false" aria-controls="fd-filters">条件<b id="fd-filter-n" hidden></b></button>
+    <button type="button" id="fd-compare-open" class="fd-pill" aria-label="保存したルートを比べる">★<b id="fd-saved-n">0</b></button>
   </div>
-  <div class="fd-filters" role="group" aria-label="条件で絞る">
+  <div id="fd-filters" class="fd-filters" role="group" aria-label="条件で絞る" hidden>
     <span class="fd-label" id="fd-l-n">日数</span>
     <div class="fd-chips" role="radiogroup" aria-labelledby="fd-l-n" data-group="nights">
       <button type="button" role="radio" data-v="">すべて</button>
@@ -39,6 +40,7 @@
       <button type="button" role="radio" data-v="8">7〜8</button>
       <button type="button" role="radio" data-v="10">9〜</button>
     </div>
+    <button type="button" id="fd-filter-done" class="fd-done"><span id="fd-count">0</span> ルートを見る</button>
   </div>
 </header>
 
