@@ -461,6 +461,9 @@ CREATE TABLE trail_grading (
   stamina           INTEGER CHECK (stamina BETWEEN 1 AND 10),
   technical         TEXT CHECK (technical IN ('A','B','C','D','E')),
   match             TEXT NOT NULL CHECK (match IN ('same','near')),
+  course_time_h     REAL,      -- 県の表の「合計コースタイム」（時間）。match='same' のときだけ HutsGo の歩行時間として使う
+  length_km         REAL,      -- 県の表の「ルート長」
+  ascent_km         REAL,      -- 県の表の「累積登り標高差」
   note              TEXT,
   last_verified_at  TEXT,
   confidence        TEXT NOT NULL DEFAULT 'unverified'

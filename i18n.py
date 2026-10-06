@@ -260,6 +260,7 @@ STRINGS = {
     "l_estimate":       ("目安", "Typical"),
     "l_walking":        ("歩行", "Walking"),
     "l_walking_time":   ("歩行時間", "Walking time"),
+    "official_ct_src":  ("長野県の表", "Nagano Pref. grading table"),
     "l_highest":        ("最高地点", "High point"),
     "l_gain":           ("累積標高差", "Total ascent"),
     "l_overnight":      ("宿泊候補", "Places to sleep"),

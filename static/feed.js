@@ -85,8 +85,12 @@
     list.forEach(function (it) { feed.appendChild(card(it)); });
     $("fd-none").hidden = list.length > 0;
     $("fd-count").textContent = String(list.length);
-    var act = ["nights", "access", "stamina"].filter(function (k) { return filt[k]; }).length;
-    $("fd-filter-n").hidden = !act; $("fd-filter-n").textContent = String(act);
+    // ボタンの文字に、選んでいる条件をそのまま出す（何も選んでいなければ「絞り込み」）
+    var on = ["nights", "access", "stamina"].filter(function (k) { return filt[k]; }).map(function (k) {
+      var b = document.querySelector('[data-group="' + k + '"] [data-v="' + filt[k] + '"]'); return b ? (k === "stamina" ? "体力" : "") + b.textContent : "";
+    });
+    $("fd-filter-label").textContent = on.length ? on.join("・") : "絞り込み";
+    $("fd-filter-open").classList.toggle("is-on", on.length > 0);
     feed.scrollTop = 0; cur = null;
     observe();
   }

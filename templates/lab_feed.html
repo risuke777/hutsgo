@@ -16,7 +16,10 @@
   <div class="fd-bar">
     <a class="fd-brand" href="{{ BASE }}/">HutsGo<span class="fd-beta">β</span></a>
     <h1 class="fd-h1">ルートを選ぶ</h1>
-    <button type="button" id="fd-filter-open" class="fd-pill" aria-expanded="false" aria-controls="fd-filters">条件<b id="fd-filter-n" hidden></b></button>
+    <button type="button" id="fd-filter-open" class="fd-pill fd-filter-btn" aria-expanded="false" aria-controls="fd-filters">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span id="fd-filter-label">絞り込み</span><span class="fd-chev" aria-hidden="true">▾</span>
+    </button>
     <button type="button" id="fd-compare-open" class="fd-pill" aria-label="保存したルートを比べる">★<b id="fd-saved-n">0</b></button>
   </div>
   <div id="fd-filters" class="fd-filters" role="group" aria-label="条件で絞る" hidden>

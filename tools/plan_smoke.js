@@ -323,7 +323,8 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   await wait(150);
   ok("地図に切り替わる", !k.d.getElementById("trail-map").hidden
      && k.d.querySelector("figure.profile").hidden);
-  ok("そのルートの小屋だけ出る", k.d.querySelectorAll("#trail-map .hgmap-pin").length === 6,
+  // 2026-10-07 から表銀座は槍沢を下って上高地まで（帰りの槍沢ロッヂ・横尾・徳沢を含めて 9 軒）
+  ok("そのルートの小屋だけ出る", k.d.querySelectorAll("#trail-map .hgmap-pin").length === 9,
      `${k.d.querySelectorAll("#trail-map .hgmap-pin").length}軒`);
   ok("ルートの線を引く", !!k.d.querySelector("#trail-map .hgmap-route"),
      (k.d.querySelector("#trail-map .hgmap-route") || {}).getAttribute
@@ -333,7 +334,7 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
      && /地理院地図の登山道/.test(k.d.getElementById("trail-map-note").textContent)
      && /通行止め/.test(k.d.getElementById("trail-map-note").textContent));
   const addBtns = k.d.querySelectorAll('.stop-actions a[href*="/plan/#add="]');
-  ok("小屋カードごとに行程へ入れる", addBtns.length === 6, `${addBtns.length}個`);
+  ok("小屋カードごとに行程へ入れる", addBtns.length === 9, `${addBtns.length}個`);
   const thLink = k.d.querySelector('.stop-th a[href*="/trailheads/"]');
   ok("登山口カードから詳細へ飛べる", !!thLink, thLink && thLink.getAttribute("href"));
   ok("ルート一括のボタンは置かない", !k.d.querySelector('a[href*="addroute="]'));

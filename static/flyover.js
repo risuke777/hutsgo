@@ -1578,7 +1578,8 @@
       for (var i = 1; i < T.length; i++) if (T[i] != null && T[i - 1] != null) { var dt = T[i] - T[i - 1]; if (dt > 0 && dt <= 20 * 60000) s += dt; }
       if (s > 0) return { h: s / 3600000, how: "GPX の時刻" };
     }
-    if (route.course_min) return { h: route.course_min / 60, how: "コースタイム" };
+    var cm = route.course_min || route.official_min;   // 区間が欠けていれば長野県の表の合計コースタイム
+    if (cm) return { h: cm / 60, how: route.course_min ? "コースタイム" : "県の表のコースタイム" };
     return null;
   }
   function numIn(id, def) { var v = Number(($(id) || {}).value); return v > 0 ? v : def; }
@@ -2091,6 +2092,8 @@
       ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(0, top - 2, W, 3);
     }
     var k = st.e.kind;
+    // 埋め込み（ルート選びのフィード）: 題字・数字・締めの文字は出さない（カードに同じ情報がある。上の帯とも重なる）
+    if (EMBED && (k === "hook" || k === "draw" || k === "swoop")) k = "embed";
     if (k === "hook") {
       shade(0.35, 0.75);
       ctx.save();
@@ -2131,7 +2134,7 @@
         if (mm.insetPin) drawPin(ix + mm.insetPin[0] / 300 * S2, iy + mm.insetPin[1] / 300 * S2, 0.75, 1);
         ctx.restore();
       }
-    } else if (st.outro) {
+    } else if (st.outro && !EMBED) {
       // 締め: 上半分に題字と数字（暗い帯の上）、下半分に道。文字は道に重ねない
       var o = Math.min(1, st.f * 3), en = info.energy, withFood = en && foods.length, y0 = SAFE_TOP + 74;
       var gt = ctx.createLinearGradient(0, 0, 0, H * 0.52); gt.addColorStop(0, "rgba(0,0,0," + (0.7 * o) + ")"); gt.addColorStop(0.75, "rgba(0,0,0," + (0.45 * o) + ")"); gt.addColorStop(1, "rgba(0,0,0,0)");
@@ -2161,14 +2164,15 @@
       if (paceOn()) paceLegend(o, y1 + (withFood ? 214 : en ? 104 : 50));
     }
     if (st.hud > 0) {   // 道中: 標高と距離（音なしでも伝わる数字）。画面を分けているときは下の地図の左上に小さく
-      var e2 = eleAt(st.d), t2 = timeAt(st.d), hy = sk > 0 ? Math.max(SAFE_TOP + 52, top + 64) : SAFE_TOP + 52, big = sk > 0 ? 44 : 58;
+      var e2 = eleAt(st.d), t2 = timeAt(st.d), hy = sk > 0 ? Math.max(SAFE_TOP + 52, top + 64) : SAFE_TOP + 52, big = sk > 0 ? 44 : 58, hx = 44;
+      if (EMBED) { hx = 130; hy = Math.max(hy, SAFE_TOP + 120); }   // 埋め込みは左右が切れて表示され、上に帯がある
       if (!sk) shade(0.35 * st.hud, 0);
       ctx.save(); ctx.globalAlpha = st.hud * (sk > 0 && !st.exit ? Math.min(1, (H - top) / (H / 3)) : 1);
-      if (e2 != null) text(Math.round(e2).toLocaleString() + "m", 44, hy, big, 800, "#fff", "left");
-      text(fmtDist(st.d * trueLen() / route.len) + (t2 != null ? "  ·  " + fmtClock(t2) : ""), 46, hy + (sk > 0 ? 38 : 46), sk > 0 ? 24 : 28, 700, "#fff", "left");
+      if (e2 != null) text(Math.round(e2).toLocaleString() + "m", hx, hy, big, 800, "#fff", "left");
+      text(fmtDist(st.d * trueLen() / route.len) + (t2 != null ? "  ·  " + fmtClock(t2) : ""), hx + 2, hy + (sk > 0 ? 38 : 46), sk > 0 ? 24 : 28, 700, "#fff", "left");
       ctx.restore();
       // 断面は道を進む場面だけ（画面を分けている間は下の地図が狭いので消す）
-      if (k === "fly" || k === "media" || k === "swoop") drawProfile(st.d, st.hud * (1 - sk));
+      if (!EMBED && (k === "fly" || k === "media" || k === "swoop")) drawProfile(st.d, st.hud * (1 - sk));
     }
     ctx.save(); ctx.globalAlpha = 0.8;
     if (!EMBED) text("HutsGo", W - 40, SAFE_TOP - 22, 24, 800, "#fff", "right");   // 埋め込み（フィード）では上の帯に名前がある

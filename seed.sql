@@ -773,3 +773,224 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('fuji_yoshida', 1,NULL,'fuji_subaru5',  NULL,0,NULL,NULL,NULL),
 ('fuji_yoshida', 2,NULL,NULL,            NULL,0,'富士山（剣ヶ峰）','Mount Fuji (Kengamine)',3776),
 ('fuji_yoshida', 3,NULL,'fuji_subaru5',  NULL,0,NULL,NULL,NULL);
+
+
+-- ===============================================================
+-- 2026-10-07 ルートを「行って帰ってくる」形にそろえる（運営者の指摘: 山頂や小屋で終わると下山先の話がつながらない）。
+-- 全ルートが登山口で終わるようにした。帰りに通る小屋は is_overnight_candidate=0（行程ボードで同じ小屋を 2 回入れない）。
+-- 帰りの区間のコースタイムは公式の出典が無いので NULL。長野県の表と行程が同じルート（match='same'）は、
+-- 表の「合計コースタイム」を歩行時間として出す（build.py）。県の表の向き・起点に合わせたルートがある（大キレット）。
+-- ===============================================================
+DELETE FROM trail_stops WHERE trail_id IN ('omote_ginza','karasawa_base','yarisawa','daikiretto','nishihotaka','kitadake',
+  'tsubakuro','karasawa','okuhotaka','chougatake','nishiho_kamikochi','dakesawa','fuji_yoshida');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('omote_ginza', 1,NULL,'nakabusa',0,0,NULL,NULL,NULL),
+('omote_ginza', 2,'enzanso',NULL,300,1,NULL,NULL,NULL),
+('omote_ginza', 3,'daitenso',NULL,540,1,NULL,NULL,NULL),
+('omote_ginza', 4,'otenjo_hutte',NULL,570,1,NULL,NULL,NULL),
+('omote_ginza', 5,NULL,NULL,640,0,'赤岩岳','Akaiwadake',NULL),
+('omote_ginza', 6,'hutte_nishidake',NULL,690,1,NULL,NULL,NULL),
+('omote_ginza', 7,NULL,NULL,730,0,'水俣乗越','Mamata-norikoshi',NULL),
+('omote_ginza', 8,'hutte_ooyari',NULL,780,1,NULL,NULL,NULL),
+('omote_ginza', 9,'yarigatake_sanso',NULL,840,1,NULL,NULL,NULL),
+('omote_ginza',10,NULL,NULL,870,0,'槍ヶ岳','Yarigatake',3180),
+('omote_ginza',11,'yarisawa_lodge',NULL,NULL,0,NULL,NULL,NULL),
+('omote_ginza',12,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('omote_ginza',13,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('omote_ginza',14,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('karasawa_base', 1,NULL,'kamikochi',0,0,NULL,NULL,NULL),
+('karasawa_base', 2,'tokusawaen',NULL,120,1,NULL,NULL,NULL),
+('karasawa_base', 3,'yokoo_sanso',NULL,180,1,NULL,NULL,NULL),
+('karasawa_base', 4,'karasawa_hutte',NULL,360,1,NULL,NULL,NULL),
+('karasawa_base', 5,'karasawa_goya',NULL,370,1,NULL,NULL,NULL),
+('karasawa_base', 6,'kitahotaka_goya',NULL,540,1,NULL,NULL,NULL),
+('karasawa_base', 7,NULL,NULL,550,0,'北穂高岳','Kitahotakadake',3106),
+('karasawa_base', 8,NULL,NULL,670,0,'涸沢カール','Karasawa cirque',NULL),
+('karasawa_base', 9,'hotakadake_sanso',NULL,850,1,NULL,NULL,NULL),
+('karasawa_base',10,NULL,NULL,900,0,'奥穂高岳','Okuhotakadake',3190),
+('karasawa_base',11,'karasawa_goya',NULL,NULL,0,NULL,NULL,NULL),
+('karasawa_base',12,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('karasawa_base',13,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('karasawa_base',14,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('yarisawa', 1,NULL,'kamikochi',0,0,NULL,NULL,NULL),
+('yarisawa', 2,'tokusawaen',NULL,120,1,NULL,NULL,NULL),
+('yarisawa', 3,'yokoo_sanso',NULL,180,1,NULL,NULL,NULL),
+('yarisawa', 4,'yarisawa_lodge',NULL,NULL,1,NULL,NULL,NULL),
+('yarisawa', 5,'sesshou_goya',NULL,NULL,1,NULL,NULL,NULL),
+('yarisawa', 6,'yarigatake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('yarisawa', 7,NULL,NULL,NULL,0,'槍ヶ岳','Yarigatake',3180),
+('yarisawa', 8,'yarisawa_lodge',NULL,NULL,0,NULL,NULL,NULL),
+('yarisawa', 9,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('yarisawa',10,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('yarisawa',11,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('daikiretto', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('daikiretto', 2,'tokusawaen',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 3,'yokoo_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 4,'karasawa_hutte',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 5,'karasawa_goya',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 6,'kitahotaka_goya',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto', 7,NULL,NULL,NULL,0,'北穂高岳','Kitahotakadake',3106),
+('daikiretto', 8,NULL,NULL,NULL,0,'大キレット','Daikiretto',NULL),
+('daikiretto', 9,'minamidake_goya',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto',10,'yarigatake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('daikiretto',11,NULL,NULL,NULL,0,'槍ヶ岳','Yarigatake',3180),
+('daikiretto',12,'yarisawa_lodge',NULL,NULL,0,NULL,NULL,NULL),
+('daikiretto',13,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('daikiretto',14,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('daikiretto',15,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('nishihotaka', 1,NULL,'shin_hotaka',0,0,NULL,NULL,NULL),
+('nishihotaka', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('nishihotaka', 3,NULL,'shin_hotaka',NULL,0,NULL,NULL,NULL),
+
+('kitadake', 1,NULL,'hirogawara',NULL,0,NULL,NULL,NULL),
+('kitadake', 2,'shirane_oike',NULL,NULL,1,NULL,NULL,NULL),
+('kitadake', 3,'kitadake_kata',NULL,NULL,1,NULL,NULL,NULL),
+('kitadake', 4,NULL,NULL,NULL,0,'北岳','Kitadake',3193),
+('kitadake', 5,'kitadake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('kitadake', 6,NULL,NULL,NULL,0,'八本歯のコル','Hachihonba col',NULL),
+('kitadake', 7,'shirane_oike',NULL,NULL,0,NULL,NULL,NULL),
+('kitadake', 8,NULL,'hirogawara',NULL,0,NULL,NULL,NULL),
+
+('tsubakuro', 1,NULL,'nakabusa',NULL,0,NULL,NULL,NULL),
+('tsubakuro', 2,'enzanso',NULL,NULL,1,NULL,NULL,NULL),
+('tsubakuro', 3,NULL,NULL,NULL,0,'燕岳','Tsubakurodake',2763),
+('tsubakuro', 4,'enzanso',NULL,NULL,0,NULL,NULL,NULL),
+('tsubakuro', 5,NULL,'nakabusa',NULL,0,NULL,NULL,NULL),
+
+('karasawa', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('karasawa', 2,'tokusawaen',NULL,NULL,1,NULL,NULL,NULL),
+('karasawa', 3,'yokoo_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('karasawa', 4,'karasawa_hutte',NULL,NULL,1,NULL,NULL,NULL),
+('karasawa', 5,'karasawa_goya',NULL,NULL,1,NULL,NULL,NULL),
+('karasawa', 6,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('karasawa', 7,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('karasawa', 8,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('okuhotaka', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('okuhotaka', 2,'yokoo_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('okuhotaka', 3,'karasawa_goya',NULL,NULL,1,NULL,NULL,NULL),
+('okuhotaka', 4,'hotakadake_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('okuhotaka', 5,NULL,NULL,NULL,0,'奥穂高岳','Okuhotakadake',3190),
+('okuhotaka', 6,'hotakadake_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('okuhotaka', 7,'karasawa_goya',NULL,NULL,0,NULL,NULL,NULL),
+('okuhotaka', 8,'yokoo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('okuhotaka', 9,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('chougatake', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('chougatake', 2,'tokusawaen',NULL,NULL,1,NULL,NULL,NULL),
+('chougatake', 3,'chougatake_hutte',NULL,NULL,1,NULL,NULL,NULL),
+('chougatake', 4,NULL,NULL,NULL,0,'蝶ヶ岳','Chougatake',NULL),
+('chougatake', 5,'tokusawaen',NULL,NULL,0,NULL,NULL,NULL),
+('chougatake', 6,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('nishiho_kamikochi', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('nishiho_kamikochi', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('nishiho_kamikochi', 3,NULL,NULL,NULL,0,'西穂高岳','Nishihotakadake',2909),
+('nishiho_kamikochi', 4,'nishiho_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('nishiho_kamikochi', 5,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+
+('dakesawa', 1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL),
+('dakesawa', 2,'dakesawa_goya',NULL,NULL,1,NULL,NULL,NULL),
+('dakesawa', 3,NULL,'kamikochi',NULL,0,NULL,NULL,NULL);
+
+UPDATE trails SET name_ja='表銀座縦走（中房温泉→槍ヶ岳→上高地）', name_en='Omote-Ginza traverse (Nakabusa to Yari to Kamikochi)',
+  summary='燕岳から大天井、東鎌尾根を経て槍ヶ岳へ抜ける北アルプス王道の縦走路。槍沢を下って上高地へ',
+  summary_en='The classic Northern Alps ridge line: up to Tsubakuro-dake, along to Daitenjo, the Higashi-Kama ridge to Yarigatake, then down the Yarisawa valley to Kamikochi.'
+  WHERE id='omote_ginza';
+UPDATE trails SET summary='上高地から涸沢に入り、北穂高・奥穂高を回って涸沢に戻り、上高地へ下りる',
+  summary_en='Walk in from Kamikochi to the Karasawa cirque, round Kita-Hotaka and Oku-Hotaka, then back down to Kamikochi.' WHERE id='karasawa_base';
+UPDATE trails SET name_ja='槍沢ルート（上高地から槍ヶ岳往復）', name_en='Yarisawa route (Kamikochi to Yarigatake and back)',
+  summary='上高地から梓川沿いに横尾、槍沢をつめて槍ヶ岳へ。同じ道を上高地へ戻る。北アルプスで最も歩かれている槍の登路',
+  summary_en='The valley route to Yari: up the Azusa river to Yokoo, the Yarisawa ravine to the spire, and back the same way.' WHERE id='yarisawa';
+UPDATE trails SET name_ja='大キレット周回（上高地から北穂→槍）', name_en='Daikiretto loop from Kamikochi (Kita-Hotaka to Yari)', nights_typical=3,
+  summary='上高地から涸沢・北穂高岳へ。大キレットを越えて南岳・槍ヶ岳へ抜け、槍沢を下って上高地へ戻る。北アルプスで最も険しい稜線。向きは長野県のグレーディングの表に合わせた',
+  summary_en='From Kamikochi via Karasawa to Kita-Hotaka, over the Daikiretto notch to Minamidake and Yari, then down the Yarisawa valley to Kamikochi. The most exposed ridge in the range.' WHERE id='daikiretto';
+UPDATE trails SET summary='新穂高からロープウェイで上がり、西穂山荘に泊まって独標・西穂高岳へ。新穂高へ戻る',
+  summary_en='Ride the ropeway from Shinhotaka, sleep at Nishiho Sanso, take the ridge to Nishi-Hotakadake and return to Shinhotaka.' WHERE id='nishihotaka';
+UPDATE trails SET summary='広河原から白根御池を経て肩の小屋へ。北岳（3,193m）を越えて北岳山荘へ。八本歯のコルから大樺沢を下り、白根御池を経て広河原へ戻る',
+  summary_en='Up from Hirogawara past Shirane-Oike to the shoulder hut, over Kitadake (3,193 m) to Kitadake Sanso, then down via the Hachihonba col and the Okanba valley back to Hirogawara.' WHERE id='kitadake';
+UPDATE trails SET summary='中房温泉から合戦尾根を登って燕山荘へ。山荘から燕岳の山頂を往復し、同じ道を中房温泉へ下りる' WHERE id='tsubakuro';
+UPDATE trails SET summary='上高地から梓川沿いに徳沢・横尾へ。横尾谷を登って、穂高の岩壁に囲まれた涸沢へ。同じ道を上高地へ戻る' WHERE id='karasawa';
+UPDATE trails SET summary='上高地から横尾・涸沢を経てザイテングラートを登り、穂高岳山荘へ。山荘から奥穂高岳を往復し、涸沢・横尾を経て上高地へ戻る' WHERE id='okuhotaka';
+UPDATE trails SET summary='上高地から徳沢へ。長塀尾根を登って蝶ヶ岳ヒュッテへ。稜線から槍・穂高を正面に見て、同じ道を上高地へ戻る' WHERE id='chougatake';
+UPDATE trails SET summary='上高地から西穂山荘へ登り、山荘から西穂高岳を往復して上高地へ戻る' WHERE id='nishiho_kamikochi';
+UPDATE trails SET summary='上高地から岳沢を登って岳沢小屋へ。穂高の岩壁を見上げる谷の中の小屋。同じ道を上高地へ戻る' WHERE id='dakesawa';
+
+-- 県の表と行程がそろったルートを match='same' に。合計コースタイム・ルート長・累積登りを表から写す
+UPDATE trail_grading SET match='same', note='県の表と同じ行程（中房温泉から槍ヶ岳、槍沢を下って上高地）', course_time_h=25.3, length_km=37.5, ascent_km=3.07 WHERE trail_id='omote_ginza';
+UPDATE trail_grading SET match='same', note='県の表と同じ行程（上高地からの往復）', course_time_h=20.0, length_km=39.1, ascent_km=2.13 WHERE trail_id='yarisawa';
+UPDATE trail_grading SET match='same', note='県の表と同じ行程・向き（上高地から北穂→大キレット→槍、槍沢を下って上高地）', course_time_h=25.2, length_km=41.7, ascent_km=2.65 WHERE trail_id='daikiretto';
+UPDATE trail_grading SET note='県の表は北穂高岳の往復。HutsGo は北穂と奥穂を回って涸沢経由で戻る。涸沢までなら No.13 涸沢（上高地）体力度 5・難易度 B' WHERE trail_id='karasawa_base';
+UPDATE trail_grading SET note=NULL, course_time_h=7.8, length_km=9.8, ascent_km=1.42 WHERE trail_id='tsubakuro';
+UPDATE trail_grading SET note=NULL, course_time_h=11.3, length_km=30.6, ascent_km=1.17 WHERE trail_id='karasawa';
+UPDATE trail_grading SET note=NULL, course_time_h=17.7, length_km=36.6, ascent_km=2.08 WHERE trail_id='okuhotaka';
+UPDATE trail_grading SET note=NULL, course_time_h=12.2, length_km=13.2, ascent_km=1.45 WHERE trail_id='nishiho_kamikochi';
+
+-- ===============================================================
+-- 富士山 吉田ルートの山小屋（2026-10-07）。名前・合目・公式サイトは富士登山オフィシャルサイトの吉田ルート山小屋一覧、
+-- 標高・営業期間・予約は各小屋の公式サイトに書かれているものだけ（書かれていないものは NULL）。
+-- 位置: 白雲荘は運営者が泊まった点（GPS ログ）。ほかは運営者の GPS ログ（登り）の上で、公式の標高と
+-- 国土地理院の標高データが同じになる点（登山道上。建物そのものの位置は未確認）。標高が公式に無い小屋は位置も NULL。
+-- 料金は公式の 2026 年の額を確かめていないので入れない。
+-- ===============================================================
+INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES ('fuji', '富士山', 'Mount Fuji');
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES ('fuji_yoshida', 'fuji', '吉田ルート', 'Yoshida trail');
+
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
+('fuji_seikanso','里見平★星観荘','Satomidaira Seikanso','mountain_hut','fuji','fuji_yoshida',NULL,NULL,NULL,NULL,NULL,'https://seikanso.jp/','https://seikanso.jp/','2026-10-07','reported'),
+('fuji_hanagoya','花小屋','Hanagoya','mountain_hut','fuji','fuji_yoshida',NULL,NULL,NULL,NULL,NULL,'http://www2.tbb.t-com.ne.jp/hanagoya/','https://www.fujisan-climb.jp/mountainhut_yoshida/','2026-10-07','reported'),
+('fuji_hinodekan','日の出館','Hinodekan','mountain_hut','fuji','fuji_yoshida',NULL,35.378743,138.744054,2720,'official','https://www.hinodekan-fujiyoshida.com/','https://www.hinodekan-fujiyoshida.com/','2026-10-07','reported'),
+('fuji_tomoekan7','七合目トモエ館','Tomoekan (7th station)','mountain_hut','fuji','fuji_yoshida',NULL,35.378408,138.744024,2740,'official','https://tomoekan.com/','https://tomoekan.com/','2026-10-07','reported'),
+('fuji_kamaiwakan','鎌岩館','Kamaiwakan','mountain_hut','fuji','fuji_yoshida',NULL,35.377684,138.743581,2790,'official','https://kamaiwakan.jpn.org/','https://kamaiwakan.jpn.org/','2026-10-07','reported'),
+('fuji_ichikan','富士一館','Fuji Ichikan','mountain_hut','fuji','fuji_yoshida',NULL,NULL,NULL,NULL,NULL,'https://www.fuji-ichikan.jp/','https://www.fuji-ichikan.jp/','2026-10-07','reported'),
+('fuji_toriiso','鳥居荘','Toriiso','mountain_hut','fuji','fuji_yoshida',NULL,35.376047,138.742769,2900,'official','http://toriiso.com/index.html','http://toriiso.com/index.html','2026-10-07','reported'),
+('fuji_toyokan','東洋館','Toyokan','mountain_hut','fuji','fuji_yoshida',NULL,35.374503,138.742178,3000,'official','https://www.fuji-toyokan.jp/','https://www.fuji-toyokan.jp/','2026-10-07','reported'),
+('fuji_taishikan','太子舘','Taishikan','mountain_hut','fuji','fuji_yoshida',NULL,35.372968,138.741048,3100,'official','https://www.mfi.or.jp/~taisikan/index.html','https://www.mfi.or.jp/~taisikan/index.html','2026-10-07','reported'),
+('fuji_horaikan','蓬莱館','Horaikan','mountain_hut','fuji','fuji_yoshida',NULL,35.372441,138.740153,3150,'official','https://www.horaikan.jp/','https://www.horaikan.jp/','2026-10-07','reported'),
+('fuji_hakuunso','白雲荘','Hakuunso','mountain_hut','fuji','fuji_yoshida',NULL,35.371367,138.739128,NULL,NULL,'http://fujisan-hakuun.com/ja/','http://fujisan-hakuun.com/ja/','2026-10-07','reported'),
+('fuji_gansomuro','元祖室','Gansomuro','mountain_hut','fuji','fuji_yoshida',NULL,NULL,NULL,NULL,NULL,'https://www.ganso-muro.jp/','https://www.ganso-muro.jp/','2026-10-07','reported'),
+('fuji_hotel','本八合目 富士山ホテル','Fujisan Hotel (Hon-8th station)','mountain_hut','fuji','fuji_yoshida',NULL,35.368716,138.738441,3400,'official','https://www.fujisanhotel.com/','https://www.fujisanhotel.com/','2026-10-07','reported'),
+('fuji_tomoekan8','本八合目トモエ館','Tomoekan (Hon-8th station)','mountain_hut','fuji','fuji_yoshida',NULL,35.368716,138.738441,3400,'official','https://tomoekan.com/','https://tomoekan.com/','2026-10-07','reported');
+
+-- 2026 年の営業期間・予約受付が公式に年つきで書かれている小屋だけ
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES
+('fuji_toyokan',2026,'open','2026-06-30','2026-09-10',NULL,1,'https://www.fuji-toyokan.jp/','0555-22-1040',
+ 'オンライン予約（公式サイトから）',NULL,NULL,NULL,'https://www.fuji-toyokan.jp/','2026-10-07','reported'),
+('fuji_taishikan',2026,'open','2026-06-30','2026-09-09',NULL,1,'https://www.mfi.or.jp/~taisikan/index.html','0555-22-1947',
+ '泊まる日で分けて受付: 6/30〜7/15 は 5月11日 9:00、7/16〜31 は 5月12日 9:00、8/1〜15 は 5月13日 9:00、8/16〜9/9 は 5月14日 9:00（インターネットのみ）',
+ 'Bookings open by stay date: 30 Jun–15 Jul from 11 May 09:00, 16–31 Jul from 12 May, 1–15 Aug from 13 May, 16 Aug–9 Sep from 14 May (online only).',
+ NULL,NULL,'https://www.mfi.or.jp/~taisikan/index.html','2026-10-07','reported'),
+('fuji_hakuunso',2026,'open','2026-07-01','2026-09-10','公式の表記は「7月1日〜9月10日を予定」',1,'http://fujisan-hakuun.com/ja/',NULL,
+ '5月1日 9:30から（オンラインのみ。電話の予約は受け付けない）','From 1 May, 09:30 JST (online only; no phone bookings).',NULL,NULL,'http://fujisan-hakuun.com/ja/','2026-10-07','reported');
+
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES
+('fuji_seikanso','fuji_subaru5',NULL),('fuji_hanagoya','fuji_subaru5',NULL),('fuji_hinodekan','fuji_subaru5',NULL),
+('fuji_tomoekan7','fuji_subaru5',NULL),('fuji_kamaiwakan','fuji_subaru5',NULL),('fuji_ichikan','fuji_subaru5',NULL),
+('fuji_toriiso','fuji_subaru5',NULL),('fuji_toyokan','fuji_subaru5',NULL),('fuji_taishikan','fuji_subaru5',NULL),
+('fuji_horaikan','fuji_subaru5',NULL),('fuji_hakuunso','fuji_subaru5',NULL),('fuji_gansomuro','fuji_subaru5',NULL),
+('fuji_hotel','fuji_subaru5',NULL),('fuji_tomoekan8','fuji_subaru5',NULL);
+
+-- 富士山のルートに小屋を並べる（官公式の一覧の順＝登る順）。泊まれる候補はすべて 1、帰りは下山道（小屋は通らない）
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('fuji_yoshida', 1,NULL,'fuji_subaru5',NULL,0,NULL,NULL,NULL),
+('fuji_yoshida', 2,'fuji_seikanso',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 3,'fuji_hanagoya',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 4,'fuji_hinodekan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 5,'fuji_tomoekan7',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 6,'fuji_kamaiwakan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 7,'fuji_ichikan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 8,'fuji_toriiso',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida', 9,'fuji_toyokan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',10,'fuji_taishikan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',11,'fuji_horaikan',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',12,'fuji_hakuunso',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',13,'fuji_gansomuro',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',14,'fuji_hotel',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',15,'fuji_tomoekan8',NULL,NULL,1,NULL,NULL,NULL),
+('fuji_yoshida',16,NULL,NULL,NULL,0,'富士山（剣ヶ峰）','Mount Fuji (Kengamine)',3776),
+('fuji_yoshida',17,NULL,'fuji_subaru5',NULL,0,NULL,NULL,NULL);

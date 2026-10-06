@@ -530,6 +530,10 @@ def build_model(lang):
         t["times_known"] = all(s["cumulative_time_min"] is not None for s in t["stops"])
         t["total_min"] = max(s["cumulative_time_min"] or 0 for s in t["stops"]) if t["times_known"] else None
         t["hut_count"] = sum(1 for s in t["stops"] if s["hut"] and s["is_overnight_candidate"])
+        # 区間のコースタイムが欠けていても、長野県の表と同じ行程なら表の「合計コースタイム」を歩行時間として出す（出典つき）
+        _g = rows("SELECT course_time_h, source_url FROM trail_grading WHERE trail_id=? AND match='same' AND course_time_h IS NOT NULL", t["id"])
+        t["official_min"] = round(_g[0]["course_time_h"] * 60) if _g else None
+        t["official_url"] = _g[0]["source_url"] if _g else None
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
         # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする
@@ -725,6 +729,7 @@ for lang, prefix in LOCALES:
         r = FLY_ROUTES.setdefault(t["id"], {
             "id": t["id"], "name": {}, "traced": t["legs_total"] > 0 and t["legs_traced"] == t["legs_total"],
             "course_min": t["total_min"],   # 公式のコースタイムの合計（区間が欠けていれば None）。エネルギー収支の行動時間に使う
+            "official_min": t.get("official_min"),   # 長野県の表の合計コースタイム（同じ行程のときだけ）
             "line": [[round(a, 6), round(b, 6)] for a, b in t["line_pts"]],
             "stops": [{"id": s["hut_id"] or s["trailhead_id"], "kind": "hut" if s["hut"] else "trailhead", "name": {},
                        "lat": p["lat"], "lon": p["lon"], "elev": p["elevation_m"]}
@@ -1254,7 +1259,7 @@ for t in rows("SELECT * FROM trails"):
     g = rows("SELECT * FROM trail_grading WHERE trail_id=?", t["id"])
     g = g[0] if g else None
     FEED.append({
-        "id": t["id"], "name": t["name_ja"], "nights": t["nights_typical"], "course_min": fr["course_min"],
+        "id": t["id"], "name": t["name_ja"], "nights": t["nights_typical"], "course_min": fr["course_min"] or fr.get("official_min"),
         "huts": [hut_names.get(h, h) for h in hut_ids],
         "start": access_of(ths[0] if ths else None), "end": access_of(ths[-1] if len(ths) > 1 else None),
         "grading": g and {"stamina": g["stamina"], "technical": g["technical"], "no": g["source_route_no"], "route": g["source_route_name"],

@@ -75,3 +75,11 @@ a{color:inherit}
 @media (prefers-reduced-motion:reduce){.fd-poster{transition:none}.fd-feed{scroll-behavior:auto}}
 @media (min-width:700px){.fd-info{right:auto;max-width:560px}}
 .fd-pill b[hidden]{display:none}
+
+/* 絞り込みのボタン: 開くものだと分かるように、じょうごの印と ▾。選んでいる条件はボタンの文字に出す */
+.fd-filter-btn{max-width:46vw}
+.fd-filter-btn span#fd-filter-label{overflow:hidden;text-overflow:ellipsis}
+.fd-chev{display:inline-block;transition:transform .2s ease}
+.fd-filter-btn[aria-expanded="true"] .fd-chev{transform:rotate(180deg)}
+.fd-filter-btn.is-on{background:var(--accent);border-color:var(--accent);color:#16241d}
+@media (prefers-reduced-motion:reduce){.fd-chev{transition:none}}
