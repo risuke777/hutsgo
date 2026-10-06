@@ -209,3 +209,21 @@ h2{font-size:1.2rem;line-height:1.35;margin:0 0 .35rem}
 .fly-go-row[hidden]{display:none}
 .fly-go-row a{color:var(--moss);font-weight:700}
 #fly-link-share{width:100%;white-space:normal}
+
+/* 提供のシート */
+.fly-contrib-card{justify-items:stretch;text-align:left}
+.fly-contrib-card h2{text-align:center}
+.fly-contrib-dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.3rem .7rem;font-size:.84rem}
+.fly-contrib-dl dt{font-weight:700}
+.fly-contrib-dl dd{margin:0;color:var(--soft)}
+.fly-contrib-card textarea{font:inherit;color:var(--ink);padding:.4rem .5rem;border:1px solid var(--line);border-radius:8px;background:var(--card);width:100%;resize:vertical}
+.fly-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+#fly-contrib-open{width:100%;white-space:normal}
+/* 埋め込み（ルート選びのフィードの後ろで流す）: 動画の絵だけを画面いっぱいに */
+.is-embed{padding:0;background:#0f1a15;overflow:hidden}
+.is-embed .fly-head,.is-embed .fly-player,.is-embed .fly-controls,.is-embed .fly-viewer,.is-embed .fly-foot,.is-embed .fly-actions,
+.is-embed #fly-empty,.is-embed #fly-go-row,.is-embed #fly-loading p{display:none !important}
+.is-embed .fly{padding:0;max-width:none;display:block}
+.is-embed .fly-stage{margin:0}
+.is-embed .fly-phone{width:100vw;height:100vh;max-width:none;min-width:0;aspect-ratio:auto;border-radius:0;box-shadow:none}
+.is-embed #fly-out{object-fit:cover}

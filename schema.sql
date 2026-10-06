@@ -445,3 +445,23 @@ CREATE INDEX idx_huts_area     ON huts(sub_area_id);
 CREATE INDEX idx_seasons_year  ON hut_seasons(year, status);
 CREATE INDEX idx_rates_year    ON hut_rates(year, plan_type);
 CREATE INDEX idx_clicks_hut    ON outbound_clicks(hut_id, occurred_at);
+
+-- ---------------------------------------------------------------
+-- 県のグレーディング（長野県「信州 山のグレーディング」など）。体力度 1〜10・技術的難易度 A〜E。
+-- HutsGo のルートと県の表のルートは区切り（起点・終点・方向）が違うことがあるので、対応の度合いを match に持つ:
+--   same = 同じ行程 / near = 一部が違う（note に違いを書く）
+-- 県の表に無いルートは行を作らない（推測で埋めない＝A1）。人が公式の表と照らすまで confidence は 'unverified'
+-- ---------------------------------------------------------------
+CREATE TABLE trail_grading (
+  trail_id          TEXT PRIMARY KEY REFERENCES trails(id),
+  source_name       TEXT NOT NULL,
+  source_url        TEXT NOT NULL,
+  source_route_no   INTEGER,
+  source_route_name TEXT,
+  stamina           INTEGER CHECK (stamina BETWEEN 1 AND 10),
+  technical         TEXT CHECK (technical IN ('A','B','C','D','E')),
+  match             TEXT NOT NULL CHECK (match IN ('same','near')),
+  note              TEXT,
+  last_verified_at  TEXT,
+  confidence        TEXT NOT NULL DEFAULT 'unverified'
+);

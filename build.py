@@ -1231,6 +1231,48 @@ def stamp_lastmod():
     env.get_template("lab_flyover.html").render(BASE=BASE, API_URL=API_URL, SITE_URL=SITE_URL), encoding="utf-8")
 
 
+# ---------------------------------------------------------------- 試作: ルートを選ぶ縦フィード（/lab/feed/）
+# 条件（泊数・アクセス・体力度）で絞り、ルートの 3D を流して選ぶ。数字は確認済みデータと県のグレーディング（出典つき）。
+# 動画ファイルは持たない（3D は見る人のブラウザで作る）。保存は見る人の端末の中だけ
+FEED = []
+for t in rows("SELECT * FROM trails"):
+    fr = FLY_ROUTES.get(t["id"])
+    if not fr or len(fr["line"]) < 2:
+        continue
+    stops = rows("SELECT * FROM trail_stops WHERE trail_id=? ORDER BY seq", t["id"])
+    hut_ids = [x["hut_id"] for x in stops if x["hut_id"] and x["is_overnight_candidate"]]
+    hut_names = {x["id"]: x["name_ja"] for x in rows("SELECT id,name_ja FROM huts")}
+    ths = [x["trailhead_id"] for x in stops if x["trailhead_id"]]
+    def access_of(th_id):
+        if not th_id:
+            return None
+        th = rows("SELECT * FROM trailheads WHERE id=?", th_id)[0]
+        ar = rows("SELECT mode,from_place,private_car_restricted,duration_min FROM access_routes WHERE trailhead_id=?", th_id)
+        return {"id": th_id, "name": th["name_ja"], "parking": th["parking_spaces"],
+                "modes": sorted({a["mode"] for a in ar}), "from": sorted({a["from_place"] for a in ar if a["from_place"]}),
+                "car_restricted": any(a["private_car_restricted"] for a in ar)}
+    g = rows("SELECT * FROM trail_grading WHERE trail_id=?", t["id"])
+    g = g[0] if g else None
+    FEED.append({
+        "id": t["id"], "name": t["name_ja"], "nights": t["nights_typical"], "course_min": fr["course_min"],
+        "huts": [hut_names.get(h, h) for h in hut_ids],
+        "start": access_of(ths[0] if ths else None), "end": access_of(ths[-1] if len(ths) > 1 else None),
+        "grading": g and {"stamina": g["stamina"], "technical": g["technical"], "no": g["source_route_no"], "route": g["source_route_name"],
+                          "match": g["match"], "note": g["note"], "source": g["source_name"], "url": g["source_url"], "confidence": g["confidence"]},
+        "line": fr["line"][::max(1, len(fr["line"]) // 120)] + [fr["line"][-1]],
+        "url": f"{BASE}/trails/{t['id']}/"})
+# 提供された道（承認したものだけが contrib/ にある。tools/import_contrib.py で取り込む）
+CONTRIB = []
+for f in sorted((ROOT / "contrib").glob("*.json")) if (ROOT / "contrib").is_dir() else []:
+    c = json.loads(f.read_text(encoding="utf-8"))
+    if c.get("status") == "approved" and re.fullmatch(r"v=z\.[A-Za-z0-9_-]{50,20000}", c.get("link", "")):
+        CONTRIB.append({k: c.get(k) for k in ("id", "title", "comment", "trail", "region", "link", "km", "up")})
+(DIST / "lab" / "feed").mkdir(parents=True, exist_ok=True)
+(DIST / "lab" / "feed" / "feed.json").write_text(
+    json.dumps({"routes": FEED, "contrib": CONTRIB}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+(DIST / "lab" / "feed" / "index.html").write_text(
+    env.get_template("lab_feed.html").render(BASE=BASE, API_URL=API_URL, SITE_URL=SITE_URL), encoding="utf-8")
+
 stamp_lastmod()
 
 print(f"articles: ja {len(ARTICLES['ja'])} / en {len(ARTICLES['en'])}")

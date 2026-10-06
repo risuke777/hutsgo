@@ -685,3 +685,12 @@ INSERT INTO hut_booking_channels (hut_id, year, seq, kind, operator, url, url_en
 ('hirogawara_sanso',2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported'),
 ('kitadake_sanso', 2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported'),
 ('shirane_oike',   2026,1,'web','minamialps_reserve','https://www.minamialps-yoyaku.jp/',NULL,'partial','https://www.minamialps-yoyaku.jp/Terms/HowToUseEnglish.pdf','電話予約は事務手数料が加算される','A handling fee is added to phone bookings','https://www.minamialps-yoyaku.jp/','2026-10-01','reported');
+
+-- 長野県「信州 山のグレーディング」一覧表（令和8年4月版、北アルプス）から写したもの（2026-10-06・Claude Code が転記、運営者の確認待ち）。
+-- 西穂高（新穂高から＝岐阜県側）と北岳（山梨県）は長野県の表に無いので行を作らない。
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence) VALUES
+('omote_ginza','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',5,'縦 表銀座（中房温泉・上高地）',9,'C','near','県の表は槍ヶ岳から上高地へ下りるまでを含む','unverified'),
+('yarisawa','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',44,'槍ヶ岳（上高地）',8,'C','near','県の表は上高地からの往復','unverified'),
+('karasawa_base','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',17,'北穂高岳（上高地）＜涸沢＞',7,'D','near','涸沢までなら No.13 涸沢（上高地）体力度 5・難易度 B','unverified'),
+('daikiretto','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',26,'周 大キレット（上高地）＜北穂→槍＞',9,'E','near','県の表は上高地からの周回で、北穂→槍の向き','unverified'),
+('jonen_cho','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',30,'縦 燕→常念（中房温泉・一ノ沢）',7,'B','near','県の表は常念岳から一ノ沢へ下りる。蝶ヶ岳から長塀尾根で上高地へ下りる区間は No.27（体力度 6・難易度 B）','unverified');

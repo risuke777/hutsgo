@@ -27,7 +27,8 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                // 旅行会社（小屋が案内している英語の予約パッケージ）への案内。outbound_ で始めない: 小屋への送客ではないため
                'agency_link',
                // 試作 /lab/flyover/ の動画書き出し（写真・動画そのものは送られない。数だけ）
-               'flyover_export', 'flyover_card', 'flyover_link', 'flyover_view', 'flyover_go',
+               'flyover_export', 'flyover_card', 'flyover_link', 'flyover_view', 'flyover_go', 'flyover_contrib',
+               'feed_view', 'feed_w5', 'feed_w15', 'feed_w30', 'feed_save', 'feed_detail', 'feed_compare',
                // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。
                // outbound_ で始めない: 小屋への送客率（主KPI）に混ぜないため
                'gear_link'];

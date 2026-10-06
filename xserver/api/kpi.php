@@ -49,6 +49,9 @@ function read_jsonl(string $dir, string $since): array {
 
 $ev = read_jsonl(hg_data_dir($cfg, 'events'), $since);
 $posts = read_jsonl(hg_data_dir($cfg, 'posts'), $since);
+// 道の提供（山ムービー → ルート選び）。承認制なので、未確認の件数だけ出す
+$contrib = read_jsonl(hg_data_dir($cfg, 'contrib'), $since);
+$cPending = count(array_filter($contrib, fn($c) => ($c['status'] ?? '') === 'pending'));
 
 $counts = $pv = $pvHut = $outHut = $vis = [];
 $hutPairs = $hutViewPairs = [];                 // 訪問者×小屋の集合
@@ -219,6 +222,10 @@ if ($cold) {
        'その小屋ページの予約情報・受付開始日・料金を確認する');
 }
 
+if ($cPending > 0) {
+  $say('contrib', 'act', '道の提供 未確認 ' . $cPending . ' 件', 'ルート選び（/lab/feed/）の素材。確かめるまで載らない。',
+       'data/contrib の jsonl を落とし、tools/import_contrib.py で書き出して確かめる');
+}
 if ($pending > 0) {
   $say('posts', 'act', '未承認 ' . $pending . ' 件', '放置すると投稿が止まる。', 'tools/import_posts.py で取り込み、設備を hut_facilities に反映');
 } elseif (count($posts) === 0) {

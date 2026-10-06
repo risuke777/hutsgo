@@ -166,9 +166,28 @@
         <button type="button" id="fly-card-video" class="fly-btn fly-btn-lg">動画を作って共有</button>
       </div>
       <button type="button" id="fly-link-share" class="fly-btn fly-btn-ghost">リンクで共有（3D の道だけ・写真は入らない）</button>
+      <button type="button" id="fly-contrib-open" class="fly-btn fly-btn-ghost" hidden>この道を HutsGo に提供する（任意・確認してから載せます）</button>
       <p id="fly-link-note" class="fly-hint" aria-live="polite"></p>
       <p class="fly-hint">動画の最後の場面を 1 枚にした画像です（縦長なので、ストーリーにそのまま使えます）。</p>
       <button type="button" id="fly-sheet-close" class="fly-btn fly-btn-ghost">閉じる</button>
+    </div>
+  </section>
+
+  <section id="fly-contrib" class="fly-result" hidden aria-labelledby="fly-contrib-h">
+    <div class="fly-result-card fly-contrib-card">
+      <h2 id="fly-contrib-h">この道を HutsGo に提供する</h2>
+      <p class="fly-hint">ほかの人がルートを選ぶとき、3D で見られるようになります。HutsGo が確認してから「投稿（未確認）」として載せます。</p>
+      <dl class="fly-contrib-dl">
+        <dt>送るもの</dt><dd>歩いた道（自宅や駐車場が分からないよう、両端 300m を切ります）・標高・ペースの色・題・ひとこと</dd>
+        <dt>送らないもの</dt><dd>写真・動画・歩いた日時・お名前・連絡先。IP アドレスも残しません</dd>
+      </dl>
+      <label class="fly-field">題<input type="text" id="fly-contrib-title" maxlength="40"></label>
+      <label class="fly-field">ひとこと（任意・200 字まで。リンクは載りません）<textarea id="fly-contrib-comment" maxlength="200" rows="3"></textarea></label>
+      <input type="text" id="fly-contrib-hp" class="fly-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="fly-check"><input type="checkbox" id="fly-contrib-ok"> 上の内容で送ることに同意します</label>
+      <button type="button" id="fly-contrib-send" class="fly-btn fly-btn-primary fly-btn-lg">送る</button>
+      <p id="fly-contrib-msg" class="fly-hint" aria-live="polite"></p>
+      <button type="button" id="fly-contrib-close" class="fly-btn fly-btn-ghost">閉じる</button>
     </div>
   </section>
 
