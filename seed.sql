@@ -694,3 +694,58 @@ INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,sourc
 ('karasawa_base','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',17,'北穂高岳（上高地）＜涸沢＞',7,'D','near','涸沢までなら No.13 涸沢（上高地）体力度 5・難易度 B','unverified'),
 ('daikiretto','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',26,'周 大キレット（上高地）＜北穂→槍＞',9,'E','near','県の表は上高地からの周回で、北穂→槍の向き','unverified'),
 ('jonen_cho','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',30,'縦 燕→常念（中房温泉・一ノ沢）',7,'B','near','県の表は常念岳から一ノ沢へ下りる。蝶ヶ岳から長塀尾根で上高地へ下りる区間は No.27（体力度 6・難易度 B）','unverified');
+
+-- ---------------------------------------------------------------
+-- ルートを増やす（2026-10-06・ルート選びのフィード用）。既にある小屋・登山口だけで組める定番の行程。
+-- コースタイムは公式の出典を確かめていないので NULL（A1: 推測で埋めない）。山頂の標高は長野県
+-- 「信州 山のグレーディング」（令和8年4月）の表の値。difficulty は HutsGo の判断を入れていないので NULL。
+-- ---------------------------------------------------------------
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('tsubakuro','燕岳（中房温泉から）','Tsubakurodake from Nakabusa Onsen',1,NULL,
+ '中房温泉から合戦尾根を登って燕山荘へ。山荘から燕岳の山頂を往復する',
+ 'Up the Kassen ridge from Nakabusa Onsen to Enzanso, then out and back to the Tsubakurodake summit.'),
+('karasawa','涸沢（上高地から）','Karasawa from Kamikochi',1,NULL,
+ '上高地から梓川沿いに徳沢・横尾へ。横尾谷を登って、穂高の岩壁に囲まれた涸沢へ',
+ 'Along the Azusa river from Kamikochi via Tokusawa and Yokoo, then up the Yokoo valley to the Karasawa cirque below the Hotaka walls.'),
+('okuhotaka','奥穂高岳（上高地・涸沢から）','Okuhotakadake via Karasawa',2,NULL,
+ '上高地から横尾・涸沢を経てザイテングラートを登り、穂高岳山荘へ。山荘から奥穂高岳の山頂を往復する',
+ 'From Kamikochi via Yokoo and Karasawa, up the Zaitengrat to Hotakadake Sanso, then out and back to the Okuhotakadake summit.'),
+('chougatake','蝶ヶ岳（上高地・長塀尾根から）','Chougatake via the Nagakabe ridge',1,NULL,
+ '上高地から徳沢へ。長塀尾根を登って蝶ヶ岳ヒュッテへ。稜線から槍・穂高を正面に見る',
+ 'From Kamikochi to Tokusawa, then up the Nagakabe ridge to Chougatake Hutte, facing Yari and Hotaka across the valley.'),
+('nishiho_kamikochi','西穂高岳（上高地から）','Nishihotakadake from Kamikochi',1,NULL,
+ '上高地から西穂高岳への登山道を登って西穂山荘へ。山荘から西穂高岳の山頂を往復する',
+ 'From Kamikochi up to Nishiho Sanso, then out and back to the Nishihotakadake summit.'),
+('dakesawa','岳沢（上高地から）','Dakesawa from Kamikochi',1,NULL,
+ '上高地から岳沢を登って岳沢小屋へ。穂高の岩壁を見上げる谷の中の小屋',
+ 'From Kamikochi up the Dakesawa valley to Dakesawa Goya, under the Hotaka walls.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('tsubakuro', 1,NULL,'nakabusa',          NULL,0,NULL,NULL,NULL),
+('tsubakuro', 2,'enzanso',NULL,           NULL,1,NULL,NULL,NULL),
+('tsubakuro', 3,NULL,NULL,                NULL,0,'燕岳','Tsubakurodake',2763),
+('karasawa', 1,NULL,'kamikochi',          NULL,0,NULL,NULL,NULL),
+('karasawa', 2,'tokusawaen',NULL,         NULL,1,NULL,NULL,NULL),
+('karasawa', 3,'yokoo_sanso',NULL,        NULL,1,NULL,NULL,NULL),
+('karasawa', 4,'karasawa_hutte',NULL,     NULL,1,NULL,NULL,NULL),
+('karasawa', 5,'karasawa_goya',NULL,      NULL,1,NULL,NULL,NULL),
+('okuhotaka', 1,NULL,'kamikochi',         NULL,0,NULL,NULL,NULL),
+('okuhotaka', 2,'yokoo_sanso',NULL,       NULL,1,NULL,NULL,NULL),
+('okuhotaka', 3,'karasawa_goya',NULL,     NULL,1,NULL,NULL,NULL),
+('okuhotaka', 4,'hotakadake_sanso',NULL,  NULL,1,NULL,NULL,NULL),
+('okuhotaka', 5,NULL,NULL,                NULL,0,'奥穂高岳','Okuhotakadake',3190),
+('chougatake', 1,NULL,'kamikochi',        NULL,0,NULL,NULL,NULL),
+('chougatake', 2,'tokusawaen',NULL,       NULL,1,NULL,NULL,NULL),
+('chougatake', 3,'chougatake_hutte',NULL, NULL,1,NULL,NULL,NULL),
+('nishiho_kamikochi', 1,NULL,'kamikochi', NULL,0,NULL,NULL,NULL),
+('nishiho_kamikochi', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('nishiho_kamikochi', 3,NULL,NULL,        NULL,0,'西穂高岳','Nishihotakadake',2909),
+('dakesawa', 1,NULL,'kamikochi',          NULL,0,NULL,NULL,NULL),
+('dakesawa', 2,'dakesawa_goya',NULL,      NULL,1,NULL,NULL,NULL);
+
+-- 増やしたルートのグレーディング（長野県の表に同じ・近いルートがあるものだけ。確認待ち）
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence) VALUES
+('tsubakuro','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',31,'燕岳（中房温泉）',4,'B','same',NULL,'unverified'),
+('karasawa','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',13,'涸沢（上高地）',5,'B','same','県の表は上高地からの往復','unverified'),
+('okuhotaka','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',4,'奥穂高岳（上高地）＜涸沢＞',7,'C','same','県の表は上高地からの往復','unverified'),
+('nishiho_kamikochi','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',33,'西穂高岳（上高地）',5,'D','same','県の表は上高地からの往復','unverified');

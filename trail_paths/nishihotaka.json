@@ -1,0 +1,21 @@
+{
+ "trail_id": "nishihotaka",
+ "source": "国土地理院ベクトルタイル（optimal_bvmap-v1・道路中心線）",
+ "source_zoom": 16,
+ "computed_on": "2026-10-06",
+ "note": "地図データ上の道をたどった線。登山道の現況（通行止め・付け替え）は反映しない",
+ "legs": [
+  {
+   "from": "shin_hotaka",
+   "to": "nishiho_sanso",
+   "from_name": "新穂高",
+   "to_name": "西穂山荘",
+   "snap_m": [
+    51,
+    20
+   ],
+   "status": "none",
+   "reason": "道でつながらない"
+  }
+ ]
+}
