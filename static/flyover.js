@@ -1690,6 +1690,12 @@
     return Math.round(up);
   }
   function ymd(utc) { var d = new Date(localMs(utc)); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()]; }
+  function durText() {   // 日帰りは行動時間（7h 45m）
+    var mh = movingHours(); if (!mh) return null;
+    var h = Math.floor(mh.h), mi = Math.round((mh.h - h) * 60);
+    if (mi === 60) { h++; mi = 0; }
+    return h + "h" + (mi ? " " + mi + "m" : "");
+  }
   function titleInfo() {
     var top = (route.peaks || []).filter(function (p) { return p.elev; }).sort(function (a, b) { return b.elev - a.elev; })[0];
     var t0 = timeAt(0), t1 = timeAt(route.len), days = null, date = "";
@@ -1700,7 +1706,7 @@
     }
     var g = gainUp(), custom = ((($("fly-title") || {}).value) || "").trim();
     return { title: custom || (top ? top.name.ja : route.name.ja), sub: !custom && top ? top.elev.toLocaleString() + "m" : "", date: date,
-             stats: [fmtDist(route.len), g ? "↑" + g.toLocaleString() + "m" : null, days ? days + "日間" : null].filter(Boolean) };
+             stats: [fmtDist(route.len), g ? "↑" + g.toLocaleString() + "m" : null, days > 1 ? days + " days" : durText()].filter(Boolean) };
   }
   function highlight() {
     var u = usedMedia();
@@ -2030,8 +2036,8 @@
     var x0 = W / 2 - 170, x1 = W / 2 + 170, y = yy || SAFE_BOTTOM - 46, g = ctx.createLinearGradient(x0, 0, x1, 0);
     PACE.forEach(function (p, i) { g.addColorStop(i / (PACE.length - 1), "rgb(" + p[1].join(",") + ")"); });
     ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = g; rr(x0, y, x1 - x0, 12, 6); ctx.fill();
-    text("ゆっくり", x0 - 14, y + 12, 22, 700, "#fff", "right"); text("速い", x1 + 14, y + 12, 22, 700, "#fff", "left");
-    text("ペース（標準タイムと比べて）", W / 2, y + 48, 20, 600, "rgba(255,255,255,.85)", "center");
+    text("SLOW", x0 - 14, y + 12, 22, 800, "#fff", "right"); text("FAST", x1 + 14, y + 12, 22, 800, "#fff", "left");
+    text("PACE", W / 2, y + 46, 20, 800, "rgba(255,255,255,.85)", "center");
     ctx.restore();
   }
   function shade(top, bottom) {
@@ -2132,7 +2138,8 @@
       if (info.date) { text(info.date, W / 2, y1 + 46, 26, 600, "rgba(255,255,255,.9)", "center"); y1 += 46; }
       if (en) {
         // エネルギー収支: 消費と補給（山では食べ足りない方が危ない。目安は消費の 7〜8 割）
-        text("消費 " + en.burn.toLocaleString() + " kcal" + (withFood ? "  ·  補給 " + en.intake.toLocaleString() + " kcal（" + en.pct + "%）" : ""), W / 2, y1 + 58, withFood ? 30 : 34, 800, withFood && en.pct < 70 ? "#FFD6A0" : "#fff", "center");
+        // 🔥 使った量、🍙 食べた量（割合）
+        text("🔥 " + en.burn.toLocaleString() + " kcal" + (withFood ? "    🍙 " + en.intake.toLocaleString() + " kcal · " + en.pct + "%" : ""), W / 2, y1 + 58, withFood ? 32 : 36, 800, withFood && en.pct < 70 ? "#FFD6A0" : "#fff", "center");
         if (withFood) {
           var pics = foods.filter(function (f) { return f.img; }).slice(0, 4), sz = 96, gap = 12, x0 = (W - (pics.length * sz + (pics.length - 1) * gap)) / 2;
           pics.forEach(function (f, i) {
@@ -2423,6 +2430,13 @@
     track("flyover_card");
   }
   var cardCanvas = null;
+  async function endFrame() {   // 動画の最後の場面を、読み込みを待って 1 枚描く（縦 9:16、ストーリーにそのまま使える）
+    var show = sp.show || buildShow(), t = show.total - 0.02, st = showState(show, t);
+    await settledFrame(st, t, show, true);
+    var c = document.createElement("canvas"); c.width = W; c.height = H; c.getContext("2d").drawImage(out, 0, 0);
+    renderAt(sp.t, false);
+    return c;
+  }
   function mediaSrc(m) {   // 今描ける絵（写真・再生中の動画・取っておいた絵・ファイルから作った絵）
     if (m.kind !== "video") return m.img ? [m.img, m.img.width, m.img.height] : null;
     if (m.dframes && m.dframes.length) { var d = m.dframes[0].cv; return [d, d.width, d.height]; }
@@ -2437,8 +2451,8 @@
     // 画像は開いたときに作る（作る前は img を置かない）
     var box = $("fly-card-box"), img = $("fly-card-img");
     if (!img) { img = document.createElement("img"); img.id = "fly-card-img"; img.className = "fly-card-preview"; img.alt = "共有用の画像（3D の地図に歩いた道と記録）"; box.appendChild(img); }
-    img.alt = "共有用の画像（写真に歩いた道と記録を重ねたもの）"; img.removeAttribute("src"); box.classList.add("is-loading");
-    cardCanvas = makeCard();
+    img.alt = "共有用の画像（動画の最後の場面: 記録と、3D の地図に歩いた道と写真のピン）"; img.removeAttribute("src"); box.classList.add("is-loading");
+    try { cardCanvas = await endFrame(); } catch (e) { cardCanvas = makeCard(); }
     img.src = cardCanvas.toDataURL("image/jpeg", 0.85); box.classList.remove("is-loading");
     busy = false; setButtons(true);
   }
@@ -2510,7 +2524,7 @@
       var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
       PACE.forEach(function (q, i) { lg.addColorStop(i / (PACE.length - 1), "rgb(" + q[1].join(",") + ")"); });
       x.fillStyle = lg; x.beginPath(); x.roundRect(lx, ly - 10, 260, 10, 5); x.fill();
-      T("ゆっくり", lx - 10, ly, 20, 600, "rgba(255,255,255,.85)", "right"); T("速い", lx + 270, ly, 20, 600, "rgba(255,255,255,.85)", "left");
+      T("SLOW", lx - 10, ly, 20, 800, "rgba(255,255,255,.85)", "right"); T("FAST", lx + 270, ly, 20, 800, "rgba(255,255,255,.85)", "left");
     }
   }
   function makeCard3d(c, x, bg, hl) {
@@ -2542,7 +2556,7 @@
       var lx = CW - 56 - 260, ly = 1312, lg = x.createLinearGradient(lx, 0, lx + 260, 0);
       PACE.forEach(function (q, i) { lg.addColorStop(i / (PACE.length - 1), "rgb(" + q[1].join(",") + ")"); });
       x.fillStyle = lg; x.beginPath(); x.roundRect(lx, ly - 10, 260, 10, 5); x.fill();
-      T("ゆっくり", lx - 10, ly, 20, 600, "rgba(255,255,255,.85)", "right"); T("速い", lx + 270, ly, 20, 600, "rgba(255,255,255,.85)", "left");
+      T("SLOW", lx - 10, ly, 20, 800, "rgba(255,255,255,.85)", "right"); T("FAST", lx + 270, ly, 20, 800, "rgba(255,255,255,.85)", "left");
     }
     return c;
   }
