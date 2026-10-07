@@ -20,9 +20,11 @@
 <body>
 <header class="fd-top">
   <div class="fd-bar">
-    <a class="fd-brand" href="{{ BASE }}/">HutsGo<span class="fd-beta">β</span></a>
+    <div class="fd-brandcol">
+      <a class="fd-brand" href="{{ BASE }}/">HutsGo<span class="fd-beta">β</span></a>
+      <a class="fd-make" href="{{ BASE }}/lab/flyover/" data-make aria-label="自分の山の動画を作る" title="自分の山の動画を作る"><span aria-hidden="true">＋</span></a>
+    </div>
     <h1 class="fd-h1">ルートを選ぶ</h1>
-    <a class="fd-pill fd-make" href="{{ BASE }}/lab/flyover/" data-make aria-label="自分の山の動画を作る"><span aria-hidden="true">＋</span>作る</a>
     <button type="button" id="fd-filter-open" class="fd-pill fd-filter-btn" aria-expanded="false" aria-controls="fd-filters">
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
       <span id="fd-filter-label">絞り込み</span><span class="fd-chev" aria-hidden="true">▾</span>
