@@ -115,7 +115,8 @@
         <h2><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.name }}</a><small>{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}{{ T.mid }}{{ h.operator.name }}{% endif %}</small></h2>
         <p class="stop-line">
           <span class="season-badge" data-season-badge></span>
-          {% if se and se.status == 'open' %}<span>{{ se.open_date | fmt_date }}{{ T.range }}{{ se.close_date | fmt_date }}</span>
+          {% if se and se.status == 'open' and (se.open_date or se.close_date) %}<span>{{ se.open_date | fmt_date }}{{ T.range }}{{ se.close_date | fmt_date }}</span>
+          {% elif se and se.status == 'open' %}{# 「7月上旬〜」のように日付まで決まっていない: 文言は注記に出る #}
           {% elif se and se.status == 'year_round' %}<span>{{ T.season_year_round }}</span>
           {% elif se and se.status == 'closed_this_year' %}<span>{{ T.season_closed }}</span>
           {% else %}<span>{{ T.season_unknown }}</span>{% endif %}

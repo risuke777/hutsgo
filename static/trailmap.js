@@ -77,7 +77,7 @@
         var s = h.season_2026, rates = h.rates_2026 || [];
         var rt = function (k) { return rates.filter(function (r) { return r.plan === k; })[0]; };
         rows.push("<dt>" + L.season + "</dt><dd>" + (!s || !s.status ? L.unk : s.status === "year_round" ? L.yr
-          : (s.open_date && s.close_date ? md(s.open_date) + "〜" + md(s.close_date) : L.unk)) + "</dd>");
+          : (s.open_date && s.close_date ? md(s.open_date) + "〜" + md(s.close_date) : (s.note ? escH(s.note) : L.unk))) + "</dd>");
         rows.push("<dt>" + L.two + "</dt><dd>" + yen(rt("two_meals")) + "</dd>");
         if (rt("tent")) rows.push("<dt>" + L.tent + "</dt><dd>" + yen(rt("tent")) + "</dd>");
         var pv = (rt("two_meals") || {}).provenance || (s || {}).provenance || h.provenance || {};
@@ -154,7 +154,8 @@
         m.addLayer({ id: "route-halo", type: "line", source: "route", paint: { "line-color": "#fff", "line-width": 7, "line-opacity": 0.85 }, layout: { "line-join": "round", "line-cap": "round" } });
         m.addLayer({ id: "route", type: "line", source: "route", paint: { "line-color": "#E4572E", "line-width": 4 }, layout: { "line-join": "round", "line-cap": "round" } });
         m.addSource("pts", { type: "geojson", data: { type: "FeatureCollection", features: pts.map(function (p) {
-          var lab = p.n + (p.k === "peak" && p.e ? "\n" + Number(p.e).toLocaleString() + "m" : "");
+          // 地図の上は短く（「千畳敷（駒ヶ岳ロープウェイ千畳敷駅）」→「千畳敷」）。触ったときの札は正式な名前
+          var lab = (p.k === "th" ? p.n.replace(/\s*[（(].*$/, "") || p.n : p.n) + (p.k === "peak" && p.e ? "\n" + Number(p.e).toLocaleString() + "m" : "");
           return { type: "Feature", properties: { i: pts.indexOf(p), k: p.k, label: (p.k === "peak" ? "▲ " : "") + lab }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } };
         }) } });
         m.addLayer({ id: "pts", type: "circle", source: "pts", filter: ["!=", ["get", "k"], "peak"],

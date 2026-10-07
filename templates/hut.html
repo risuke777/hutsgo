@@ -44,7 +44,8 @@
       <div>
         <dt>{{ T.l_period }}</dt>
         <dd {% if s %}data-status="{{ s.status }}" data-open="{{ s.open_date or '' }}" data-close="{{ s.close_date or '' }}"{% endif %}>
-          {% if s and s.status == 'open' %}{{ s.open_date | fmt_date }}{{ T.range }}{{ s.close_date | fmt_date }}
+          {% if s and s.status == 'open' and (s.open_date or s.close_date) %}{{ s.open_date | fmt_date }}{{ T.range }}{{ s.close_date | fmt_date }}
+          {% elif s and s.status == 'open' %}{# 日付まで決まっていない: 文言は注記に出る #}
           {% elif s and s.status == 'year_round' %}{{ T.season_year_round }}
           {% elif s and s.status == 'closed_this_year' %}{{ T.season_closed }}
           {% else %}{{ T.unknown }}{% endif %}

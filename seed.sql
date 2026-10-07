@@ -1036,3 +1036,73 @@ UPDATE trail_stops SET lat=36.287407, lon=137.726077, elevation_m=COALESCE(eleva
 UPDATE trail_stops SET lat=36.343337, lon=137.684052, elevation_m=COALESCE(elevation_m,2769) WHERE label='赤岩岳';
 UPDATE trail_stops SET lat=36.336933, lon=137.670112 WHERE label='水俣乗越';
 UPDATE trail_stops SET lat=35.670631, lon=138.243536 WHERE label='八本歯のコル';
+
+-- ===============================================================
+-- 2026-10-07 千畳敷カールから木曽駒ヶ岳の往復（中央アルプス。C4 は 2026-09-22 に中央アルプス（千畳敷）を対象に入れ済み）。
+-- 千畳敷駅: 座標は国土地理院の注記「千畳敷駅」、標高 2,612m は中央アルプス観光の公式サイト。
+-- 小屋（宝剣山荘・天狗荘・頂上山荘）: 運営は宮田観光開発。標高「約2,870m」・収容・料金（税込）は同社の各小屋のページ。
+--   料金のページに年の記載が無いので confidence='reported'（2026-10-07 時点の掲載額）。
+--   2026 年の営業期間は長野県「山小屋情報ポータル（中央アルプス）」（2026-06-02 更新）。「7月上旬」のように日付まで決まっていないので
+--   open_date/close_date は NULL、文言を season_note にそのまま入れる（A1: 日付を推測で埋めない）。
+--   座標は国土地理院ベクトルタイルの建物の形（BldA）の中心。宝剣山荘・天狗荘は注記（文字）が建物の約 200m 西に置かれているので、
+--   注記の東にある 2 棟のうち北を天狗荘、南を宝剣山荘とした（長野県の表記「宝剣山荘北50m」と向きが合う）。頂上山荘は注記から 14m の建物。
+-- 中岳・木曽駒ヶ岳: 国土地理院の注記と標高点 2925・三角点 2956.1。乗越浄土は地図に注記が無いので通過点にしない。
+-- 頂上木曽小屋は山頂の木曽側で、このルート（山頂の往復）は通らないので入れない。
+-- ===============================================================
+INSERT INTO operators (id, name_ja, website) VALUES ('miyada_kanko', '宮田観光開発', 'https://miyadakankou.co.jp/');
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES ('kisokoma', 'chuo_alps', '木曽駒ヶ岳・宝剣岳', 'Kisokoma-ga-take');
+
+UPDATE trailheads SET name_ja='千畳敷（駒ヶ岳ロープウェイ千畳敷駅）', name_en='Senjojiki (Komagatake Ropeway top station)',
+  lat=35.777435, lon=137.813435, elevation_m=2612 WHERE id='senjojiki';
+INSERT INTO access_routes (id,trailhead_id,mode,operator_name,from_place,seasonal_only,requires_hut_stay,reservation_required,private_car_restricted,source_url,confidence) VALUES
+('senjojiki_bus','senjojiki','bus','中央アルプス観光','JR駒ヶ根駅・菅の台バスセンター（しらび平で駒ヶ岳ロープウェイに乗り継ぎ）',0,0,0,1,'https://www.chuo-alps.com/timetable/','reported'),
+('senjojiki_ropeway','senjojiki','ropeway','中央アルプス観光（駒ヶ岳ロープウェイ）','しらび平',0,0,0,1,'https://www.chuo-alps.com/timetable/','reported');
+
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
+('hoken_sanso','宝剣山荘','Hoken Sanso','mountain_hut','chuo_alps','kisokoma','miyada_kanko',35.783200,137.809009,2870,'official','https://miyadakankou.co.jp/houkensansou','https://miyadakankou.co.jp/houkensansou','2026-10-07','reported'),
+('tengu_so','天狗荘','Tengu-so','mountain_hut','chuo_alps','kisokoma','miyada_kanko',35.783850,137.808703,2870,'official','https://miyadakankou.co.jp/tengusou','https://miyadakankou.co.jp/tengusou','2026-10-07','reported'),
+('komagatake_chojo_sanso','駒ヶ岳頂上山荘','Komagatake Chojo Sanso','mountain_hut','chuo_alps','kisokoma','miyada_kanko',35.787901,137.806481,2870,'official','https://miyadakankou.co.jp/chojosansou','https://miyadakankou.co.jp/chojosansou','2026-10-07','reported');
+
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES
+('hoken_sanso',2026,'open',NULL,NULL,'4月上旬〜11月上旬（4月・11月は要問い合わせ）','Early April to early November (ask ahead for April and November)',1,NULL,'090-5507-6345',NULL,NULL,100,NULL,
+ 'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_cyuualps.html','2026-10-07','reported'),
+('tengu_so',2026,'open',NULL,NULL,'7月上旬〜10月初旬（要問い合わせ）','Early July to early October (ask ahead)',1,NULL,'0265-95-1919',NULL,NULL,100,NULL,
+ 'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_cyuualps.html','2026-10-07','reported'),
+('komagatake_chojo_sanso',2026,'open',NULL,NULL,'7月初旬〜10月初旬（要予約・要問い合わせ）','Early July to early October (booking required; ask ahead)',1,NULL,'0265-95-1919',NULL,NULL,50,100,
+ 'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_cyuualps.html','2026-10-07','reported');
+
+INSERT INTO hut_rates (hut_id,year,plan_type,price_jpy,is_from_price,source_url,last_verified_at,confidence) VALUES
+('hoken_sanso',2026,'two_meals',13200,0,'https://miyadakankou.co.jp/houkensansou','2026-10-07','reported'),
+('hoken_sanso',2026,'no_meal',10200,0,'https://miyadakankou.co.jp/houkensansou','2026-10-07','reported'),
+('tengu_so',2026,'two_meals',13200,0,'https://miyadakankou.co.jp/tengusou','2026-10-07','reported'),
+('tengu_so',2026,'no_meal',10200,0,'https://miyadakankou.co.jp/tengusou','2026-10-07','reported'),
+('komagatake_chojo_sanso',2026,'two_meals',13200,0,'https://miyadakankou.co.jp/chojosansou','2026-10-07','reported'),
+('komagatake_chojo_sanso',2026,'no_meal',10200,0,'https://miyadakankou.co.jp/chojosansou','2026-10-07','reported'),
+('komagatake_chojo_sanso',2026,'tent',2000,0,'https://miyadakankou.co.jp/chojosansou','2026-10-07','reported');
+
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES
+('hoken_sanso','senjojiki',NULL),('tengu_so','senjojiki',NULL),('komagatake_chojo_sanso','senjojiki',NULL);
+
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('kisokoma','木曽駒ヶ岳（千畳敷カールから往復）','Kisokoma-ga-take from the Senjojiki cirque',1,NULL,
+ '駒ヶ岳ロープウェイで千畳敷（2,612m）へ上がり、千畳敷カールから稜線へ。宝剣山荘・天狗荘の前を通って中岳を越え、木曽駒ヶ岳（2,956m）へ。同じ道を千畳敷へ戻る',
+ 'Ride the Komagatake Ropeway up to Senjojiki (2,612 m), climb out of the cirque to the ridge by Hoken Sanso and Tengu-so, cross Nakadake and reach Kisokoma-ga-take (2,956 m), then return the same way.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('kisokoma', 1,NULL,'senjojiki',NULL,0,NULL,NULL,NULL),
+('kisokoma', 2,'hoken_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('kisokoma', 3,'tengu_so',NULL,NULL,1,NULL,NULL,NULL),
+('kisokoma', 4,NULL,NULL,NULL,0,'中岳','Nakadake',2925),
+('kisokoma', 5,'komagatake_chojo_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('kisokoma', 6,NULL,NULL,NULL,0,'木曽駒ヶ岳','Kisokoma-ga-take',2956),
+('kisokoma', 7,'komagatake_chojo_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('kisokoma', 8,NULL,NULL,NULL,0,'中岳','Nakadake',2925),
+('kisokoma', 9,'tengu_so',NULL,NULL,0,NULL,NULL,NULL),
+('kisokoma',10,'hoken_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('kisokoma',11,NULL,'senjojiki',NULL,0,NULL,NULL,NULL);
+UPDATE trail_stops SET lat=35.786124, lon=137.807754 WHERE trail_id='kisokoma' AND label='中岳';
+UPDATE trail_stops SET lat=35.789550, lon=137.804574 WHERE trail_id='kisokoma' AND label='木曽駒ヶ岳';
+
+-- 長野県の表 No.54。PDF の文字の並びがずれているため、体力度は合計コースタイム・ルート定数（12.3）の並びから対応をとった。運営者の確認待ち
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
+('kisokoma','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',54,'木曽駒ヶ岳（千畳敷）',2,'B','same','県の表の出発点の標高は 2,650m（千畳敷）','unverified',3.7,3.8,0.43);
