@@ -316,7 +316,8 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   // ---- 8. ルートページ: 断面図 ⇄ 地図、行程に入れる ----------------------
   const k = bootTrail();
   await wait(150);
-  ok("ルートページに切り替えがある", k.d.querySelectorAll("[data-trailview]").length === 2);
+  // 断面図・地図・地図（3D）の 3 つ
+  ok("ルートページに切り替えがある", k.d.querySelectorAll("[data-trailview]").length === 3);
   ok("最初は断面図", k.d.getElementById("trail-map").hidden
      && !k.d.querySelector("figure.profile").hidden);
   k.d.querySelector('[data-trailview="map"]').click();
@@ -329,10 +330,10 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("ルートの線を引く", !!k.d.querySelector("#trail-map .hgmap-route"),
      (k.d.querySelector("#trail-map .hgmap-route") || {}).getAttribute
        ? k.d.querySelector("#trail-map .hgmap-route").getAttribute("points").slice(0, 30) : "");
-  // 表銀座は地理院の徒歩道に沿わせた線（trail_paths/omote_ginza.json）。出典と、現況は反映しない旨を出す
+  // 表銀座は地理院の徒歩道に沿わせた線（trail_paths/omote_ginza.json）。出典と、現地の標識を優先する旨を短く出す
   ok("線の出典と限界を書いてある", !k.d.getElementById("trail-map-note").hidden
      && /地理院地図の登山道/.test(k.d.getElementById("trail-map-note").textContent)
-     && /通行止め/.test(k.d.getElementById("trail-map-note").textContent));
+     && /現地の標識/.test(k.d.getElementById("trail-map-note").textContent));
   const addBtns = k.d.querySelectorAll('.stop-actions a[href*="/plan/#add="]');
   ok("小屋カードごとに行程へ入れる", addBtns.length === 9, `${addBtns.length}個`);
   const thLink = k.d.querySelector('.stop-th a[href*="/trailheads/"]');
@@ -449,25 +450,29 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("装備リンクは新しいタブで開き rel=noopener を付ける",
      /href="https:\/\/www\.yamarent\.com\/en"[^>]*target="_blank"[^>]*rel="noopener"/.test(thHtmlEn));
 
-  // ---- 13. ルートを地理院地図3Dで開くリンク（自前3Dの需要テスト）------------
-  // 地理院地図3D は pxsize が無いと空の alert を出して止まる。lat/lon はルートの座標の内側にあること
+  // ---- 13. ルートページの「地図（3D）」: 外部へ飛ばさず、ページの中で地形の上に線を載せる -----
+  // 点（小屋・登山口・山頂）はルートの線の範囲内にあること。MapLibre は押したときだけ読む
   const trailDirs = ["", "en/"].flatMap(p =>
     fs.readdirSync(path.join(DIST, p + "trails"), { withFileTypes: true })
       .filter(e => e.isDirectory()).map(e => p + "trails/" + e.name));
   const bad3d = trailDirs.filter(d => {
     const html = fs.readFileSync(path.join(DIST, d, "index.html"), "utf8");
-    const m = /href="https:\/\/maps\.gsi\.go\.jp\/index_3d\.html\?z=(\d+)&amp;lat=([\d.]+)&amp;lon=([\d.]+)&amp;pxsize=2048&amp;ls=std"[^>]*target="_blank"[^>]*rel="noopener"[^>]*data-track="view_3d"/.exec(html);
+    if (/maps\.gsi\.go\.jp\/index_3d/.test(html) || /<script[^>]*maplibre/.test(html)) return true;
+    if (!/data-trailview="3d"/.test(html)) return true;
+    const m = /id="trail-3d"[^>]*data-points="([^"]*)"/.exec(html);
     const line = /data-line="([^"]*)"/.exec(html);
     if (!m || !line) return true;
+    let pts3;
+    try { pts3 = JSON.parse(m[1].replace(/&#34;|&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")); }
+    catch (e) { return true; }
     const pts = line[1].split(";").map(s => s.split(",").map(Number));
-    const lat = +m[2], lon = +m[3], z = +m[1];
-    const inside = lat >= Math.min(...pts.map(p => p[0])) && lat <= Math.max(...pts.map(p => p[0]))
-      && lon >= Math.min(...pts.map(p => p[1])) && lon <= Math.max(...pts.map(p => p[1]));
-    return !(inside && z >= 10 && z <= 15);
+    const la = pts.map(p => p[0]), lo = pts.map(p => p[1]), m2 = 0.01;
+    return !(pts3.length >= 2 && pts3.every(q => q.lat >= Math.min(...la) - m2 && q.lat <= Math.max(...la) + m2
+      && q.lon >= Math.min(...lo) - m2 && q.lon <= Math.max(...lo) + m2));
   });
-  ok("全ルート（日英" + trailDirs.length + "ページ）に3Dリンクがあり、中心がルートの範囲内",
+  ok("全ルート（日英" + trailDirs.length + "ページ）に地図（3D）があり、点がルートの範囲内",
      trailDirs.length > 0 && bad3d.length === 0);
-  if (bad3d.length) console.log("  3Dリンクが不正:", bad3d.join(", "));
+  if (bad3d.length) console.log("  地図（3D）が不正:", bad3d.join(", "));
 
   // ---- 14. 登山道に沿った線と GPX ------------------------------------------
   // 道をたどれたルートだけ GPX を出す。直線の区間を含む GPX はナビで使われると危ない

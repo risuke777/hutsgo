@@ -366,3 +366,8 @@ button.btn{font:inherit;cursor:pointer}
 .trail-map{position:relative;height:60vh;min-height:20rem;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .trail-map[hidden]{display:none}
 .trail-map-note{margin:.4rem 0 0}
+
+/* ルートの「地図（3D）」: 山ムービーと同じ航空写真＋標高に道を重ね、指で回して見る（押したときだけ部品を読む） */
+.trail-3dmap{position:relative;height:min(68vh,560px);min-height:340px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#16241d}
+.trail-3dmap .t3d-hint{position:absolute;left:.6rem;top:.6rem;z-index:2;margin:0;padding:.2rem .6rem;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:.78rem;pointer-events:none}
+.trail-3dmap .t3d-load{position:absolute;inset:0;display:grid;place-items:center;color:#d6e2da;font-size:.9rem}

@@ -29,13 +29,14 @@
     <div class="viewswitch" role="tablist" aria-label="{{ T.trail_view_switch }}">
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="profile" aria-selected="true">{{ T.trail_view_profile }}</button>
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="map" aria-selected="false">{{ T.trail_view_map }}</button>
+      <button type="button" class="viewswitch-btn" role="tab" data-trailview="3d" aria-selected="false" data-trail="{{ t.id }}">{{ T.trail_view_3d }}</button>
     </div>
-    {% if t.gsi3d %}<a class="trail-3d" href="{{ t.gsi3d }}" target="_blank" rel="noopener" data-track="view_3d" data-trail="{{ t.id }}">{{ T.trail_view_3d }}</a>{% endif %}
   </div>
 
   <div class="trail-map" id="trail-map" hidden
        data-huts="{{ t.stops | selectattr('hut') | map(attribute='hut.id') | join(',') }}"
        data-line="{{ t.map_line }}"></div>
+  <div class="trail-3dmap" id="trail-3d" hidden data-points="{{ t.map_points }}" data-hint="{{ T.trail_3d_hint }}"></div>
   <p class="quiet trail-map-note" id="trail-map-note" hidden>
     {%- if t.legs_traced == 0 %}{{ T.trail_map_note }}
     {%- else %}{{ T.trail_map_note_path }}{% if t.legs_traced < t.legs_total %} {{ T.trail_map_note_partial }}{% endif %}

@@ -63,7 +63,7 @@
       (facts.length ? '<ul class="fd-facts">' + facts.join("") + "</ul>" : "") + huts + acc +
       (it.contrib && it.contrib.comment ? '<p class="fd-line">' + esc(it.contrib.comment) + "</p>" : "") + "</div>" +
       '<div class="fd-acts"><button type="button" class="fd-act" data-save="' + esc(it.key) + '" aria-pressed="' + isSaved + '"><span class="ic" aria-hidden="true">★</span>保存</button>' +
-      (r ? '<a class="fd-act" href="' + esc(r.url) + '" data-detail="' + esc(r.id) + '"><span class="ic" aria-hidden="true">→</span>詳しく</a>' : "") + "</div>";
+      (r ? '<a class="fd-act" href="' + esc(r.url) + '" data-detail="' + esc(r.id) + '"><span class="ic" aria-hidden="true">↑</span>詳しく</a>' : "") + "</div>";
     return el;
   }
 
