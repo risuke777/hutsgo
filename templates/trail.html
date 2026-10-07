@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{{ BASE }}/static/plan.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ItemList","name":"{{ t.name }}","itemListOrder":"https://schema.org/ItemListOrderAscending",
- "itemListElement":[{% for s in t.stops if s.hut %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/huts/{{ s.hut.id }}/","name":"{{ s.hut.name }}"}{{ "," if not loop.last }}{% endfor %}]}
+ "itemListElement":[{% for s in t.stops if s.hut and not s.again_of %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/huts/{{ s.hut.id }}/","name":"{{ s.hut.name }}"}{{ "," if not loop.last }}{% endfor %}]}
 </script>
 {% endblock %}
 {% block body %}
@@ -27,9 +27,9 @@
 
   <div class="trail-actions">
     <div class="viewswitch" role="tablist" aria-label="{{ T.trail_view_switch }}">
+      <button type="button" class="viewswitch-btn" role="tab" data-trailview="3d" aria-selected="false" data-trail="{{ t.id }}">{{ T.trail_view_3d }}</button>
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="profile" aria-selected="true">{{ T.trail_view_profile }}</button>
       <button type="button" class="viewswitch-btn" role="tab" data-trailview="map" aria-selected="false">{{ T.trail_view_map }}</button>
-      <button type="button" class="viewswitch-btn" role="tab" data-trailview="3d" aria-selected="false" data-trail="{{ t.id }}">{{ T.trail_view_3d }}</button>
     </div>
   </div>
 
@@ -60,7 +60,7 @@
         <span><i class="lg lg-peak"></i>{{ T.legend_peak }}</span>
         <span><i class="lg lg-est"></i>{{ T.legend_est }}</span>
       </p>
-      <p class="quiet profile-note">{% if t.times_known %}{{ T.profile_note }}{% else %}{{ T.profile_note_seq }}{% endif %} {{ T.profile_note_rest }}{% if sm and sm.unverified %} {{ T.profile_note_est.format(names=sm.unverified | join('・' if LANG == 'ja' else ', ')) }}{% endif %}</p>
+      <p class="quiet profile-note">{% if t.times_known %}{{ T.profile_note }}{% else %}{{ T.profile_note_seq }}{% endif %} {{ T.profile_note_rest }}{% if sm and sm.unverified %} {{ T.profile_note_est.format(names=sm.unverified | unique | join('・' if LANG == 'ja' else ', ')) }}{% endif %}</p>
     </figcaption>
   </figure>
 
@@ -75,7 +75,7 @@
   <section class="block" aria-labelledby="huts-h">
     <h2 id="huts-h">{{ T.trail_huts_h }}</h2>
     <ul class="link-list">
-      {% for s in t.stops if s.hut %}
+      {% for s in t.stops if s.hut and not s.again_of %}
       <li><a href="{{ LB }}/huts/{{ s.hut.id }}/">{{ s.hut.name }}</a>
         <span class="quiet">{{ s.hut.type_label }}{% if s.hut.elevation_m %}{{ T.mid }}{{ s.hut.elevation_m | metres }}{% endif %}{% if s.hut.price_two %}{{ T.mid }}{{ T.plan_two_meals }} {{ s.hut.price_two.price_jpy | yen }}{{ '+' if s.hut.price_two.is_from_price }}{% endif %}</span></li>
       {% endfor %}
@@ -91,7 +91,18 @@
 
   <ol class="timeline" data-plan-date>
   {% for r in t.rows %}
-    {% if r.row == 'stop' %}
+    {% if r.row == 'stop' and r.stop.again_of %}
+    {% set s = r.stop %}{% set p = r.p %}
+    <li class="stop stop-hut stop-pass stop-again" id="stop-{{ s.seq }}">
+      <div class="stop-card">
+        <p class="stop-head">
+          <span class="stop-time">{% if t.times_known and p.t %}{{ p.t | fmt_time }}{% endif %}</span>
+          <span class="stop-elev{{ ' is-est' if p.est }}">{{ p.elev | metres }}</span>
+        </p>
+        <p class="stop-again-line"><a href="{{ LB }}/huts/{{ s.hut.id }}/">{{ s.hut.name }}</a> <span class="quiet">{{ T.trail_again }}</span> <a class="quiet" href="#stop-{{ s.again_of }}">{{ T.trail_again_up }}</a></p>
+      </div>
+    </li>
+    {% elif r.row == 'stop' %}
     {% set s = r.stop %}{% set p = r.p %}{% set h = s.hut %}{% set se = h.season if h else None %}
     <li class="stop {{ 'stop-hut' if h else 'stop-th' }}{{ ' stop-pass' if h and not s.is_overnight_candidate }}" id="stop-{{ s.seq }}"
         {% if se %}data-status="{{ se.status }}" data-open="{{ se.open_date or '' }}" data-close="{{ se.close_date or '' }}"{% endif %}>

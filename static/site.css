@@ -385,3 +385,8 @@ button.btn{font:inherit;cursor:pointer}
 .t3d-pop-dl dd{margin:0;font-weight:700}
 .t3d-pop-src{margin:.35rem 0 0;font-size:.7rem;color:var(--granite)}
 .t3d-pop-go{display:inline-block;margin-top:.4rem;font-weight:800;color:var(--moss-deep)}
+
+/* 往復の帰りにもう一度通る小屋: カードを重ねず 1 行 */
+.stop-again .stop-card{padding-top:.5rem;padding-bottom:.5rem}
+.stop-again-line{margin:.15rem 0 0;font-weight:700}
+.stop-again-line .quiet{font-weight:400;font-size:.85rem;white-space:nowrap}

@@ -28,7 +28,7 @@ $allowed_ev = ['pageview', 'outbound_official_site', 'outbound_reservation', 'ou
                'agency_link',
                // 試作 /lab/flyover/ の動画書き出し（写真・動画そのものは送られない。数だけ）
                'flyover_export', 'flyover_card', 'flyover_link', 'flyover_view', 'flyover_go', 'flyover_contrib',
-               'feed_view', 'feed_w5', 'feed_w15', 'feed_w30', 'feed_save', 'feed_detail', 'feed_compare', 'feed_share',
+               'feed_view', 'feed_w5', 'feed_w15', 'feed_w30', 'feed_save', 'feed_detail', 'feed_compare', 'feed_share', 'feed_make',
                // ルートページの地図（3D）で小屋・登山口・山頂を触った数
                'view_3d_pin',
                // 装備レンタルのゼロ円需要テスト（2026-09-27）。提携なし・手数料なしの素のリンク。

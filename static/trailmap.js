@@ -96,14 +96,15 @@
     var pts = []; try { pts = JSON.parse(el.dataset.points || "[]"); } catch (e) { pts = []; }
     var sendView = document.querySelector('[data-trailview="3d"]');
     var api = meta("hutsgo-api");
-    if (api && navigator.sendBeacon && sendView) navigator.sendBeacon(api + "/track.php", new Blob([JSON.stringify({ ev: "view_3d", lang: LANG, hut: "", trail: sendView.dataset.trail || "", page: location.pathname, ref: "" })], { type: "text/plain" }));
     loadLib().then(function () {
       el.innerHTML = '<p class="t3d-hint">' + (el.dataset.hint || "") + "</p>";
       var GSI = "https://cyberjapandata.gsi.go.jp/xyz/";
       var dem = { type: "raster-dem", tiles: [GSI + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
                   redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' };
       var m = new maplibregl.Map({
-        container: el, attributionControl: false, maxPitch: 80,
+        container: el, attributionControl: false, maxPitch: 80, cooperativeGestures: true,
+        locale: LANG === "en" ? {} : { "CooperativeGesturesHandler.WindowsHelpText": "Ctrl を押しながらスクロールで拡大・縮小",
+          "CooperativeGesturesHandler.MacHelpText": "⌘ を押しながらスクロールで拡大・縮小", "CooperativeGesturesHandler.MobileHelpText": "2本指で地図を動かします" },
         style: { version: 8, glyphs: "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
           sources: { photo: { type: "raster", tiles: [GSI + "seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 18 }, dem: dem,
                      hsdem: (function () { var d = Object.assign({}, dem); delete d.attribution; return d; })() },
@@ -128,7 +129,10 @@
         },
         onRemove: function () {}
       }, "top-right");
-      m.addControl(new maplibregl.FullscreenControl(), "top-right");
+      var fsc = new maplibregl.FullscreenControl();
+      fsc.on("fullscreenstart", function () { m.cooperativeGestures.disable(); });
+      fsc.on("fullscreenend", function () { m.cooperativeGestures.enable(); });
+      m.addControl(fsc, "top-right");
       m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
       m.on("error", function (ev) { if (window.console) console.warn("[3d]", ev && ev.error && ev.error.message); });
       m.on("load", function () {
@@ -196,6 +200,14 @@
 
   sw.addEventListener("click", function (e) {
     var b = e.target.closest("[data-trailview]");
-    if (b) show(b.dataset.trailview);
+    if (!b) return;
+    // 押して 3D を見た数（最初から 3D で開いた分は数えない）
+    var api3 = meta("hutsgo-api");
+    if (b.dataset.trailview === "3d" && api3 && navigator.sendBeacon) navigator.sendBeacon(api3 + "/track.php", new Blob([JSON.stringify({ ev: "view_3d", lang: LANG, hut: "", trail: b.dataset.trail || "", page: location.pathname, ref: "" })], { type: "text/plain" }));
+    show(b.dataset.trailview);
   });
+  // WebGL が使える端末は最初から地図（3D）。使えない端末・古いブラウザは断面図のまま
+  var gl = false;
+  try { var cv = window.WebGLRenderingContext && document.createElement("canvas"); gl = !!(cv && (cv.getContext("webgl2") || cv.getContext("webgl"))); } catch (e) { gl = false; }
+  if (gl && document.getElementById("trail-3d")) show("3d");
 })();

@@ -210,6 +210,7 @@
       if (i >= 0) saved.splice(i, 1); else { saved.push(k); track("feed_save", (items.filter(function (x) { return x.key === k; })[0] || {}).route ? k : ""); }
       sv.setAttribute("aria-pressed", String(i < 0)); keep(); return;
     }
+    if (e.target.closest("[data-make]")) { track("feed_make"); return; }
     var sh = e.target.closest("[data-share]");
     if (sh) { share(sh.dataset.share); return; }
     var dt = e.target.closest("[data-detail]");

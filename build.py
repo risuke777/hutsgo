@@ -520,10 +520,15 @@ def build_model(lang):
         t["name"] = disp(t, lang, with_ja=False)
         t["summary_t"] = pick(t, "summary", lang)
         t["stops"] = rows("SELECT * FROM trail_stops WHERE trail_id=? ORDER BY seq", t["id"])
+        _first = {}
         for s in t["stops"]:
             s["hut"] = huts.get(s["hut_id"])
             s["trailhead"] = trailheads.get(s["trailhead_id"])
-            if s["hut"]:
+            # 往復ルートの帰りに同じ小屋を通る: 2 回目は「行きと同じ小屋」として 1 行だけ（一覧・カードを重ねない）
+            s["again_of"] = _first.get(s["hut_id"]) if s["hut_id"] else None
+            if s["hut_id"] and s["hut_id"] not in _first:
+                _first[s["hut_id"]] = s["seq"]
+            if s["hut"] and not s["again_of"]:
                 s["hut"]["trails"].append(t)
         # コースタイムは区間ごとの公式記載が無いルートがある。断面図は横軸が累積時間なので、
         # 1つでも欠けていれば描かない（0 で埋めると嘘の形になる）。行程の並びだけは出す。
