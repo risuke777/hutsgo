@@ -543,8 +543,13 @@ def build_model(lang):
         t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)
         t["svg_mini"] = profile_mini_svg(t, t["points"])
         # 地図に引く線。小屋・登山口の座標を行程順に結んだだけのもので、登山道そのものではない
-        stop_pts = [(s["hut_id"] or s["trailhead_id"], p["lat"], p["lon"]) for s in t["stops"]
-                     for p in [s["hut"] or s["trailhead"]] if p and p.get("lat") and p.get("lon")]
+        stop_pts = []
+        for s in t["stops"]:
+            p = s["hut"] or s["trailhead"]
+            if p and p.get("lat") and p.get("lon"):
+                stop_pts.append((s["hut_id"] or s["trailhead_id"], p["lat"], p["lon"]))
+            elif s.get("label") and s.get("lat") is not None:   # 山頂・コル（tools/trail_paths.py と同じ id）
+                stop_pts.append(("pk:" + s["label"], s["lat"], s["lon"]))
         line, t["legs_traced"], t["legs_total"] = trail_line(t["id"], stop_pts)
         t["line_pts"] = line
         t["map_line"] = ";".join(f"{la:.6f},{lo:.6f}" for la, lo in line)

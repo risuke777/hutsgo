@@ -127,6 +127,41 @@
     if (e.data.type === "ready") { ready = true; if (pending) { $("fd-player").contentWindow.postMessage(pending, location.origin); pending = null; } }
   });
 
+  // ---- 詳しく: ルートのページをシートで開く。サイトの見出しと足もとは隠し、後ろの 3D は止める
+  var lastFocus = null;
+  function player(msg) { try { $("fd-player").contentWindow.postMessage(msg, location.origin); } catch (e) { /* まだ無い */ } }
+  function openDetail(url, id) {
+    var it = items.filter(function (x) { return x.route && x.route.id === id; })[0];
+    $("fd-detail-h").textContent = it ? it.route.name : "ルート";
+    $("fd-detail-page").href = url;
+    var body = document.querySelector(".fd-detail-body"), old = body.querySelector("iframe");
+    if (old) old.remove();
+    $("fd-detail-loading").hidden = false;
+    var fr = document.createElement("iframe"); fr.title = "ルートの詳しい情報"; fr.src = url;
+    fr.addEventListener("load", function () {
+      $("fd-detail-loading").hidden = true;
+      try {   // 同じサイトなので中に手が届く。見出し・足もと・言語切り替えは隠す
+        var st = fr.contentDocument.createElement("style");
+        st.textContent = ".site-head,.site-foot,.skip-link{display:none!important}body{padding-top:0!important}";
+        fr.contentDocument.head.appendChild(st);
+      } catch (e) { /* 隠せなくても読める */ }
+    });
+    body.appendChild(fr);
+    $("fd-compare").hidden = true;
+    $("fd-detail").hidden = false;
+    lastFocus = document.activeElement; $("fd-detail-close").focus();
+    player({ type: "pause" });
+  }
+  function closeDetail() {
+    $("fd-detail").hidden = true;
+    var fr = document.querySelector(".fd-detail-body iframe"); if (fr) fr.remove();
+    player({ type: "play" });
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $("fd-detail-close").addEventListener("click", closeDetail);
+  $("fd-detail").addEventListener("click", function (e) { if (e.target === $("fd-detail")) closeDetail(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("fd-detail").hidden) closeDetail(); });
+
   // ---- 比べる
   function compare() {
     var rows = items.filter(function (it) { return saved.indexOf(it.key) >= 0; });
@@ -152,7 +187,12 @@
       sv.setAttribute("aria-pressed", String(i < 0)); keep(); return;
     }
     var dt = e.target.closest("[data-detail]");
-    if (dt) track("feed_detail", dt.dataset.detail);
+    if (dt) {
+      track("feed_detail", dt.dataset.detail);
+      // 新しいタブ・別ウインドウで開く操作はそのまま。ふつうに押したらシートで開く
+      if (!(e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) { e.preventDefault(); openDetail(dt.getAttribute("href"), dt.dataset.detail); }
+      return;
+    }
     var ch = e.target.closest(".fd-chips button");
     if (ch) {
       var grp = ch.parentNode.dataset.group; filt[grp] = ch.dataset.v;

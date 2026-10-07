@@ -63,8 +63,9 @@ def fetch(z, x, y):
 def stops_of(trail_id):
     db = sqlite3.connect(ROOT / "hutsgo.db"); db.row_factory = sqlite3.Row
     out = []
-    for r in db.execute("""SELECT s.seq, COALESCE(s.hut_id, s.trailhead_id) id,
-            COALESCE(h.name_ja, t.name_ja) name, COALESCE(h.lat, t.lat) lat, COALESCE(h.lon, t.lon) lon
+    # 山頂・コルなどの通過点も、位置があれば区間の端にする（id は "pk:" + 名前。build.py と同じ決まり）
+    for r in db.execute("""SELECT s.seq, COALESCE(s.hut_id, s.trailhead_id, 'pk:' || s.label) id,
+            COALESCE(h.name_ja, t.name_ja, s.label) name, COALESCE(h.lat, t.lat, s.lat) lat, COALESCE(h.lon, t.lon, s.lon) lon
           FROM trail_stops s LEFT JOIN huts h ON h.id = s.hut_id LEFT JOIN trailheads t ON t.id = s.trailhead_id
           WHERE s.trail_id = ? ORDER BY s.seq""", (trail_id,)):
         if r["lat"] is not None and r["lon"] is not None:

@@ -994,3 +994,45 @@ INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is
 ('fuji_yoshida',15,'fuji_tomoekan8',NULL,NULL,1,NULL,NULL,NULL),
 ('fuji_yoshida',16,NULL,NULL,NULL,0,'富士山（剣ヶ峰）','Mount Fuji (Kengamine)',3776),
 ('fuji_yoshida',17,NULL,'fuji_subaru5',NULL,0,NULL,NULL,NULL);
+
+-- ===============================================================
+-- 2026-10-07 西穂高（新穂高から）を山頂まで登って下りるルートに（運営者の指摘: 小屋まで行って戻るだけでは登山にならない）。
+-- 歩き始めは新穂高ロープウェイの山頂駅「西穂高口」。座標は国土地理院の地図の注記「西穂高口駅」、標高は岐阜県観光公式サイト。
+-- 独標・西穂高岳の標高は国土地理院（標高点 2701・三角点 2908.8）。
+-- ===============================================================
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('nishihotakaguchi','西穂高口（新穂高ロープウェイ山頂駅）','Nishihotakaguchi (Shinhotaka Ropeway top station)',36.267658,137.601721,2156,0,
+ 'ロープウェイの駅。新穂高温泉駅から第1ロープウェイでしらかば平へ、第2ロープウェイに乗り継いで上がる',
+ 'A ropeway station: ride the first ropeway from Shinhotaka Onsen to Shirakabadaira, then change to the second ropeway.');
+INSERT INTO access_routes (id,trailhead_id,mode,operator_name,from_place,seasonal_only,requires_hut_stay,reservation_required,private_car_restricted,source_url,confidence) VALUES
+('nishihotakaguchi_ropeway','nishihotakaguchi','ropeway','新穂高ロープウェイ','新穂高温泉駅（しらかば平で乗り継ぎ）',0,0,0,0,'https://www.kankou-gifu.jp/spot/detail_1212.html','reported');
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('nishiho_sanso','nishihotakaguchi',NULL);
+
+DELETE FROM trail_stops WHERE trail_id='nishihotaka';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m) VALUES
+('nishihotaka', 1,NULL,'nishihotakaguchi',NULL,0,NULL,NULL,NULL),
+('nishihotaka', 2,'nishiho_sanso',NULL,NULL,1,NULL,NULL,NULL),
+('nishihotaka', 3,NULL,NULL,NULL,0,'西穂独標','Nishiho Dokuhyo',2701),
+('nishihotaka', 4,NULL,NULL,NULL,0,'西穂高岳','Nishihotakadake',2909),
+('nishihotaka', 5,'nishiho_sanso',NULL,NULL,0,NULL,NULL,NULL),
+('nishihotaka', 6,NULL,'nishihotakaguchi',NULL,0,NULL,NULL,NULL);
+UPDATE trails SET name_ja='西穂高岳（新穂高ロープウェイから）', name_en='Nishihotakadake from the Shinhotaka Ropeway',
+  summary='新穂高ロープウェイで西穂高口（2,156m）へ上がり、西穂山荘へ。独標を越えて西穂高岳（2,909m）の山頂を往復し、西穂山荘から西穂高口へ戻る',
+  summary_en='Ride the Shinhotaka Ropeway up to Nishihotakaguchi (2,156 m), walk to Nishiho Sanso, then over the Dokuhyo knoll to the Nishihotakadake summit (2,909 m) and back the same way.'
+  WHERE id='nishihotaka';
+
+-- ===============================================================
+-- 2026-10-07 通過点（山頂・コル）に位置を入れる。国土地理院ベクトルタイルの注記（山名の近く 400m 以内でいちばん高い標高点・三角点を山頂とする）。
+-- これで山頂の往復も線が山頂まで届く（以前は位置が無く、小屋から小屋へ直線で結んでいた）
+-- ===============================================================
+UPDATE trail_stops SET lat=36.406816, lon=137.712757, elevation_m=COALESCE(elevation_m,2763) WHERE label='燕岳';
+UPDATE trail_stops SET lat=36.342006, lon=137.647657, elevation_m=COALESCE(elevation_m,3180) WHERE label='槍ヶ岳';
+UPDATE trail_stops SET lat=36.302531, lon=137.652037, elevation_m=COALESCE(elevation_m,3106) WHERE label='北穂高岳';
+UPDATE trail_stops SET lat=36.289203, lon=137.647997, elevation_m=COALESCE(elevation_m,3190) WHERE label='奥穂高岳';
+UPDATE trail_stops SET lat=36.278994, lon=137.629064, elevation_m=COALESCE(elevation_m,2909) WHERE label='西穂高岳';
+UPDATE trail_stops SET lat=36.272517, lon=137.626427, elevation_m=COALESCE(elevation_m,2701) WHERE label='西穂独標';
+UPDATE trail_stops SET lat=35.674315, lon=138.238832, elevation_m=COALESCE(elevation_m,3193) WHERE label='北岳';
+UPDATE trail_stops SET lat=36.287407, lon=137.726077, elevation_m=COALESCE(elevation_m,2677) WHERE label='蝶ヶ岳';
+UPDATE trail_stops SET lat=36.343337, lon=137.684052, elevation_m=COALESCE(elevation_m,2769) WHERE label='赤岩岳';
+UPDATE trail_stops SET lat=36.336933, lon=137.670112 WHERE label='水俣乗越';
+UPDATE trail_stops SET lat=35.670631, lon=138.243536 WHERE label='八本歯のコル';

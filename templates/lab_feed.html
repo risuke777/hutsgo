@@ -51,6 +51,17 @@
 <main id="fd-feed" class="fd-feed" aria-label="ルート"></main>
 <p id="fd-none" class="fd-none" hidden>この条件のルートはまだありません。条件をゆるめてください。</p>
 
+<section id="fd-detail" class="fd-sheet fd-detail" hidden aria-labelledby="fd-detail-h">
+  <div class="fd-sheet-card fd-detail-card" role="dialog" aria-modal="true">
+    <div class="fd-detail-head">
+      <h2 id="fd-detail-h">ルート</h2>
+      <a id="fd-detail-page" class="fd-detail-link" href="#">ページで開く</a>
+      <button type="button" id="fd-detail-close" class="fd-x" aria-label="閉じる">×</button>
+    </div>
+    <div class="fd-detail-body"><p id="fd-detail-loading" class="fd-note">読み込み中…</p></div>
+  </div>
+</section>
+
 <section id="fd-compare" class="fd-sheet" hidden aria-labelledby="fd-compare-h">
   <div class="fd-sheet-card">
     <h2 id="fd-compare-h">保存したルートを比べる</h2>

@@ -235,6 +235,9 @@ CREATE TABLE trail_stops (
   label       TEXT,
   label_en    TEXT,
   elevation_m INTEGER,
+  -- 通過点（山頂・コル）の位置。国土地理院の地図の注記（山頂は近くの標高点・三角点）。線を山頂まで引くのに使う
+  lat REAL,
+  lon REAL,
   PRIMARY KEY (trail_id, seq)
 );
 

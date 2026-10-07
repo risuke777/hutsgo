@@ -83,3 +83,13 @@ a{color:inherit}
 .fd-filter-btn[aria-expanded="true"] .fd-chev{transform:rotate(180deg)}
 .fd-filter-btn.is-on{background:var(--accent);border-color:var(--accent);color:#16241d}
 @media (prefers-reduced-motion:reduce){.fd-chev{transition:none}}
+
+/* 詳しく: ルートのページをフィードの中のシートで開く（ページを離れない） */
+.fd-detail-card{display:flex;flex-direction:column;height:90svh;padding:0;overflow:hidden}
+.fd-detail-head{display:flex;align-items:center;gap:.6rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+.fd-detail-head h2{flex:1;margin:0;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fd-detail-link{font-size:.82rem;color:var(--moss);font-weight:700;white-space:nowrap}
+.fd-x{width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:1.3rem;line-height:1;cursor:pointer}
+.fd-detail-body{position:relative;flex:1;min-height:0}
+.fd-detail-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.fd-detail-body .fd-note{padding:1rem;margin:0}

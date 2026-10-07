@@ -2737,6 +2737,7 @@
         if (d.type === "route") r = routes.find(function (x) { return x.id === d.id; });
         else if (d.type === "link") { try { var l = await readLink("#" + d.link); r = l && l.gpx; tt = (l && l.title) || d.title || ""; } catch (err) { r = null; } }
         else if (d.type === "pause") { pauseSp(); return; }
+        else if (d.type === "play") { if (!sp.playing) playSp(); return; }
         if (!r) return;
         pauseSp(); $("fly-title").value = tt;
         await useRoute(r);
