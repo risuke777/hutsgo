@@ -102,7 +102,7 @@
       var dem = { type: "raster-dem", tiles: [GSI + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
                   redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' };
       var m = new maplibregl.Map({
-        container: el, attributionControl: false, maxPitch: 80, cooperativeGestures: true,
+        container: el, attributionControl: false, maxPitch: 80, cooperativeGestures: true, pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         locale: LANG === "en" ? {} : { "CooperativeGesturesHandler.WindowsHelpText": "Ctrl を押しながらスクロールで拡大・縮小",
           "CooperativeGesturesHandler.MacHelpText": "⌘ を押しながらスクロールで拡大・縮小", "CooperativeGesturesHandler.MobileHelpText": "2本指で地図を動かします" },
         style: { version: 8, glyphs: "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
@@ -135,8 +135,21 @@
       m.addControl(fsc, "top-right");
       m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
       m.on("error", function (ev) { if (window.console) console.warn("[3d]", ev && ev.error && ev.error.message); });
-      m.on("load", function () {
-        var coords = line.map(function (p) { return [p.lon, p.lat]; });
+      var coords = line.map(function (p) { return [p.lon, p.lat]; });
+      if (coords.length > 1) {
+        var b = coords.reduce(function (bb, c) { return bb.extend(c); }, new maplibregl.LngLatBounds(coords[0], coords[0]));
+        // 真上から全体が入る位置を出し、少し引いてから傾ける（傾けたまま合わせると奥の端が切れる）
+        var cam = m.cameraForBounds(b, { padding: 40, bearing: -20 }) || {};
+        var pts3 = pts.map(function (p) { return [p.lon, p.lat]; }).concat(coords);
+        b = pts3.reduce(function (bb, c) { return bb.extend(c); }, b);
+        cam = m.cameraForBounds(b, { padding: 36, bearing: -20 }) || cam;
+        home = { center: cam.center, zoom: (cam.zoom || 12) - 0.2, pitch: 50, bearing: -20 };
+        m.jumpTo(home);
+      }
+      // 線と点は、地図の設定が読めた時点で載せる（load は写真・標高のタイルを待つので、遅い回線では 30 秒以上なにも出なかった）
+      var drawn = false;
+      function overlays() {
+        if (drawn) return; drawn = true;
         m.addSource("route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: coords } } });
         m.addLayer({ id: "route-halo", type: "line", source: "route", paint: { "line-color": "#fff", "line-width": 7, "line-opacity": 0.85 }, layout: { "line-join": "round", "line-cap": "round" } });
         m.addLayer({ id: "route", type: "line", source: "route", paint: { "line-color": "#E4572E", "line-width": 4 }, layout: { "line-join": "round", "line-cap": "round" } });
@@ -181,17 +194,8 @@
           if (sendView && api && navigator.sendBeacon) navigator.sendBeacon(api + "/track.php", new Blob([JSON.stringify({ ev: "view_3d_pin", lang: LANG, hut: p.k === "hut" ? p.id : "", trail: sendView.dataset.trail || "", page: location.pathname, ref: "" })], { type: "text/plain" }));
         });
         m.on("mousemove", function (e) { m.getCanvas().style.cursor = hit(e.point) ? "pointer" : ""; });
-        if (coords.length > 1) {
-          var b = coords.reduce(function (bb, c) { return bb.extend(c); }, new maplibregl.LngLatBounds(coords[0], coords[0]));
-          // 真上から全体が入る位置を出し、少し引いてから傾ける（傾けたまま合わせると奥の端が切れる）
-          var cam = m.cameraForBounds(b, { padding: 40, bearing: -20 }) || {};
-          var pts3 = pts.map(function (p) { return [p.lon, p.lat]; }).concat(coords);
-          b = pts3.reduce(function (bb, c) { return bb.extend(c); }, b);
-          cam = m.cameraForBounds(b, { padding: 36, bearing: -20 }) || cam;
-          home = { center: cam.center, zoom: (cam.zoom || 12) - 0.2, pitch: 50, bearing: -20 };
-          m.jumpTo(home);
-        }
-      });
+      }
+      if (m.isStyleLoaded()) overlays(); else m.once("style.load", overlays);
     }).catch(function () {
       map3d = null;
       el.innerHTML = '<p class="t3d-load">' + (LANG === "en" ? "Could not load the 3D map." : "3D の地図を読み込めませんでした。通信を確かめてください。") + "</p>";
