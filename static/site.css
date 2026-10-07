@@ -371,3 +371,17 @@ button.btn{font:inherit;cursor:pointer}
 .trail-3dmap{position:relative;height:min(68vh,560px);min-height:340px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#16241d}
 .trail-3dmap .t3d-hint{position:absolute;left:.6rem;top:.6rem;z-index:2;margin:0;padding:.2rem .6rem;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:.78rem;pointer-events:none}
 .trail-3dmap .t3d-load{position:absolute;inset:0;display:grid;place-items:center;color:#d6e2da;font-size:.9rem}
+
+/* 地図（3D）: 家のボタンと、点を触ったときの札 */
+.trail-3dmap .t3d-home{display:grid;place-items:center;color:#17251F}
+.t3d-pop .maplibregl-popup-content{padding:.6rem .75rem .55rem;border-radius:12px;background:var(--card);color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.28);font-size:.82rem;line-height:1.45}
+.t3d-pop.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,.t3d-pop.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,.t3d-pop.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip{border-top-color:var(--card)}
+.t3d-pop.maplibregl-popup-anchor-top .maplibregl-popup-tip,.t3d-pop.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,.t3d-pop.maplibregl-popup-anchor-top-right .maplibregl-popup-tip{border-bottom-color:var(--card)}
+.t3d-pop .maplibregl-popup-close-button{width:32px;height:32px;font-size:1.2rem;color:var(--granite)}
+.t3d-pop-k{margin:0;font-size:.7rem;font-weight:700;color:var(--moss)}
+.t3d-pop-n{margin:.05rem 1.6rem .35rem 0;font-weight:800;font-size:.95rem}
+.t3d-pop-dl{display:grid;grid-template-columns:auto 1fr;gap:.1rem .7rem;margin:0}
+.t3d-pop-dl dt{color:var(--granite)}
+.t3d-pop-dl dd{margin:0;font-weight:700}
+.t3d-pop-src{margin:.35rem 0 0;font-size:.7rem;color:var(--granite)}
+.t3d-pop-go{display:inline-block;margin-top:.4rem;font-weight:800;color:var(--moss-deep)}

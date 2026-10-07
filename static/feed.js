@@ -63,6 +63,7 @@
       (facts.length ? '<ul class="fd-facts">' + facts.join("") + "</ul>" : "") + huts + acc +
       (it.contrib && it.contrib.comment ? '<p class="fd-line">' + esc(it.contrib.comment) + "</p>" : "") + "</div>" +
       '<div class="fd-acts"><button type="button" class="fd-act" data-save="' + esc(it.key) + '" aria-pressed="' + isSaved + '"><span class="ic" aria-hidden="true">★</span>保存</button>' +
+      '<button type="button" class="fd-act" data-share="' + esc(it.key) + '"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>シェア</button>' +
       (r ? '<a class="fd-act" href="' + esc(r.url) + '" data-detail="' + esc(r.id) + '"><span class="ic" aria-hidden="true">↑</span>詳しく</a>' : "") + "</div>";
     return el;
   }
@@ -162,6 +163,29 @@
   $("fd-detail").addEventListener("click", function (e) { if (e.target === $("fd-detail")) closeDetail(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("fd-detail").hidden) closeDetail(); });
 
+  // ---- シェア: 端末の共有シートを開く（無い環境ではリンクをコピー）。リンクを開くとそのルートのカードから始まる
+  var toastT = null;
+  function toast(msg) {
+    var t = $("fd-toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+  function share(key) {
+    var it = items.filter(function (x) { return x.key === key; })[0];
+    if (!it) return;
+    var r = it.route, url = location.origin + BASE + "/lab/feed/#r=" + encodeURIComponent(key);
+    var name = it.contrib ? (it.contrib.title || "投稿された道") : r.name;
+    var bits = r ? [days(r.nights), ct(r.course_min)].filter(Boolean).join("・") : "";
+    var text = name + (bits ? "｜" + bits : "") + "｜3D で見る";
+    track("feed_share", r ? r.id : "");
+    if (navigator.share) {
+      navigator.share({ title: name + " | HutsGo", text: text, url: url }).catch(function () { /* 閉じただけ */ });
+      return;
+    }
+    var done = function () { toast("リンクをコピーしました"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { toast(url); });
+    else toast(url);
+  }
+
   // ---- 比べる
   function compare() {
     var rows = items.filter(function (it) { return saved.indexOf(it.key) >= 0; });
@@ -186,6 +210,8 @@
       if (i >= 0) saved.splice(i, 1); else { saved.push(k); track("feed_save", (items.filter(function (x) { return x.key === k; })[0] || {}).route ? k : ""); }
       sv.setAttribute("aria-pressed", String(i < 0)); keep(); return;
     }
+    var sh = e.target.closest("[data-share]");
+    if (sh) { share(sh.dataset.share); return; }
     var dt = e.target.closest("[data-detail]");
     if (dt) {
       track("feed_detail", dt.dataset.detail);
@@ -220,5 +246,8 @@
       if (at >= 0) items.splice(at + 1, 0, it); else items.push(it);
     });
     render();
+    var m = /[#&]r=([^&]+)/.exec(location.hash), key = m ? decodeURIComponent(m[1]) : "";
+    var el = key && [].filter.call(document.querySelectorAll(".fd-card"), function (c) { return c.dataset.key === key; })[0];
+    if (el) $("fd-feed").scrollTop = el.offsetTop;
   });
 })();

@@ -7,6 +7,12 @@
 <title>ルートを選ぶ | HutsGo</title>
 <meta name="description" content="日数と行き方で絞って、北アルプスの縦走ルートを 3D で見比べる。">
 <meta name="theme-color" content="#0f1a15">
+<meta property="og:title" content="ルートを選ぶ | HutsGo">
+<meta property="og:description" content="北アルプス・南アルプス・富士山の山小屋泊ルートを、3D の飛行で見比べる。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ SITE_URL }}{{ BASE }}/lab/feed/">
+<meta property="og:image" content="{{ SITE_URL }}{{ BASE }}/static/img/omote-tents-sunrise.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="hutsgo-api" content="{{ API_URL }}">
 <link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{{ BASE }}/static/feed.css">
@@ -50,6 +56,8 @@
 <iframe id="fd-player" class="fd-player" title="ルートの 3D の飛行" src="{{ BASE }}/lab/flyover/?embed=1" allow="autoplay"></iframe>
 <main id="fd-feed" class="fd-feed" aria-label="ルート"></main>
 <p id="fd-none" class="fd-none" hidden>この条件のルートはまだありません。条件をゆるめてください。</p>
+
+<p id="fd-toast" class="fd-toast" role="status" aria-live="polite" hidden></p>
 
 <section id="fd-detail" class="fd-sheet fd-detail" hidden aria-labelledby="fd-detail-h">
   <div class="fd-sheet-card fd-detail-card" role="dialog" aria-modal="true">

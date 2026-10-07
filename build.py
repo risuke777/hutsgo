@@ -559,14 +559,16 @@ def build_model(lang):
             p = s["hut"] or s["trailhead"]
             if p and p.get("lat"):
                 k, n, la, lo, el = ("hut" if s["hut"] else "th"), p["name"], p["lat"], p["lon"], p.get("elevation_m")
+                pid = s["hut_id"] or s["trailhead_id"]
             elif s.get("label") and s.get("lat") is not None:
                 k, n, la, lo, el = "peak", pick(s, "label", lang), s["lat"], s["lon"], s.get("elevation_m")
+                pid = None
             else:
                 continue
             if (la, lo, n) in _seen:
                 continue
             _seen.add((la, lo, n))
-            _pts.append({"k": k, "n": n, "lat": round(la, 6), "lon": round(lo, 6), "e": el})
+            _pts.append({"k": k, "n": n, "lat": round(la, 6), "lon": round(lo, 6), "e": el, **({"id": pid} if pid else {})})
         t["map_points"] = json.dumps(_pts, ensure_ascii=False, separators=(",", ":"))
         t["has_gpx"] = t["legs_total"] > 0 and t["legs_traced"] == t["legs_total"]
         t["gsi3d"] = gsi3d_url(t["map_line"])
