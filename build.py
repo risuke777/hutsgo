@@ -539,6 +539,24 @@ def build_model(lang):
         _g = rows("SELECT course_time_h, source_url FROM trail_grading WHERE trail_id=? AND match='same' AND course_time_h IS NOT NULL", t["id"])
         t["official_min"] = round(_g[0]["course_time_h"] * 60) if _g else None
         t["official_url"] = _g[0]["source_url"] if _g else None
+        # ページの最初に出す「3つの答え」（どれくらい大変か・どう行くか・予約）の材料
+        _gr = rows("SELECT * FROM trail_grading WHERE trail_id=?", t["id"])
+        t["grading"] = _gr[0] if _gr else None
+        _ths = [s["trailhead"] for s in t["stops"] if s["trailhead"]]
+        t["start_th"] = _ths[0] if _ths else None
+        t["end_th"] = _ths[-1] if len(_ths) > 1 and _ths[-1]["id"] != _ths[0]["id"] else None
+        t["access"] = rows("SELECT * FROM access_routes WHERE trailhead_id=?", t["start_th"]["id"]) if t["start_th"] else []
+        for _a in t["access"]:
+            _a["from_t"] = pick(_a, "from_place", lang)
+        t["car_restricted"] = any(_a["private_car_restricted"] for _a in t["access"])
+        t["public_modes"] = [m for m in ("train", "bus", "shuttle", "ropeway", "ferry")
+                             if any(_a["mode"] == m for _a in t["access"])]
+        t["public_from"] = [_a["from_t"] for _a in t["access"] if _a["mode"] in ("bus", "train", "shuttle") and _a["from_t"]]
+        _seen_h, t["stays"] = set(), []
+        for s in t["stops"]:
+            if s["hut"] and s["is_overnight_candidate"] and s["hut_id"] not in _seen_h:
+                _seen_h.add(s["hut_id"])
+                t["stays"].append(s["hut"])
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
         # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする
@@ -812,7 +830,7 @@ for lang, prefix in LOCALES:
         write(f"{d}huts/{h['id']}/index.html", "hut.html", h=h, page=f"/huts/{h['id']}/", **g)
     for t in trails_l:
         write(f"{d}trails/{t['id']}/index.html", "trail.html", t=t, page=f"/trails/{t['id']}/",
-              plan_strings=plan_strings, **g)
+              plan_strings=plan_strings, gw=by_th.get((t["start_th"] or {}).get("id")), **g)
         if t["has_gpx"] and not d:
             (DIST / "trails" / t["id"] / "route.gpx").write_text(gpx_for(t, t["line_pts"]), encoding="utf-8")
 

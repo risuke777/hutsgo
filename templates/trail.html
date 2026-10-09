@@ -17,13 +17,62 @@
     <p class="crumb"><a href="{{ LB }}/">{{ T.crumb_routes }}</a></p>
     <h1>{{ t.name }}</h1>
     <p class="lede">{{ t.summary_t }}</p>
-    <dl class="facts-inline">
-      <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</dd></div>
-      <div><dt>{{ T.l_walking_time }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% elif t.official_min %}{{ t.official_min | fmt_time }} <small><a href="{{ t.official_url }}" rel="noopener">{{ T.official_ct_src }}</a></small>{% else %}{{ T.unknown }}{% endif %}</dd></div>
-      {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.short }} {{ sm.top.elev | metres }}</dd></div>{% endif %}
-      <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>
-    </dl>
   </header>
+
+  {#- 最初に見るもの: どれくらい大変か・どう行くか・予約。ここだけ読めば決められるように。詳しいことは下に -#}
+  {% set gr = t.grading %}
+  <section class="answers" aria-label="{{ T.ans_aria }}">
+    <div class="ans">
+      <h2>{{ T.ans_hard_h }}</h2>
+      <dl>
+        <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) if t.nights_typical else T.ans_day_trip }}</dd></div>
+        <div><dt>{{ T.l_walking_time }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% elif t.official_min %}{{ t.official_min | fmt_time }}{% else %}{{ T.unknown }}{% endif %}
+          <small>{{ T.ans_time_note }}</small></dd></div>
+        <div><dt>{{ T.ans_climb }}</dt><dd>{% if gr and gr.match == 'same' and gr.ascent_km %}{{ T.approx }}{{ (gr.ascent_km * 1000) | round | int | metres }}{% elif sm %}{{ T.approx }}{{ sm.gain | metres }}{% else %}{{ T.unknown }}{% endif %}
+          {% if sm %}<small>{{ T.ans_top.format(name=sm.top.short, elev=sm.top.elev | metres) }}</small>{% endif %}</dd></div>
+        {% if gr %}
+        {% set band = 'day' if gr.stamina <= 3 else ('n1' if gr.stamina <= 5 else ('n2' if gr.stamina <= 7 else 'n3')) %}
+        <div><dt>{{ T.ans_stamina }}</dt><dd>{{ gr.stamina }}<span class="of">/10</span> <small>{{ T['stamina_' ~ band] }}</small></dd></div>
+        <div><dt>{{ T.ans_tech }}</dt><dd>{{ gr.technical }} <small>{{ T['tech_' ~ gr.technical] }}</small></dd></div>
+        {% endif %}
+      </dl>
+      {% if gr %}<p class="ans-src">{{ T.ans_grading_src.format(no=gr.source_route_no) }}{% if gr.match == 'near' %}{{ T.ans_grading_near }}{% endif %}{% if gr.confidence != 'verified' %}{{ T.ans_grading_unv }}{% endif %}
+        <a href="{{ gr.source_url }}" rel="noopener">{{ T.ans_src_link }}</a></p>
+      {% else %}<p class="ans-src">{{ T.ans_grading_none }}</p>{% endif %}
+    </div>
+
+    <div class="ans">
+      <h2>{{ T.ans_go_h }}</h2>
+      {% set th = t.start_th %}
+      <dl>
+        {% if th %}<div><dt>{{ T.ans_trailhead }}</dt><dd><a href="{{ LB }}/trailheads/{{ th.id }}/">{{ th.short }}</a>{% if th.elevation_m %} <small>{{ th.elevation_m | metres }}</small>{% endif %}</dd></div>{% endif %}
+        {% if t.public_modes %}<div><dt>{{ T.ans_public }}</dt><dd>{% for m in t.public_modes %}{{ T['ans_mode_' ~ m] }}{% if not loop.last %}{{ T.ans_plus }}{% endif %}{% endfor %}
+          {% if t.public_from %}<small>{{ T.ans_from.format(place=t.public_from | first) }}</small>{% endif %}</dd></div>{% endif %}
+        {% if gw %}{% for ln in gw.lines if ln.periods and ln.periods[0].last_down_time %}{% if loop.first %}
+        <div><dt>{{ T.ans_last }}</dt><dd>{{ ln.periods[0].last_down_time }} <small>{{ ln.name }}</small></dd></div>{% endif %}{% endfor %}{% endif %}
+        {% if th %}<div><dt>{{ T.ans_car }}</dt><dd>{% if t.car_restricted %}{{ T.ans_car_restricted }}{% elif th.parking_spaces %}{{ T.ans_parking_n.format(n=th.parking_spaces) }}{% elif not th.parking %}{{ T.unknown }}{% endif %}
+          {% if th.parking %}{% if t.car_restricted or th.parking_spaces %}<small>{{ th.parking }}</small>{% else %}<span class="ans-plain">{{ th.parking }}</span>{% endif %}{% endif %}</dd></div>{% endif %}
+        {% if t.end_th %}<div><dt>{{ T.ans_end }}</dt><dd><a href="{{ LB }}/trailheads/{{ t.end_th.id }}/">{{ t.end_th.short }}</a></dd></div>{% endif %}
+      </dl>
+      {% if th %}<p class="ans-more"><a href="{{ LB }}/trailheads/{{ th.id }}/">{{ T.ans_go_more }}</a></p>{% endif %}
+    </div>
+
+    <div class="ans">
+      <h2>{{ T.ans_book_h }}</h2>
+      {% if t.stays %}
+      <p class="ans-lead">{{ T.ans_book_lead.format(n=t.stays | length) }}</p>
+      <ul class="ans-book">
+        {% for h in t.stays[:4] %}<li><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.short }}</a>
+          <span>{% if h.season and h.season.opens %}{{ h.season.opens | truncate(44, True, '…') }}{% else %}{{ T.ans_opens_unknown }}{% endif %}</span></li>{% endfor %}
+      </ul>
+      {% if t.stays | length > 4 %}<p class="ans-src">{{ T.ans_book_more.format(n=t.stays | length - 4) }}</p>{% endif %}
+      {#- ルートを丸ごと行程に入れるボタンは置かない（泊まる小屋は 1 軒ずつ選ぶ。PLAN_BOARD.md 2026-09-24）-#}
+      <p class="ans-more"><a href="#timeline">{{ T.ans_book_plan }}</a></p>
+      {% else %}
+      <p class="ans-lead">{{ T.ans_book_none }}</p>
+      {% endif %}
+    </div>
+  </section>
 
   <div class="trail-actions">
     <div class="viewswitch" role="tablist" aria-label="{{ T.trail_view_switch }}">
@@ -89,6 +138,7 @@
     <span class="quiet">{{ T.plan_date_note }}</span>
   </div>
 
+  <h2 class="timeline-h" id="timeline">{{ T.ans_timeline_h }}</h2>
   <ol class="timeline" data-plan-date>
   {% for r in t.rows %}
     {% if r.row == 'stop' and r.stop.again_of %}

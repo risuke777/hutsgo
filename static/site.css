@@ -390,3 +390,27 @@ button.btn{font:inherit;cursor:pointer}
 .stop-again .stop-card{padding-top:.5rem;padding-bottom:.5rem}
 .stop-again-line{margin:.15rem 0 0;font-weight:700}
 .stop-again-line .quiet{font-weight:400;font-size:.85rem;white-space:nowrap}
+
+/* ルートページの最初の「3つの答え」。飾らず、数字と短い言葉だけ。スマホでは縦に、広い画面では 3 列 */
+.answers{display:grid;gap:0;margin:1.2rem 0 1.4rem;border-top:2px solid var(--ink)}
+.ans{padding:.9rem 0 1rem;border-bottom:1px solid var(--line)}
+.ans h2{margin:0 0 .55rem;font-size:1.05rem;letter-spacing:.02em}
+.answers .ans dl{display:grid;gap:.5rem;margin:0}
+.answers .ans dl>div{display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:.8rem;align-items:baseline;margin:0;padding:0;border:0;background:none}
+.ans dt{color:var(--granite);font-size:.85rem;padding-top:.1rem;line-height:1.3}
+.ans dd{margin:0;font-weight:700;font-size:1rem;line-height:1.45}
+.ans dd small{display:block;font-weight:400;font-size:.8rem;color:var(--ink-soft);line-height:1.45}
+.ans dd .of{font-weight:400;color:var(--granite);font-size:.85rem}
+.ans-src{margin:.6rem 0 0;font-size:.75rem;color:var(--granite);line-height:1.5}
+.ans-lead{margin:0 0 .4rem;font-size:.92rem}
+.ans-book{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
+.ans-book li{display:grid;gap:.05rem}
+.ans-book a{font-weight:700}
+.ans-book span{font-size:.82rem;color:var(--ink-soft)}
+.ans-more{margin:.6rem 0 0;font-weight:700;font-size:.9rem}
+.timeline-h{margin:1.6rem 0 .6rem;font-size:1.05rem}
+@media (min-width:860px){
+  .answers{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:1.6rem}
+  .ans{border-bottom:0}
+}
+.ans dd .ans-plain{font-weight:400;font-size:.9rem}
