@@ -130,6 +130,68 @@ def trail_line(trail_id, pts):
     return line, traced, max(len(pts) - 1, 0)
 
 
+# 標準タイムの式: 時間(h) = 距離(km)×a + 累積登り(km)×b + 累積下り(km)×c
+# 長野県「信州 山のグレーディング」一覧表（令和8年4月）の 124 ルートの合計コースタイム・ルート長・累積登り・累積下りに
+# 最小二乗で当てはめた（tools/fit_course_time.py）。平均の外れ 約12%、113/124 ルートが ±25% 以内。
+# 平地 約3.9km/h・登り 約440m/h・下り 約490m/h に当たる。距離・登り・下りは tools/trail_profile.py が地理院の線と標高から出す。
+CT_COEF = (0.2573, 2.2955, 2.0368)
+
+
+def _ct_h(l_m, u_m, d_m):
+    a, b, c = CT_COEF
+    return l_m / 1000 * a + u_m / 1000 * b + d_m / 1000 * c
+
+
+def course_estimate(trail_id, stops):
+    """stops = [(stop_id, lat, lon, seq, 名前, 種類)]（座標のある stop を行程順）。
+    区間ごとに式で時間を出す。1 区間でも道沿いの線・標高が無ければ None（直線の区間に時間を付けない）。"""
+    f = ROOT / "trail_paths" / f"{trail_id}.json"
+    if not f.exists() or len(stops) < 2:
+        return None
+    legs = {(lg["from"], lg["to"]): lg for lg in json.loads(f.read_text(encoding="utf-8"))["legs"]
+            if lg.get("coords") and "up_m" in lg}
+    out = []
+    for a, b in zip(stops, stops[1:]):
+        lg = legs.get((a[0], b[0]))
+        if not lg or _hav_m(lg["coords"][0], a[1:3]) >= 5 or _hav_m(lg["coords"][-1], b[1:3]) >= 5:
+            return None
+        out.append(dict(a=a, b=b, h=_ct_h(lg["length_m"], lg["up_m"], lg["down_m"]), L=lg["length_m"],
+                        U=lg["up_m"], D=lg["down_m"], coords=lg["coords"], elev=lg.get("elev")))
+    return out
+
+
+def track_of(est, cap=600):
+    """3D 地図のスライダー用: [緯度, 経度, 距離km, 標高, 分] の列と、小屋・山頂の位置（何点目・何分）。
+    区間の中の時間は、細かい区間ごとに同じ式で重みを付けて配る（急な所ほど時間がかかる）。"""
+    pts, marks, t0, d0 = [], [], 0.0, 0.0
+    for j, x in enumerate(est):
+        c = x["coords"]
+        e = x["elev"] or [None] * len(c)
+        w, dist = [0.0], [0.0]
+        for i in range(1, len(c)):
+            d = _hav_m(c[i - 1], c[i])
+            dz = (e[i] - e[i - 1]) if e[i] is not None and e[i - 1] is not None else 0
+            w.append(w[-1] + _ct_h(d, max(dz, 0), max(-dz, 0)))
+            dist.append(dist[-1] + d)
+        wt = w[-1] or 1
+        if j == 0:
+            marks.append(dict(n=x["a"][4], k=x["a"][5], i=0, m=0, km=0))
+        for i in range(0 if j == 0 else 1, len(c)):
+            pts.append([round(c[i][0], 6), round(c[i][1], 6), round((d0 + dist[i]) / 1000, 3), e[i],
+                        round(t0 + x["min"] * w[i] / wt, 1)])
+        t0 += x["min"]
+        d0 += dist[-1]
+        marks.append(dict(n=x["b"][4], k=x["b"][5], i=len(pts) - 1, m=round(t0, 1), km=round(d0 / 1000, 2)))
+    if len(pts) > cap:
+        step = -(-len(pts) // cap)
+        keep = sorted({i for i in range(0, len(pts), step)} | {mk["i"] for mk in marks} | {len(pts) - 1})
+        remap = {old: new for new, old in enumerate(keep)}
+        pts = [pts[i] for i in keep]
+        for mk in marks:
+            mk["i"] = remap[mk["i"]]
+    return dict(p=pts, s=marks)
+
+
 def gpx_for(t, line):
     """道をたどれたルートだけ GPX にする。直線の区間を含む GPX はナビに読み込まれると危ないので作らない"""
     from xml.sax.saxutils import escape as x, quoteattr as qa
@@ -371,7 +433,15 @@ def build_model(lang):
                         down += a - b
                 # 時刻が未確認のルートは区間時間も出さない（0 分と書かない）
                 mins = q["t"] - p["t"] if t["times_known"] else None
-                out.append(dict(row="leg", minutes=mins, up=up, down=down, est=est,
+                # 公式の区間時間が無ければ、式の目安（線と標高から）。登り・下りも線から
+                est_min = None
+                if mins is None and t.get("est"):
+                    xs = [x for x in t["est"]["legs"] if p["seq"] <= x["a"][3] and x["b"][3] <= q["seq"]]
+                    if xs:
+                        est_min = round(sum(x["min"] for x in xs) / 5) * 5
+                        if not t["times_known"]:
+                            up, down, est = sum(x["U"] for x in xs), sum(x["D"] for x in xs), False
+                out.append(dict(row="leg", minutes=mins, est_min=est_min, up=up, down=down, est=est,
                                 vias=[x for x in seg if x["kind"] == "peak"]))
         return out
 
@@ -561,6 +631,25 @@ def build_model(lang):
         t["points"] = build_points(t)
         # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする
         t["profile"] = summarize(t["points"])
+        # 標準タイム（式）。長野県の表と同じ行程なら、表の合計コースタイムに合わせて区間に配る
+        _sp = []
+        for s in t["stops"]:
+            p = s["hut"] or s["trailhead"]
+            if p and p.get("lat") and p.get("lon"):
+                _sp.append((s["hut_id"] or s["trailhead_id"], p["lat"], p["lon"], s["seq"],
+                            p.get("short") or p["name"], "hut" if s["hut"] else "th"))
+            elif s.get("label") and s.get("lat") is not None:
+                _sp.append(("pk:" + s["label"], s["lat"], s["lon"], s["seq"], pick(s, "label", lang), "peak"))
+        _est = course_estimate(t["id"], _sp)
+        t["est"], t["track"] = None, ""
+        if _est:
+            _raw = sum(x["h"] for x in _est) * 60
+            _k = t["official_min"] / _raw if t["official_min"] else 1.0
+            for x in _est:
+                x["min"] = x["h"] * 60 * _k
+            t["est"] = dict(legs=_est, total=round(_raw * _k / 5) * 5, scaled=bool(t["official_min"]),
+                            km=sum(x["L"] for x in _est) / 1000, up=sum(x["U"] for x in _est), down=sum(x["D"] for x in _est))
+            t["track"] = json.dumps(track_of(_est), ensure_ascii=False, separators=(",", ":"))
         t["rows"] = build_legs(t, t["points"])
         t["svg_wide"] = profile_svg(t, t["points"], 720, 300)
         t["svg_narrow"] = profile_svg(t, t["points"], 360, 250, compact=True)

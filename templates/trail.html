@@ -26,9 +26,10 @@
       <h2>{{ T.ans_hard_h }}</h2>
       <dl>
         <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) if t.nights_typical else T.ans_day_trip }}</dd></div>
-        <div><dt>{{ T.l_walking_time }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% elif t.official_min %}{{ t.official_min | fmt_time }}{% else %}{{ T.unknown }}{% endif %}
-          <small>{{ T.ans_time_note }}</small></dd></div>
-        <div><dt>{{ T.ans_climb }}</dt><dd>{% if gr and gr.match == 'same' and gr.ascent_km %}{{ T.approx }}{{ (gr.ascent_km * 1000) | round | int | metres }}{% elif sm %}{{ T.approx }}{{ sm.gain | metres }}{% else %}{{ T.unknown }}{% endif %}
+        <div><dt>{{ T.l_walking_time }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% elif t.official_min %}{{ t.official_min | fmt_time }}{% elif t.est %}{{ T.approx }}{{ t.est.total | fmt_time }}{% else %}{{ T.unknown }}{% endif %}
+          <small>{% if not t.times_known and not t.official_min and t.est %}{{ T.ans_time_est }}{% else %}{{ T.ans_time_note }}{% endif %}</small></dd></div>
+        {% if t.est %}<div><dt>{{ T.ans_dist }}</dt><dd>{{ T.approx }}{{ '%.1f' | format(t.est.km) }} km</dd></div>{% endif %}
+        <div><dt>{{ T.ans_climb }}</dt><dd>{% if gr and gr.match == 'same' and gr.ascent_km %}{{ T.approx }}{{ (gr.ascent_km * 1000) | round | int | metres }}{% elif t.est %}{{ T.approx }}{{ (((t.est.up / 10) | round | int) * 10) | metres }}{% elif sm %}{{ T.approx }}{{ sm.gain | metres }}{% else %}{{ T.unknown }}{% endif %}
           {% if sm %}<small>{{ T.ans_top.format(name=sm.top.short, elev=sm.top.elev | metres) }}</small>{% endif %}</dd></div>
         {% if gr %}
         {% set band = 'day' if gr.stamina <= 3 else ('n1' if gr.stamina <= 5 else ('n2' if gr.stamina <= 7 else 'n3')) %}
@@ -86,6 +87,17 @@
        data-huts="{{ t.stops | selectattr('hut') | map(attribute='hut.id') | join(',') }}"
        data-line="{{ t.map_line }}"></div>
   <div class="trail-3dmap" id="trail-3d" hidden data-points="{{ t.map_points }}" data-hint="{{ T.trail_3d_hint }}"></div>
+  {% if t.track %}
+  <div class="t3d-scrub" id="trail-scrub" hidden data-route="{{ t.track }}" data-scaled="{{ 1 if t.est.scaled else 0 }}">
+    <button type="button" class="t3d-play" aria-label="{{ T.scrub_play }}" data-play="{{ T.scrub_play }}" data-pause="{{ T.scrub_pause }}"><span aria-hidden="true">▶</span></button>
+    <div class="t3d-bar">
+      <input type="range" min="0" max="1000" value="0" step="1" aria-label="{{ T.scrub_aria }}">
+      <div class="t3d-ticks" aria-hidden="true"></div>
+    </div>
+    <p class="t3d-read" aria-live="polite"></p>
+    <p class="t3d-src">{{ T.scrub_src_scaled if t.est.scaled else T.scrub_src }}</p>
+  </div>
+  {% endif %}
   <p class="quiet trail-map-note" id="trail-map-note" hidden>
     {%- if t.legs_traced == 0 %}{{ T.trail_map_note }}
     {%- else %}{{ T.trail_map_note_path }}{% if t.legs_traced < t.legs_total %} {{ T.trail_map_note_partial }}{% endif %}
@@ -139,6 +151,7 @@
   </div>
 
   <h2 class="timeline-h" id="timeline">{{ T.ans_timeline_h }}</h2>
+  {% if t.est and not t.times_known %}<p class="quiet timeline-note">{{ T.leg_est_note_scaled if t.est.scaled else T.leg_est_note }}</p>{% endif %}
   <ol class="timeline" data-plan-date>
   {% for r in t.rows %}
     {% if r.row == 'stop' and r.stop.again_of %}
@@ -200,7 +213,7 @@
     </li>
     {% else %}
     <li class="leg">
-      <span class="leg-time">{% if r.minutes is not none %}{{ r.minutes | fmt_time }}{% else %}—{% endif %}</span>
+      <span class="leg-time">{% if r.minutes is not none %}{{ r.minutes | fmt_time }}{% elif r.est_min %}<span class="leg-est" title="{{ T.leg_est_title }}">{{ T.approx }}{{ r.est_min | fmt_time }}</span>{% else %}—{% endif %}</span>
       <span class="leg-ud">
         {% if r.up %}<span class="up">{{ T.leg_up.format(v=r.up|metres) }}</span>{% endif %}
         {% if r.down %}<span class="down">{{ T.leg_down.format(v=r.down|metres) }}</span>{% endif %}

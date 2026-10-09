@@ -28,6 +28,8 @@
     var fig = document.querySelector("figure.profile");
     if (fig) fig.hidden = isMap || is3d;
     if (is3d) { show3d(box3); }
+    var scrub = document.getElementById("trail-scrub");
+    if (scrub) scrub.hidden = !is3d;
     sw.querySelectorAll("[data-trailview]").forEach(function (b) {
       b.setAttribute("aria-selected", String(b.dataset.trailview === view));
     });
@@ -61,9 +63,9 @@
     });
   }
   var L = LANG === "en"
-    ? { home: "Back to the whole route", hut: "Mountain hut", th: "Trailhead", peak: "Summit / pass", elev: "Elevation", season: "Open in 2026", yr: "Year-round",
+    ? { next: "next: {n} in {t}", arrive: "finish: {n}", home: "Back to the whole route", hut: "Mountain hut", th: "Trailhead", peak: "Summit / pass", elev: "Elevation", season: "Open in 2026", yr: "Year-round",
         two: "Dinner & breakfast", tent: "Tent site", unk: "Not confirmed", from: "from ", chk: "Checked ", page: "Hut page →", thpage: "Trailhead page →" }
-    : { home: "ルート全体に戻る", hut: "山小屋", th: "登山口", peak: "山頂・峠", elev: "標高", season: "2026年の営業", yr: "通年",
+    : { next: "次は {n} まで {t}", arrive: "{n} に着く", home: "ルート全体に戻る", hut: "山小屋", th: "登山口", peak: "山頂・峠", elev: "標高", season: "2026年の営業", yr: "通年",
         two: "1泊2食", tent: "テント", unk: "未確認", from: "", chk: "確認 ", page: "小屋のページ →", thpage: "登山口のページ →" };
   function md(d) { var a = String(d).split("-"); return Number(a[1]) + "/" + Number(a[2]); }
   function yen(r) { return r ? (r.is_from_price ? L.from : "") + "¥" + Number(r.price).toLocaleString() + (r.is_from_price && LANG !== "en" ? "〜" : "") : L.unk; }
@@ -88,6 +90,74 @@
       foot = '<a class="t3d-pop-go" href="' + pre + "/trailheads/" + escH(p.id) + '/">' + L.thpage + "</a>";
     }
     return '<p class="t3d-pop-k">' + L[p.k] + '</p><p class="t3d-pop-n">' + escH(p.n) + '</p><dl class="t3d-pop-dl">' + rows.join("") + "</dl>" + foot;
+  }
+  // ---- 3D の下のスライダー: 歩き始めて何分でどこにいるか。▶ で頭から流す
+  function fmtMin(v) {
+    v = Math.max(0, Math.round(v / 5) * 5);
+    var h = Math.floor(v / 60), mm = v % 60;
+    if (LANG === "en") return h ? h + "h" + (mm ? String(mm).padStart(2, "0") : "") : mm + " min";
+    return h ? h + "時間" + (mm ? mm + "分" : "") : mm + "分";
+  }
+  function setupScrub(m) {
+    var box = document.getElementById("trail-scrub");
+    if (!box) return;
+    var tr;
+    try { tr = JSON.parse(box.dataset.route); } catch (e) { return; }
+    var P = tr.p, S = tr.s, END = P[P.length - 1][4];
+    var range = box.querySelector("input"), out = box.querySelector(".t3d-read"), btn = box.querySelector(".t3d-play");
+    range.max = String(Math.round(END));
+    var ticks = box.querySelector(".t3d-ticks");
+    S.forEach(function (s) {
+      if (s.m <= 0 || s.m >= END) return;
+      var i = document.createElement("i");
+      i.className = "k-" + s.k; i.style.left = (s.m / END * 100) + "%"; i.title = s.n;
+      ticks.appendChild(i);
+    });
+    function pt(a) { return { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [a[1], a[0]] } }; }
+    function ln(arr) { return { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: arr.map(function (a) { return [a[1], a[0]]; }) } }; }
+    m.addSource("pos", { type: "geojson", data: pt(P[0]) });
+    m.addSource("done", { type: "geojson", data: ln([P[0], P[0]]) });
+    m.addLayer({ id: "done", type: "line", source: "done", paint: { "line-color": "#FFD166", "line-width": 5 },
+                 layout: { "line-join": "round", "line-cap": "round" } }, "pts");
+    m.addLayer({ id: "pos", type: "circle", source: "pos",
+                 paint: { "circle-radius": 8, "circle-color": "#E4572E", "circle-stroke-color": "#fff", "circle-stroke-width": 3, "circle-pitch-alignment": "viewport" } });
+    function at(t) {
+      var lo = 0, hi = P.length - 1;
+      while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (P[mid][4] <= t) lo = mid; else hi = mid; }
+      var a = P[lo], b = P[hi], f = b[4] > a[4] ? (t - a[4]) / (b[4] - a[4]) : 0;
+      f = Math.max(0, Math.min(1, f));
+      var ea = a[3], eb = b[3] == null ? a[3] : b[3];
+      return { i: lo, lat: a[0] + (b[0] - a[0]) * f, lon: a[1] + (b[1] - a[1]) * f, km: a[2] + (b[2] - a[2]) * f,
+               e: ea == null ? null : ea + (eb - ea) * f };
+    }
+    var sep = LANG === "en" ? " · " : "・";
+    function set(t) {
+      var q = at(t);
+      m.getSource("pos").setData(pt([q.lat, q.lon]));
+      m.getSource("done").setData(ln(P.slice(0, q.i + 1).concat([[q.lat, q.lon]])));
+      var nx = S.filter(function (s) { return s.m > t + 0.5; })[0];
+      out.innerHTML = "<b>" + fmtMin(t) + "</b>" + sep + q.km.toFixed(1) + " km" +
+        (q.e != null ? sep + L.elev + " " + Math.round(q.e).toLocaleString() + " m" : "") + "<br>" +
+        (nx ? L.next.replace("{n}", escH(nx.n)).replace("{t}", fmtMin(nx.m - t)) : L.arrive.replace("{n}", escH(S[S.length - 1].n)));
+    }
+    var playing = false, last = 0, raf = 0;
+    function stop() { playing = false; cancelAnimationFrame(raf); btn.firstChild.textContent = "▶"; btn.setAttribute("aria-label", btn.dataset.play); }
+    function frame(ts) {
+      if (!playing) return;
+      var dt = last ? ts - last : 0; last = ts;
+      var v = Math.min(END, +range.value + END * dt / 20000);   // 全行程を約 20 秒で
+      range.value = String(v); set(v);
+      if (v >= END) { stop(); return; }
+      raf = requestAnimationFrame(frame);
+    }
+    btn.addEventListener("click", function () {
+      if (playing) { stop(); return; }
+      if (+range.value >= END) range.value = "0";
+      playing = true; last = 0; btn.firstChild.textContent = "❚❚"; btn.setAttribute("aria-label", btn.dataset.pause);
+      raf = requestAnimationFrame(frame);
+    });
+    range.addEventListener("input", function () { if (playing) stop(); set(+range.value); });
+    set(0);
   }
   function show3d(el) {
     if (!el || map3d) { if (map3d) map3d.resize(); return; }
@@ -166,6 +236,7 @@
                   "symbol-sort-key": ["match", ["get", "k"], "peak", 0, "hut", 1, 2],
                   "text-variable-anchor": ["bottom", "left", "right", "top"], "text-radial-offset": 0.9, "text-justify": "auto" },
           paint: { "text-color": "#fff", "text-halo-color": "rgba(0,0,0,.75)", "text-halo-width": 1.4 } });
+        setupScrub(m);
         // 小屋・登山口・山頂を触ると、名前・標高・営業・料金（確認日つき）とページへのリンクを出す
         // 指の近くにある点のうち、いちばん近いもの（槍ヶ岳と山荘のように重なる所で、隣の名前を拾わない）
         function hit(pt) {

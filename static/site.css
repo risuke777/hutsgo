@@ -414,3 +414,20 @@ button.btn{font:inherit;cursor:pointer}
   .ans{border-bottom:0}
 }
 .ans dd .ans-plain{font-weight:400;font-size:.9rem}
+
+/* 3D の下のスライダー: 何分でどこまで行くか */
+.t3d-scrub{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.4rem .7rem;align-items:center;margin:.5rem 0 0;padding:.6rem .7rem;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.t3d-scrub[hidden]{display:none}
+.t3d-play{width:44px;height:44px;border-radius:999px;border:0;background:var(--moss);color:#fff;font-size:1rem;cursor:pointer}
+.t3d-play:focus-visible{outline:3px solid var(--moss-deep);outline-offset:2px}
+.t3d-bar{position:relative;padding-bottom:12px}
+.t3d-bar input{width:100%;margin:0;accent-color:#E4572E;height:28px}
+.t3d-ticks{position:absolute;left:8px;right:8px;bottom:0;height:10px}
+.t3d-ticks i{position:absolute;top:0;width:2px;height:8px;margin-left:-1px;background:var(--granite);border-radius:1px}
+.t3d-ticks i.k-hut{background:var(--moss);height:10px;width:3px}
+.t3d-ticks i.k-peak{background:#8a5a2b}
+.t3d-read{grid-column:1/-1;margin:0;font-size:.92rem;line-height:1.5}
+.t3d-read b{font-size:1.05rem}
+.t3d-src{grid-column:1/-1;margin:0;font-size:.72rem;color:var(--granite)}
+.leg-est{font-weight:700}
+.timeline-note{margin:-.2rem 0 .6rem;font-size:.8rem}
