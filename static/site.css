@@ -431,3 +431,28 @@ button.btn{font:inherit;cursor:pointer}
 .t3d-src{grid-column:1/-1;margin:0;font-size:.72rem;color:var(--granite)}
 .leg-est{font-weight:700}
 .timeline-note{margin:-.2rem 0 .6rem;font-size:.8rem}
+
+/* トップ: 探す（名前・日程・行き方・体力）と「今の時期」 */
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.finder{margin:0 0 1.2rem;display:grid;gap:.55rem}
+.finder-q{width:100%;min-height:48px;padding:.6rem .9rem;border:1px solid var(--line-strong);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:1rem}
+.finder-q:focus-visible{outline:3px solid var(--moss);outline-offset:1px}
+.finder-row{display:flex;flex-wrap:wrap;gap:.4rem}
+.finder-row button{min-height:38px;padding:.2rem .85rem;border:1px solid var(--line-strong);border-radius:999px;background:var(--card);color:var(--ink);font:inherit;font-size:.88rem;cursor:pointer}
+.finder-row button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.finder-row button:focus-visible{outline:3px solid var(--moss);outline-offset:2px}
+.finder-n{margin:0;font-size:.85rem;color:var(--granite)}
+.now{margin:0 0 1.4rem;padding:.9rem 1rem;border-left:3px solid #c0612b;background:var(--card)}
+.now[hidden]{display:none}
+.now h2{margin:0 0 .5rem;font-size:1.05rem}
+.now-list{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
+.now-list a{font-weight:700}
+.now-list span{display:block;font-size:.85rem;color:var(--ink-soft)}
+.now-list small{color:var(--granite)}
+.now-note{margin:.6rem 0 0;font-size:.75rem}
+.route-now{margin:.35rem 0 0;font-size:.85rem;font-weight:700;color:#9a4a1c}
+.route-now.is-closed{color:var(--granite)}
+.route-meta dd small{margin-left:.3rem;font-weight:400;font-size:.75rem;color:var(--granite)}
+.route-card[hidden]{display:none}
+.now-list .now-label{display:block;margin-bottom:.1rem;font-size:.88rem;color:var(--ink)}
+.now-list li{line-height:1.7}

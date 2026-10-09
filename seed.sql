@@ -1106,3 +1106,23 @@ UPDATE trail_stops SET lat=35.789550, lon=137.804574 WHERE trail_id='kisokoma' A
 -- 長野県の表 No.54。PDF の文字の並びがずれているため、体力度は合計コースタイム・ルート定数（12.3）の並びから対応をとった。運営者の確認待ち
 INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
 ('kisokoma','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',54,'木曽駒ヶ岳（千畳敷）',2,'B','same','県の表の出発点の標高は 2,650m（千畳敷）','unverified',3.7,3.8,0.43);
+
+-- ===============================================================
+-- 2026-10-09 ルートの季節（トップの「今の時期」）。出典に書かれている「例年」の幅だけ。
+-- 涸沢・徳沢の紅葉: 上高地観光旅館組合「日本一の紅葉と言われる涸沢の紅葉と奥上高地」
+--   涸沢「見頃を迎えるのは9月下旬から10月上旬頃」→ 09-21〜10-10。徳沢「9月中旬から山肌が紅葉しはじめ、10月には…」→ 09-11〜10-31。
+--   涸沢を通るルート（涸沢・涸沢ベース・奥穂・大キレット）は涸沢、徳沢を通るだけのルート（槍沢・蝶ヶ岳・表銀座）は徳沢。
+-- 富士山: 富士登山オフィシャルサイト（富士山における適正利用推進協議会）「2026年登山シーズンは終了しました」。
+--   開山 7月1日〜9月10日は山梨県の発表を伝えた報道（トラベル Watch）→ reported。
+-- 千畳敷（木曽駒）は公式に「例年の見頃」の書き方が無い（10月中旬は初雪の時季、とだけある）ので入れない。
+-- ===============================================================
+INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,source_name,source_url,checked_on,confidence) VALUES
+('karasawa','autumn','09-21','10-10','涸沢の紅葉（例年9月下旬〜10月上旬）','Karasawa autumn colours (usually late Sep – early Oct)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('karasawa_base','autumn','09-21','10-10','涸沢の紅葉（例年9月下旬〜10月上旬）','Karasawa autumn colours (usually late Sep – early Oct)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('okuhotaka','autumn','09-21','10-10','涸沢の紅葉（例年9月下旬〜10月上旬）','Karasawa autumn colours (usually late Sep – early Oct)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('daikiretto','autumn','09-21','10-10','涸沢の紅葉（例年9月下旬〜10月上旬）','Karasawa autumn colours (usually late Sep – early Oct)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('yarisawa','autumn','09-11','10-31','徳沢の紅葉（例年9月中旬から色づき、10月）','Tokusawa autumn colours (from mid-Sep, best in October)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('chougatake','autumn','09-11','10-31','徳沢の紅葉（例年9月中旬から色づき、10月）','Tokusawa autumn colours (from mid-Sep, best in October)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('omote_ginza','autumn','09-11','10-31','徳沢の紅葉（例年9月中旬から色づき、10月）','Tokusawa autumn colours (from mid-Sep, best in October)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
+('fuji_yoshida','open','07-01','09-10','開山期間（2026年は7月1日〜9月10日）','Climbing season (2026: 1 Jul – 10 Sep)','トラベル Watch（山梨県の発表）','https://travel.watch.impress.co.jp/docs/news/2105115.html','2026-10-09','reported'),
+('fuji_yoshida','closed','09-11','06-30','閉山中（2026年の登山シーズンは終了）','Closed (the 2026 season has ended)','富士登山オフィシャルサイト','https://www.fujisan-climb.jp/','2026-10-09','verified');

@@ -627,6 +627,22 @@ def build_model(lang):
             if s["hut"] and s["is_overnight_candidate"] and s["hut_id"] not in _seen_h:
                 _seen_h.add(s["hut_id"])
                 t["stays"].append(s["hut"])
+        # トップのカード: 検索の文字（日英の名前・小屋・山頂・登山口）、季節、泊まる小屋の営業期間
+        _words = [t["name_ja"], t.get("name_en") or "", t["summary_t"] or ""]
+        for s in t["stops"]:
+            if s["hut_id"]:
+                _words += [r["name_ja"] + " " + (r["name_en"] or "") for r in rows("SELECT name_ja,name_en FROM huts WHERE id=?", s["hut_id"])]
+            elif s["trailhead_id"]:
+                _words += [r["name_ja"] + " " + (r["name_en"] or "") for r in rows("SELECT name_ja,name_en FROM trailheads WHERE id=?", s["trailhead_id"])]
+            elif s.get("label"):
+                _words.append((s["label"] or "") + " " + (s.get("label_en") or ""))
+        t["search"] = " ".join(dict.fromkeys(w for w in _words if w))
+        t["seasons_json"] = json.dumps([dict(k=r["kind"], s=r["start_md"], e=r["end_md"], l=(r["label_en"] if lang == "en" and r["label_en"] else r["label_ja"]),
+                                             src=r["source_name"], u=r["source_url"])
+                                        for r in rows("SELECT * FROM trail_seasons WHERE trail_id=?", t["id"])],
+                                       ensure_ascii=False, separators=(",", ":"))
+        t["stays_json"] = json.dumps([[(h["season"] or {}).get("status"), (h["season"] or {}).get("open_date"),
+                                       (h["season"] or {}).get("close_date")] for h in t["stays"]], separators=(",", ":"))
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
         # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする

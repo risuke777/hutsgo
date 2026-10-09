@@ -7,33 +7,56 @@
 {"@context":"https://schema.org","@type":"WebSite","name":"HutsGo","url":"{{ SITE_URL }}{{ PREFIX }}/","inLanguage":"{{ LANG }}",
  "description":"{{ T.site_desc }}"}
 </script>
+<script src="{{ BASE }}/static/routes.js" defer></script>
 {% endblock %}
 {% block body %}
 <section class="hero">
   <h1>{{ T.home_h1_a }}<br>{{ T.home_h1_b }}</h1>
   <p class="lede">{{ T.home_lede }}</p>
 </section>
-{% if HERO %}
-<figure class="photo photo-hero">
-  {{ img(HERO, eager=true) }}
-  <figcaption>{{ HERO.caption_t }} <span class="credit">{{ HERO.credit_t }}</span></figcaption>
-</figure>
-{% endif %}
+{#- 探す: 名前で検索・日程／行き方／体力で絞る（routes.js。JS が無ければ全部並ぶだけ） -#}
+<section class="finder" aria-label="{{ T.find_aria }}">
+  <label class="vh" for="route-q">{{ T.find_label }}</label>
+  <input type="search" id="route-q" class="finder-q" placeholder="{{ T.find_ph }}" autocomplete="off" enterkeyhint="search">
+  <div class="finder-row" role="group" aria-label="{{ T.find_days }}">
+    <button type="button" data-f="days" data-v="0" aria-pressed="false">{{ T.ans_day_trip }}</button>
+    <button type="button" data-f="days" data-v="1" aria-pressed="false">{{ T.find_n1 }}</button>
+    <button type="button" data-f="days" data-v="2" aria-pressed="false">{{ T.find_n2 }}</button>
+    <button type="button" data-f="public" data-v="1" aria-pressed="false">{{ T.find_public }}</button>
+  </div>
+  <div class="finder-row" role="group" aria-label="{{ T.ans_stamina }}">
+    <button type="button" data-f="stamina" data-v="3" aria-pressed="false">{{ T.find_st3 }}</button>
+    <button type="button" data-f="stamina" data-v="5" aria-pressed="false">{{ T.find_st5 }}</button>
+    <button type="button" data-f="stamina" data-v="10" aria-pressed="false">{{ T.find_st10 }}</button>
+  </div>
+  <p class="finder-n" aria-live="polite" id="route-n" data-fmt="{{ T.find_n }}" data-none="{{ T.find_none }}"></p>
+</section>
+
+<section class="now" id="route-now" hidden aria-labelledby="now-h">
+  <h2 id="now-h" data-fmt="{{ T.now_h }}">{{ T.now_h }}</h2>
+  <ul class="now-list" id="now-list"></ul>
+  <p class="quiet now-note">{{ T.now_note }}</p>
+</section>
 
 <section class="route-list" aria-labelledby="trails-h">
   <h2 id="trails-h">{{ T.home_routes_h }}</h2>
   {% for t in trails %}
-  {% set sm = t.profile %}
-  <a class="route-card" href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}">
+  {% set sm = t.profile %}{% set gr = t.grading %}
+  <a class="route-card" href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}"
+     data-q="{{ t.search }}" data-nights="{{ t.nights_typical }}" data-stamina="{{ gr.stamina if gr else '' }}"
+     data-public="{{ 1 if t.public_modes else 0 }}" data-season="{{ t.seasons_json }}" data-stays="{{ t.stays_json }}">
     {{ t.svg_mini }}
     <div class="route-body">
       <strong>{{ t.name }}</strong>
       <span class="route-summary">{{ t.summary_t }}</span>
+      <p class="route-now" hidden></p>
       <dl class="route-meta">
-        <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) }}</dd></div>
-        {% if t.times_known %}<div><dt>{{ T.l_walking }}</dt><dd>{{ t.total_min | fmt_time }}</dd></div>{% endif %}
-        {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.elev | metres }}</dd></div>
-        <div><dt>{{ T.l_gain }}</dt><dd>{{ T.approx }}{{ sm.gain | metres }}</dd></div>{% endif %}
+        <div><dt>{{ T.l_estimate }}</dt><dd>{{ T.nights.format(n=t.nights_typical, m=t.nights_typical + 1) if t.nights_typical else T.ans_day_trip }}</dd></div>
+        <div><dt>{{ T.l_walking }}</dt><dd>{% if t.times_known %}{{ t.total_min | fmt_time }}{% elif t.official_min %}{{ t.official_min | fmt_time }}{% elif t.est %}{{ T.approx }}{{ t.est.total | fmt_time }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
+        {% if gr %}<div><dt>{{ T.ans_stamina }}</dt><dd>{{ gr.stamina }}<small>/10</small></dd></div>
+        <div><dt>{{ T.ans_tech }}</dt><dd>{{ gr.technical }}</dd></div>{% endif %}
+        {% if sm %}<div><dt>{{ T.l_highest }}</dt><dd>{{ sm.top.elev | metres }}</dd></div>{% endif %}
+        <div><dt>{{ T.find_access }}</dt><dd>{% if t.public_modes %}{% for m in t.public_modes %}{{ T['ans_mode_' ~ m] }}{% if not loop.last %}{{ T.ans_plus }}{% endif %}{% endfor %}{% else %}{{ T.unknown }}{% endif %}{% if t.car_restricted %}<small>{{ T.find_car_restricted }}</small>{% endif %}</dd></div>
         <div><dt>{{ T.l_overnight }}</dt><dd>{{ T.huts_count.format(n=t.hut_count) }}</dd></div>
       </dl>
     </div>
@@ -42,6 +65,13 @@
   <p class="quiet">{{ T.home_more_routes }}<a href="{{ LB }}/huts/">{{ T.home_more_link }}</a>{{ T.home_more_tail }}</p>
   <p class="quiet"><a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}<a href="{{ LB }}/plan/">{{ T.plan_link }}</a></p>
 </section>
+
+{% if HERO %}
+<figure class="photo photo-hero">
+  {{ img(HERO) }}
+  <figcaption>{{ HERO.caption_t }} <span class="credit">{{ HERO.credit_t }}</span></figcaption>
+</figure>
+{% endif %}
 
 {% if articles %}
 <section class="areas" aria-labelledby="articles-h">

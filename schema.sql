@@ -471,3 +471,20 @@ CREATE TABLE trail_grading (
   last_verified_at  TEXT,
   confidence        TEXT NOT NULL DEFAULT 'unverified'
 );
+
+-- ---------------------------------------------------------------
+-- ルートの季節（紅葉・花・開山期間・閉山）。トップの「今の時期」とルートのカードに使う。
+-- 月日だけを持ち「例年」の幅として扱う（end_md が start_md より前なら年をまたぐ）。出典の無い季節は入れない（A1・A2）。
+-- ---------------------------------------------------------------
+CREATE TABLE trail_seasons (
+  trail_id    TEXT NOT NULL REFERENCES trails(id),
+  kind        TEXT NOT NULL CHECK (kind IN ('autumn','flowers','open','closed')),
+  start_md    TEXT NOT NULL,
+  end_md      TEXT NOT NULL,
+  label_ja    TEXT NOT NULL,
+  label_en    TEXT,
+  source_name TEXT NOT NULL,
+  source_url  TEXT NOT NULL,
+  checked_on  TEXT NOT NULL,
+  confidence  TEXT NOT NULL DEFAULT 'reported'
+);
