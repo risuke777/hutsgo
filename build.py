@@ -627,6 +627,9 @@ def build_model(lang):
             if s["hut"] and s["is_overnight_candidate"] and s["hut_id"] not in _seen_h:
                 _seen_h.add(s["hut_id"])
                 t["stays"].append(s["hut"])
+        t["poster"] = (ROOT / "static" / "img" / "routes" / f"{t['id']}.jpg").exists()   # tools/route_posters.mjs が作る 3D の静止画
+        _rg = rows("SELECT * FROM mountain_ranges WHERE id=?", t.get("range_id"))
+        t["range"] = dict(id=_rg[0]["id"], name=disp(_rg[0], lang, with_ja=False)) if _rg else None
         # トップのカード: 検索の文字（日英の名前・小屋・山頂・登山口）、季節、泊まる小屋の営業期間
         _words = [t["name_ja"], t.get("name_en") or "", t["summary_t"] or ""]
         for s in t["stops"]:
@@ -885,6 +888,19 @@ for lang, prefix in LOCALES:
                        "lat": p["lat"], "lon": p["lon"], "elev": p["elevation_m"]}
                       for s in t["stops"] for p in [s["hut"] or s["trailhead"]] if p and p.get("lat") and p.get("lon")]})
         r["name"][lang] = t["name"]
+        if "photos" not in r:
+            # 写真の場所: 位置情報が道から 3km 以内ならそこ、無ければ山頂（いちばん高い通過点）。動画の中で写真を出す所
+            _tops = sorted([s for s in t["stops"] if s.get("label") and s.get("lat") is not None and s.get("elevation_m")],
+                           key=lambda s: -s["elevation_m"])
+            _top = (_tops[0]["lat"], _tops[0]["lon"]) if _tops else t["line_pts"][len(t["line_pts"]) // 2]
+            r["photos"] = []
+            for p in t["photos"]:
+                ll = (p["lat"], p["lon"]) if p.get("lat") is not None else None
+                if ll and min(_hav_m(ll, q) for q in t["line_pts"][::5] + [t["line_pts"][-1]]) > 3000:
+                    ll = None
+                who = (p["credit"] or "").replace("撮影：", "").strip()
+                r["photos"].append({"u": f"{BASE}/static/img/{p['file']}.jpg", "lat": (ll or _top)[0], "lon": (ll or _top)[1],
+                                    "cap": p["alt"], "cr": "Photo: " + who + (" / " + p["license"] if p.get("license") else "")})
         for st, s in zip(r["stops"], [s for s in t["stops"] if (s["hut"] or s["trailhead"]) and (s["hut"] or s["trailhead"]).get("lat")]):
             st["name"][lang] = (s["hut"] or s["trailhead"])["name"]
 
@@ -895,7 +911,13 @@ for lang, prefix in LOCALES:
         t["articles"] = [a for a in arts if t["id"] in a["trails"]]
     g["HAS_ARTICLES"] = bool(arts)
 
-    write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", articles=arts[:3], **g)
+    # トップの「エリア」: ルートのある山域だけ、ルートの多い順
+    _rc = {}
+    for _t in trails_l:
+        if _t["range"]:
+            _rc.setdefault(_t["range"]["id"], [_t["range"], 0])[1] += 1
+    write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", articles=arts[:3],
+          ranges=[v[0] for v in sorted(_rc.values(), key=lambda v: -v[1])], **g)
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
@@ -1414,6 +1436,7 @@ for t in rows("SELECT * FROM trails"):
         "start": access_of(ths[0] if ths else None), "end": access_of(ths[-1] if len(ths) > 1 else None),
         "grading": g and {"stamina": g["stamina"], "technical": g["technical"], "no": g["source_route_no"], "route": g["source_route_name"],
                           "match": g["match"], "note": g["note"], "source": g["source_name"], "url": g["source_url"], "confidence": g["confidence"]},
+        "range": t.get("range_id"),
         "line": fr["line"][::max(1, len(fr["line"]) // 120)] + [fr["line"][-1]],
         "url": f"{BASE}/trails/{t['id']}/"})
 # 提供された道（承認したものだけが contrib/ にある。tools/import_contrib.py で取り込む）

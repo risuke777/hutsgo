@@ -7,7 +7,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var BASE = location.pathname.replace(/\/lab\/feed\/.*$/, "");
   var API = (document.querySelector('meta[name="hutsgo-api"]') || {}).content || "";
-  var data = null, items = [], cur = null, ready = false, pending = null, filt = { nights: "", access: "", stamina: "" };
+  var data = null, items = [], cur = null, ready = false, pending = null, filt = { nights: "", access: "", stamina: "", range: "", tech: "" };
 
   // ---- 保存（端末の中だけ。読めない環境でも動く）
   var saved = [];
@@ -72,6 +72,8 @@
   function match(it) {
     var r = it.route;
     if (filt.nights) { if (!r || r.nights == null) return false; var n = Number(filt.nights); if (n === 3 ? r.nights < 3 : r.nights !== n) return false; }
+    if (filt.range && !(r && r.range === filt.range)) return false;
+    if (filt.tech && !(r && r.grading && filt.tech.indexOf(r.grading.technical) >= 0)) return false;
     if (filt.access === "public" && !(r && canPublic(r))) return false;
     if (filt.access === "car" && !(r && canCar(r))) return false;
     if (filt.stamina) {
@@ -87,8 +89,8 @@
     $("fd-none").hidden = list.length > 0;
     $("fd-count").textContent = String(list.length);
     // ボタンの文字に、選んでいる条件をそのまま出す（何も選んでいなければ「絞り込み」）
-    var on = ["nights", "access", "stamina"].filter(function (k) { return filt[k]; }).map(function (k) {
-      var b = document.querySelector('[data-group="' + k + '"] [data-v="' + filt[k] + '"]'); return b ? (k === "stamina" ? "体力" : "") + b.textContent : "";
+    var on = ["nights", "access", "stamina", "range", "tech"].filter(function (k) { return filt[k]; }).map(function (k) {
+      var b = document.querySelector('[data-group="' + k + '"] [data-v="' + filt[k] + '"]'); return b ? (k === "stamina" ? "体力" : k === "tech" ? "難易度" : "") + b.textContent : "";
     });
     $("fd-filter-label").textContent = on.length ? on.join("・") : "絞り込み";
     $("fd-filter-open").classList.toggle("is-on", on.length > 0);

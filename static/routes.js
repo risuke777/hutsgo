@@ -6,7 +6,7 @@
   if (!cards.length) return;
   var q = document.getElementById("route-q"), nOut = document.getElementById("route-n");
   var en = document.documentElement.lang === "en";
-  var f = { days: "", public: "", stamina: "" };
+  var f = { days: "", public: "", stamina: "", range: "", tech: "" };
 
   // 槍ヶ岳／槍ケ岳、カタカナ／ひらがな、全角／半角を同じに扱う
   function norm(s) {
@@ -23,6 +23,8 @@
     if (f.days === "1" && n !== 1) return false;
     if (f.days === "2" && n < 2) return false;
     if (f.public === "1" && c.dataset.public !== "1") return false;
+    if (f.range && c.dataset.range !== f.range) return false;
+    if (f.tech && (!c.dataset.tech || f.tech.indexOf(c.dataset.tech) < 0)) return false;
     if (f.stamina) {
       var s = +c.dataset.stamina, hi = +f.stamina, lo = hi === 3 ? 1 : hi === 5 ? 4 : 6;
       if (!s || s < lo || s > hi) return false;
@@ -30,6 +32,7 @@
     return true;
   }
   function render() {
+    if (window.HG_stopPlayer) window.HG_stopPlayer();   // 絞り込みでカードが動くので、重ねている動画を外す
     var k = 0;
     cards.forEach(function (c) { var ok = match(c); c.hidden = !ok; if (ok) k++; });
     nOut.textContent = k ? nOut.dataset.fmt.replace("{n}", k) : nOut.dataset.none;
@@ -86,4 +89,61 @@
     document.getElementById("route-now").hidden = false;
   }
   render();
+
+  // ---- カードの 3D: スクロールが止まったとき、画面の真ん中のカードにだけ山ムービー（埋め込み）を重ねて流す。
+  //      iframe は 1 つを使い回し、最初に止まったときに読む。動きを減らす設定・データ節約のときは流さない（絵だけ）
+  var medias = [].slice.call(document.querySelectorAll(".route-media[data-play]"));
+  var list0 = document.querySelector(".route-list[data-player]");
+  var noAuto = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (navigator.connection && navigator.connection.saveData);
+  if (!medias.length || !list0 || noAuto || !("IntersectionObserver" in window)) return;
+  var fr = null, ready = false, cur = null, timer = 0, vis = new Map();
+  function put(el) {
+    var r = el.getBoundingClientRect();
+    fr.style.top = (r.top + window.scrollY) + "px"; fr.style.left = (r.left + window.scrollX) + "px";
+    fr.style.width = r.width + "px"; fr.style.height = r.height + "px";
+  }
+  function start(el) {
+    if (cur === el) return;
+    cur = el;
+    if (!fr) {
+      fr = document.createElement("iframe");
+      fr.className = "route-player"; fr.title = list0.dataset.playerTitle; fr.setAttribute("allow", "autoplay"); fr.tabIndex = -1;
+      fr.src = list0.dataset.player + "&route=" + encodeURIComponent(el.dataset.play);
+      document.body.appendChild(fr);
+      window.addEventListener("message", function (e) {
+        if (e.origin !== location.origin || !e.data || e.data.type !== "ready") return;
+        ready = true; if (cur) setTimeout(function () { if (cur) fr.classList.add("is-on"); }, 300);
+      });
+      put(el);
+      return;
+    }
+    put(el); fr.classList.remove("is-on");
+    if (ready) {
+      fr.contentWindow.postMessage({ type: "route", id: el.dataset.play }, location.origin);
+      setTimeout(function () { if (cur === el) fr.classList.add("is-on"); }, 1400);   // 新しいルートを読み終えるまで絵を見せておく
+    }
+  }
+  function stop() {
+    if (!cur) return;
+    cur = null;
+    if (fr) { fr.classList.remove("is-on"); if (ready) fr.contentWindow.postMessage({ type: "pause" }, location.origin); }
+  }
+  window.HG_stopPlayer = stop;
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { vis.set(e.target, e.intersectionRatio); });
+    if (cur && (vis.get(cur) || 0) < 0.5) stop();
+  }, { threshold: [0, 0.5, 0.9, 1] });
+  medias.forEach(function (m) { io.observe(m); });
+  function settle() {
+    var best = null, bd = 1e9, mid = window.innerHeight / 2;
+    medias.forEach(function (m) {
+      if ((vis.get(m) || 0) < 0.9 || m.closest(".route-card").hidden) return;
+      var r = m.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bd) { bd = d; best = m; }
+    });
+    if (best) start(best); else stop();
+  }
+  window.addEventListener("scroll", function () { clearTimeout(timer); timer = setTimeout(settle, 650); }, { passive: true });
+  window.addEventListener("resize", function () { if (cur) put(cur); });
+  timer = setTimeout(settle, 1200);   // 開いてすぐ止まっていれば、最初に見えているカードを流す
 })();

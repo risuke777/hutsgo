@@ -220,7 +220,8 @@ CREATE TABLE trails (
   nights_typical INTEGER,
   difficulty  TEXT CHECK (difficulty IN ('easy','moderate','hard','expert')),
   summary     TEXT,
-  summary_en  TEXT
+  summary_en  TEXT,
+  range_id    TEXT REFERENCES mountain_ranges(id)   -- 山域（トップとフィードの絞り込み）
 );
 
 CREATE TABLE trail_stops (
@@ -258,7 +259,11 @@ CREATE TABLE photos (
   trail_id  TEXT REFERENCES trails(id),
   range_id  TEXT REFERENCES mountain_ranges(id),
   taken_on  TEXT,
-  sort      INTEGER DEFAULT 0
+  sort      INTEGER DEFAULT 0,
+  -- 他の人の写真（Wikimedia Commons など）: ライセンスと元のページ。写真の下と動画の中に撮影者と一緒に出す
+  license    TEXT,
+  source_url TEXT,
+  lat REAL, lon REAL   -- 撮った場所（写真に位置情報があるときだけ）
 );
 
 -- ---------------------------------------------------------------

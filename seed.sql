@@ -1126,3 +1126,164 @@ INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,sourc
 ('omote_ginza','autumn','09-11','10-31','徳沢の紅葉（例年9月中旬から色づき、10月）','Tokusawa autumn colours (from mid-Sep, best in October)','上高地観光旅館組合','https://www.kamikochi.or.jp/enjoy/feature/3213/','2026-10-09','reported'),
 ('fuji_yoshida','open','07-01','09-10','開山期間（2026年は7月1日〜9月10日）','Climbing season (2026: 1 Jul – 10 Sep)','トラベル Watch（山梨県の発表）','https://travel.watch.impress.co.jp/docs/news/2105115.html','2026-10-09','reported'),
 ('fuji_yoshida','closed','09-11','06-30','閉山中（2026年の登山シーズンは終了）','Closed (the 2026 season has ended)','富士登山オフィシャルサイト','https://www.fujisan-climb.jp/','2026-10-09','verified');
+
+-- ===============================================================
+-- 2026-10-10 人気の山を 8 ルート追加（日帰りが中心。運営者の依頼「人気の山のレパートリーを増やして」）。C4 の変更記録あり。
+-- 体力度・難易度・合計コースタイム・ルート長・累積登りは長野県「信州 山のグレーディング」一覧表（令和8年4月）。
+--   難易度とコースタイム等は表の各行のまま。体力度は表の「ルート定数」から（定数÷10 の切り捨て＋1、上限10。
+--   表の注記「体力度レベルはルート定数を基礎として設定」。既存 10 行で表の値と全部一致することを確かめた）。
+-- 位置: 国土地理院ベクトルタイルの注記（駅・峠・温泉・山名）と、標高点・三角点。登山口の標高は県の表の出発地点の値。
+-- 交通: 各社・各施設の公式ページに書かれていることだけ（書かれていないことは入れない＝「未確認」と出る）。
+-- 山小屋（北横岳ヒュッテ・黒百合ヒュッテ・唐松岳頂上山荘・オーレン小屋 など）はまだ入れない（公式で確かめてから）。
+-- 蓼科山（七合目）は登山口の位置が地理院の注記に無いので見送り。
+-- 菅平牧場の登山口: 地理院の注記「菅平牧場」は牧場の中ほど。根子岳の山頂へ道でつながる点のうち、県の表の出発地点の標高（1,590m）に
+--   いちばん近い点（地理院の標高 1,600m、山頂まで道のり約2.5km＝表のルート長 5.1km の半分）にした。駐車場の位置は未確認。
+-- ===============================================================
+INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES
+  ('yatsugatake', '八ヶ岳', 'Yatsugatake'),
+  ('joshinetsu', '上信越', 'Joshinetsu'),
+  ('kanto', '関東', 'Kanto');
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
+  ('kita_yatsu', 'yatsugatake', '北八ヶ岳', 'North Yatsugatake'),
+  ('minami_yatsu', 'yatsugatake', '南八ヶ岳', 'South Yatsugatake'),
+  ('sugadaira', 'joshinetsu', '菅平・四阿山', 'Sugadaira'),
+  ('takao', 'kanto', '高尾山', 'Mount Takao'),
+  ('hakuba', 'kita_alps', '白馬・八方尾根', 'Hakuba'),
+  ('kitazawa', 'minami_alps', '北沢峠（甲斐駒・仙丈）', 'Kitazawa Pass');
+
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('takaosanguchi','高尾山口駅','Takaosanguchi Station',35.632209,139.269845,190,NULL,
+ '近くに駐車場あり（高尾山薬王院祈祷殿駐車場 約250台・八王子市営高尾山麓駐車場 約80台）','Car parks nearby (Yakuoin prayer hall, about 250 cars; Hachioji city lot, about 80 cars).'),
+('kitayatsu_top','北八ヶ岳ロープウェイ山頂駅','Kita-Yatsugatake Ropeway top station',36.079000,138.320093,2230,NULL,
+ '山麓駅に無料駐車場 600台（24時間）','Free 24-hour car park for 600 cars at the base station.'),
+('sugadaira_bokujo','菅平牧場（根子岳登山口）','Sugadaira Bokujo (Nekodake trailhead)',36.538460,138.372695,1590,NULL,NULL,NULL),
+('shibunoyu','渋の湯','Shibu-no-yu',36.036108,138.328731,1840,NULL,NULL,NULL),
+('happoike_sanso','八方池山荘（八方アルペンライン終点）','Happo-ike Sanso (top of the Happo Alpen Line)',36.696987,137.798830,1835,NULL,NULL,NULL),
+('sakuradaira','桜平','Sakuradaira',36.010874,138.332409,1890,150,
+ '無料（約150台）。路線バスは無く、電車の場合は茅野駅からタクシー','Free (about 150 cars). No bus; take a taxi from Chino Station.'),
+('kitazawatoge','北沢峠','Kitazawa Pass',35.742199,138.213671,2030,NULL,
+ '南アルプス林道バスで戸台口から約50分（2026年は6月1日〜11月3日）','South Alps forest-road bus from Todaiguchi, about 50 min (1 Jun – 3 Nov in 2026).');
+
+INSERT INTO access_routes (id,trailhead_id,mode,operator_name,from_place,from_place_en,seasonal_only,requires_hut_stay,reservation_required,private_car_restricted,duration_min,source_url,confidence) VALUES
+('takao_keio','takaosanguchi','train','京王電鉄','新宿駅（京王線・最速47分）','Shinjuku (Keio Line, fastest 47 min)',0,0,0,0,47,'https://www.takaotozan.co.jp/sp/trafic/','reported'),
+('kitayatsu_bus','kitayatsu_top','bus','アルピコ交通','茅野駅（北八ヶ岳ロープウェイ行き・約60分）','Chino Station (bus to the ropeway, about 60 min)',0,0,0,0,60,'https://www.kitayatu.jp/access/','reported'),
+('kitayatsu_rw','kitayatsu_top','ropeway','北八ヶ岳ロープウェイ','山麓駅','Base station',0,0,0,0,NULL,'https://www.kitayatu.jp/access/','reported'),
+('shibunoyu_bus','shibunoyu','bus','アルピコ交通','茅野駅（奥蓼科渋の湯線）','Chino Station (Okutateshina Shibu-no-yu line)',0,0,0,0,NULL,'https://www.alpico.co.jp/traffic/local/suwa/shibunoyu/','reported'),
+('happo_alpenline','happoike_sanso','ropeway','八方アルペンライン（ゴンドラ・リフト）','白馬八方（ゴンドラ八方駅）','Hakuba Happo (gondola station)',1,0,0,0,30,'https://www.happo-one.jp/news-green/32559/','reported'),
+('sakuradaira_taxi','sakuradaira','taxi','アルピコタクシー・第一交通','茅野駅（約1万円）','Chino Station (about 10,000 yen)',0,0,0,0,NULL,'https://www.o-ren.net/access/','reported'),
+('kitazawa_bus','kitazawatoge','bus','南アルプス林道バス（伊那市）','戸台口（戸台パーク）','Todaiguchi (Todai Park)',1,0,0,0,50,'https://www.inacity.jp/kankojoho/sangaku_alps/minamialps/174h_nok20240320.html','reported');
+
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en) VALUES
+('takaosan','高尾山（表参道・1号路）','Mount Takao by the Omotesando (Trail 1)',0,NULL,
+ '京王線の高尾山口駅から、薬王院への表参道（1号路）を歩いて高尾山（599m）へ。同じ道を駅へ戻る',
+ 'From Takaosanguchi Station up the Omotesando (Trail 1) past Yakuoin temple to the summit of Mount Takao (599 m), and back the same way.'),
+('kitayokodake','北横岳（北八ヶ岳ロープウェイから）','Kitayokodake from the Kita-Yatsugatake Ropeway',0,NULL,
+ 'ロープウェイで山頂駅（2,230m）へ上がり、坪庭から北横岳（2,480m）へ。同じ道を山頂駅へ戻る',
+ 'Ride the ropeway to the top station (2,230 m), walk past the Tsuboniwa lava garden to Kitayokodake (2,480 m), and back.'),
+('nekodake','根子岳（菅平牧場から）','Nekodake from Sugadaira Bokujo',0,NULL,
+ '菅平牧場（1,590m）から草原の尾根を登って根子岳（2,207m）へ。同じ道を牧場へ戻る',
+ 'From the Sugadaira ranch (1,590 m) up the grassy ridge to Nekodake (2,207 m), and back.'),
+('tengudake','天狗岳（渋の湯から）','Tengudake from Shibu-no-yu',0,NULL,
+ '渋の湯（1,840m）から登り、東天狗岳を経て西天狗岳（2,646m）へ。同じ道を渋の湯へ戻る',
+ 'From Shibu-no-yu (1,840 m) up over Higashi-Tengu to Nishi-Tengu (2,646 m), and back.'),
+('karamatsudake','唐松岳（八方池山荘から）','Karamatsudake from Happo-ike Sanso',0,NULL,
+ '八方アルペンライン（ゴンドラ・リフト）で八方池山荘へ上がり、八方池を経て唐松岳（2,696m）へ。同じ道を戻る',
+ 'Ride the Happo Alpen Line (gondola and lifts) to Happo-ike Sanso, walk past Happo pond to Karamatsudake (2,696 m), and back.'),
+('iodake','硫黄岳（桜平から）','Iodake from Sakuradaira',0,NULL,
+ '桜平（1,890m）から夏沢峠を経て、爆裂火口の縁の硫黄岳（2,760m）へ。同じ道を桜平へ戻る',
+ 'From Sakuradaira (1,890 m) via Natsuzawa pass to Iodake (2,760 m) on the rim of an explosion crater, and back.'),
+('kaikoma','甲斐駒ヶ岳（北沢峠から）','Kaikomagatake from Kitazawa Pass',0,NULL,
+ '北沢峠（2,030m）から駒津峰を経て甲斐駒ヶ岳（2,967m）へ。同じ道を北沢峠へ戻る。県の表は、登山口までの交通に時間がかかるため宿泊を前提にした計画を勧めている',
+ 'From Kitazawa Pass (2,030 m) via Komatsumine to Kaikomagatake (2,967 m), and back. Nagano Prefecture advises planning an overnight stay because getting to the trailhead takes long.'),
+('senjogatake','仙丈ヶ岳（北沢峠から）','Senjogatake from Kitazawa Pass',0,NULL,
+ '北沢峠（2,030m）から小仙丈ヶ岳を経て仙丈ヶ岳（3,033m）へ。同じ道を北沢峠へ戻る。県の表は、登山口までの交通に時間がかかるため宿泊を前提にした計画を勧めている',
+ 'From Kitazawa Pass (2,030 m) via Kosenjo to Senjogatake (3,033 m), and back. Nagano Prefecture advises planning an overnight stay because getting to the trailhead takes long.');
+
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('takaosan',1,NULL,'takaosanguchi',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('takaosan',2,NULL,NULL,NULL,0,'高尾山','Mount Takao',599,35.625166,139.243611),
+('takaosan',3,NULL,'takaosanguchi',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kitayokodake',1,NULL,'kitayatsu_top',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kitayokodake',2,NULL,NULL,NULL,0,'北横岳','Kitayokodake',2480,36.087439,138.320062),
+('kitayokodake',3,NULL,'kitayatsu_top',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('nekodake',1,NULL,'sugadaira_bokujo',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('nekodake',2,NULL,NULL,NULL,0,'根子岳','Nekodake',2207,36.549118,138.395272),
+('nekodake',3,NULL,'sugadaira_bokujo',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tengudake',1,NULL,'shibunoyu',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tengudake',2,NULL,NULL,NULL,0,'西天狗岳','Nishi-Tengudake',2646,36.019171,138.355453),
+('tengudake',3,NULL,'shibunoyu',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',1,NULL,'happoike_sanso',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',2,NULL,NULL,NULL,0,'唐松岳','Karamatsudake',2696,36.687234,137.754685),
+('karamatsudake',3,NULL,'happoike_sanso',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake',1,NULL,'sakuradaira',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake',2,NULL,NULL,NULL,0,'硫黄岳','Iodake',2760,35.998764,138.369933),
+('iodake',3,NULL,'sakuradaira',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kaikoma',1,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kaikoma',2,NULL,NULL,NULL,0,'甲斐駒ヶ岳','Kaikomagatake',2967,35.757986,138.236685),
+('kaikoma',3,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('senjogatake',1,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('senjogatake',2,NULL,NULL,NULL,0,'仙丈ヶ岳','Senjogatake',3033,35.720068,138.183581),
+('senjogatake',3,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
+('takaosan','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',124,'高尾山（表参道）',2,'A','same',NULL,'unverified',3.8,7.7,0.46),
+('kitayokodake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',81,'北横岳（ロープウェイ）',1,'A','same',NULL,'unverified',2.2,4.2,0.30),
+('nekodake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',119,'根子岳（菅平牧場）',2,'A','same',NULL,'unverified',3.7,5.1,0.62),
+('tengudake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',88,'天狗岳（渋ノ湯）',3,'B','near','県の表は東天狗岳（2,640m）まで。HutsGo の線は三角点のある西天狗岳まで','unverified',6.4,9.1,0.83),
+('karamatsudake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',15,'唐松岳（八方池山荘）',3,'B','same',NULL,'unverified',7.1,10.5,0.95),
+('iodake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',77,'硫黄岳（桜平）',3,'B','same',NULL,'unverified',4.4,9.4,0.94),
+('kaikoma','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',62,'甲斐駒ヶ岳（北沢峠）',3,'C','same','表の注記: 登山口までのアクセスに時間を要するため日帰りが困難な場合があり、宿泊を前提にした計画を勧める','unverified',7.2,6.8,1.11),
+('senjogatake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',65,'仙丈ヶ岳（北沢峠）',3,'C','same','表の注記: 登山口までのアクセスに時間を要するため日帰りが困難な場合があり、宿泊を前提にした計画を勧める','unverified',7.6,9.5,1.12);
+
+-- 2026-10-10 ルートの山域（トップ・フィードの「エリア」で絞る）
+UPDATE trails SET range_id='kita_alps' WHERE id IN ('omote_ginza','yarisawa','karasawa_base','daikiretto','jonen_cho','tsubakuro','karasawa','okuhotaka','chougatake','nishiho_kamikochi','nishihotaka','dakesawa','karamatsudake');
+UPDATE trails SET range_id='chuo_alps' WHERE id IN ('kisokoma');
+UPDATE trails SET range_id='minami_alps' WHERE id IN ('kitadake','kaikoma','senjogatake');
+UPDATE trails SET range_id='fuji' WHERE id IN ('fuji_yoshida');
+UPDATE trails SET range_id='yatsugatake' WHERE id IN ('kitayokodake','tengudake','iodake');
+UPDATE trails SET range_id='joshinetsu' WHERE id IN ('nekodake');
+UPDATE trails SET range_id='kanto' WHERE id IN ('takaosan');
+
+-- ===============================================================
+-- 2026-10-10 ルートの写真（Wikimedia Commons。運営者の依頼「写真は Wikipedia などからイメージしやすいものを」）。
+-- ライセンスは 1 枚ずつ CC BY / CC BY-SA / CC0 / パブリックドメインだけ（営利で使える・表示が条件のもの）。
+-- 撮影者・ライセンス・元のページを写真の下と動画の中に出す。1600px と 800px に縮めて static/img/commons/ に置く。
+-- 1 枚目はそのルートの見出し（3D の動画の最初のハイライト）。位置は写真に位置情報があればそれ、無ければ山頂として動画に置く。
+-- ===============================================================
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('takaosan_takao','commons/takao','高尾山の山頂。秋の色づき','Mount Takao summit in autumn colours','高尾山の山頂。秋の色づき','Mount Takao summit in autumn colours','Guilhem Vellut','trail','takaosan',0,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Summit_of_Mount_Takao_(10602274205).jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kitayokodake_kitayoko5','commons/kitayoko5','北横岳から見た南八ヶ岳','South Yatsugatake from Kitayokodake','北横岳から見た南八ヶ岳','South Yatsugatake from Kitayokodake','Σ64','trail','kitayokodake',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Minami-Yatsugatake_from_Mt.Kitayokodake_01.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kitayokodake_kitayoko0','commons/kitayoko0','北横岳と縞枯山、溶岩の原','Kitayokodake, Shimagare and the lava field','北横岳と縞枯山、溶岩の原','Kitayokodake, Shimagare and the lava field','Σ64','trail','kitayokodake',1,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Kitayokodake-Shimagare.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('nekodake_neko8','commons/neko8','根子岳から見た北アルプス','The Northern Alps from Nekodake','根子岳から見た北アルプス','The Northern Alps from Nekodake','Naganojmmmm','trail','nekodake',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Northern_Japanese_Alps_panorama_from_Mount_Neko.jpg','36.54022222','138.37555556');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tengudake_tengu3','commons/tengu3','硫黄岳から見た天狗岳','Tengudake from Iodake','硫黄岳から見た天狗岳','Tengudake from Iodake','Σ64','trail','tengudake',0,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Mt.Tengudake_from_Mt.Iodake_01.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tengudake_tengu2','commons/tengu2','西天狗岳','Nishi-Tengudake','西天狗岳','Nishi-Tengudake','Σ64','trail','tengudake',1,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Mt.Nishitengudake_01.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('karamatsudake_happo','commons/happo','八方池と白馬三山','Happo pond and the Hakuba peaks','八方池と白馬三山','Happo pond and the Hakuba peaks','Alpsdake','trail','karamatsudake',0,'CC0','https://commons.wikimedia.org/wiki/File:Happo_Pond_2022-07-09_s3.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('iodake_iodake0','commons/iodake0','硫黄岳の爆裂火口','The explosion crater of Iodake','硫黄岳の爆裂火口','The explosion crater of Iodake','Chino City','trail','iodake',0,'CC BY 4.0','https://commons.wikimedia.org/wiki/File:Explosion_Crater,_Mt.Iodake.jpg','36.002201','138.366386');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('iodake_iodake3','commons/iodake3','硫黄岳から見た赤岳','Akadake from Iodake','硫黄岳から見た赤岳','Akadake from Iodake','Σ64','trail','iodake',1,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Mt.Akadake_from_Mt.Iodake_01.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kaikoma_kaikoma9','commons/kaikoma9','駒津峰から見た甲斐駒ヶ岳','Kaikomagatake from Komatsumine','駒津峰から見た甲斐駒ヶ岳','Kaikomagatake from Komatsumine','Alpsdake','trail','kaikoma',0,'Public domain','https://commons.wikimedia.org/wiki/File:Mount_Kaikoma_from_Komatsumine.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kaikoma_kaikoma0','commons/kaikoma0','甲斐駒ヶ岳','Kaikomagatake','甲斐駒ヶ岳','Kaikomagatake','Alpsdake','trail','kaikoma',1,'Public domain','https://commons.wikimedia.org/wiki/File:Kaikomagatake_from_kurisawayama_1998_10_11.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('senjogatake_senjo6','commons/senjo6','小仙丈ヶ岳から見た仙丈ヶ岳','Senjogatake from Kosenjo','小仙丈ヶ岳から見た仙丈ヶ岳','Senjogatake from Kosenjo','Alpsdake','trail','senjogatake',0,'CC0','https://commons.wikimedia.org/wiki/File:Mount_Senjo_from_Kosenjo_2000-7-2.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kisokoma_senjojiki9','commons/senjojiki9','秋の千畳敷カール','Senjojiki cirque in autumn','秋の千畳敷カール','Senjojiki cirque in autumn','Hiroaki Kaneko','trail','kisokoma',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:%E9%8C%A6%E7%A7%8B%E3%81%AE%E5%8D%83%E7%95%B3%E6%95%B7%E3%82%AB%E3%83%BC%E3%83%AB_(Autumn_Colored_Senjojiki_Cirque)_08_Oct,_2012_-_panoramio.jpg','35.779985','137.813851');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kisokoma_senjojiki2','commons/senjojiki2','宝剣岳と千畳敷カール','Hokendake and the Senjojiki cirque','宝剣岳と千畳敷カール','Hokendake and the Senjojiki cirque','sota','trail','kisokoma',1,'CC BY-SA 2.0','https://commons.wikimedia.org/wiki/File:Mount_Hoken_%26_Senjojiki_Cirque_(1170915401).jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('karasawa_karasawa6','commons/karasawa6','秋の涸沢カール','Karasawa cirque in autumn','秋の涸沢カール','Karasawa cirque in autumn','Raita Futo','trail','karasawa',0,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Karasawa_Cirque_Autumn_(52490356560).jpg','36.294166','137.661011');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('karasawa_karasawa5','commons/karasawa5','涸沢カールと穂高連峰','Karasawa cirque and the Hotaka peaks','涸沢カールと穂高連峰','Karasawa cirque and the Hotaka peaks','Raita Futo','trail','karasawa',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Karasawa_Cirque_(52490355850).jpg','36.293911','137.662908');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('karasawa_base_karasawa6','commons/karasawa6','秋の涸沢カール','Karasawa cirque in autumn','秋の涸沢カール','Karasawa cirque in autumn','Raita Futo','trail','karasawa_base',0,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Karasawa_Cirque_Autumn_(52490356560).jpg','36.294166','137.661011');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('karasawa_base_okuho9','commons/okuho9','涸沢岳から見た奥穂高岳','Okuhotakadake from Karasawadake','涸沢岳から見た奥穂高岳','Okuhotakadake from Karasawadake','Alpsdake','trail','karasawa_base',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Okuhotaka_from_Mount_Karasawa.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('okuhotaka_okuho9','commons/okuho9','涸沢岳から見た奥穂高岳','Okuhotakadake from Karasawadake','涸沢岳から見た奥穂高岳','Okuhotakadake from Karasawadake','Alpsdake','trail','okuhotaka',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Okuhotaka_from_Mount_Karasawa.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('okuhotaka_karasawa6','commons/karasawa6','秋の涸沢カール','Karasawa cirque in autumn','秋の涸沢カール','Karasawa cirque in autumn','Raita Futo','trail','okuhotaka',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Karasawa_Cirque_Autumn_(52490356560).jpg','36.294166','137.661011');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('daikiretto_kiretto0','commons/kiretto0','大キレット','The Daikiretto','大キレット','The Daikiretto','Kitadake3193','trail','daikiretto',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Daikiretto_minami.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('daikiretto_yari0','commons/yari0','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','Alpsdake','trail','daikiretto',1,'Public domain','https://commons.wikimedia.org/wiki/File:05_Yarigatake_from_Higashikamaone_2000-8-16.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('yarisawa_yari0','commons/yari0','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','Alpsdake','trail','yarisawa',0,'Public domain','https://commons.wikimedia.org/wiki/File:05_Yarigatake_from_Higashikamaone_2000-8-16.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('omote_ginza_tsubakuro1','commons/tsubakuro1','燕岳の花崗岩の稜線','The granite ridge of Tsubakurodake','燕岳の花崗岩の稜線','The granite ridge of Tsubakurodake','Alpsdake','trail','omote_ginza',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Tsubakuro.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('omote_ginza_yari0','commons/yari0','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','東鎌尾根から見た槍ヶ岳','Yarigatake from the Higashi-Kama ridge','Alpsdake','trail','omote_ginza',1,'Public domain','https://commons.wikimedia.org/wiki/File:05_Yarigatake_from_Higashikamaone_2000-8-16.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tsubakuro_tsubakuro1','commons/tsubakuro1','燕岳の花崗岩の稜線','The granite ridge of Tsubakurodake','燕岳の花崗岩の稜線','The granite ridge of Tsubakurodake','Alpsdake','trail','tsubakuro',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Tsubakuro.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tsubakuro_tsubakuro2','commons/tsubakuro2','燕山荘と燕岳','Enzanso and Tsubakurodake','燕山荘と燕岳','Enzanso and Tsubakurodake','y.ganden','trail','tsubakuro',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Mount_Tsubakuro_2014-09-28_(15393316245).jpg','36.399837','137.714942');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chougatake_chou4','commons/chou4','蝶ヶ岳ヒュッテと槍ヶ岳','Chogatake Hutte and Yarigatake','蝶ヶ岳ヒュッテと槍ヶ岳','Chogatake Hutte and Yarigatake','Alpsdake','trail','chougatake',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Chogatake_Hutte_and_Mount_Yari.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('jonen_cho_jonen7','commons/jonen7','蝶槍から見た常念岳','Jonendake from Choyari','蝶槍から見た常念岳','Jonendake from Choyari','Alpsdake','trail','jonen_cho',0,'CC0','https://commons.wikimedia.org/wiki/File:Mount_Jonen_from_Choyari_2002-7-12.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('jonen_cho_chou4','commons/chou4','蝶ヶ岳ヒュッテと槍ヶ岳','Chogatake Hutte and Yarigatake','蝶ヶ岳ヒュッテと槍ヶ岳','Chogatake Hutte and Yarigatake','Alpsdake','trail','jonen_cho',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Chogatake_Hutte_and_Mount_Yari.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('nishihotaka_nishiho11','commons/nishiho11','西穂高岳から見た乗鞍岳（4月）','Norikuradake from Nishihotakadake (April)','西穂高岳から見た乗鞍岳（4月）','Norikuradake from Nishihotakadake (April)','Alpsdake','trail','nishihotaka',0,'Public domain','https://commons.wikimedia.org/wiki/File:19_Norikuradake_from_Nishihotakadake_2000-4-17.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('nishiho_kamikochi_nishiho11','commons/nishiho11','西穂高岳から見た乗鞍岳（4月）','Norikuradake from Nishihotakadake (April)','西穂高岳から見た乗鞍岳（4月）','Norikuradake from Nishihotakadake (April)','Alpsdake','trail','nishiho_kamikochi',0,'Public domain','https://commons.wikimedia.org/wiki/File:19_Norikuradake_from_Nishihotakadake_2000-4-17.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('dakesawa_dakesawa5','commons/dakesawa5','上高地・岳沢の湿原と穂高','Dakesawa wetland and the Hotaka peaks, Kamikochi','上高地・岳沢の湿原と穂高','Dakesawa wetland and the Hotaka peaks, Kamikochi','lumoplank','trail','dakesawa',0,'CC0','https://commons.wikimedia.org/wiki/File:Kamikochi_-_Kamikochi6537.jpg','36.246244','137.635535');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kitadake_kitadake3','commons/kitadake3','北岳','Kitadake','北岳','Kitadake','拓実 橋本','trail','kitadake',0,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Kitadake_(13982793726).jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kitadake_kitadake9','commons/kitadake9','中白根山から見た北岳','Kitadake from Nakashirane','中白根山から見た北岳','Kitadake from Nakashirane','alpsdake','trail','kitadake',1,'CC0','https://commons.wikimedia.org/wiki/File:Mount_Kita_from_Mount_Nakashirane_2001-10-03.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('fuji_yoshida_fuji0','commons/fuji0','朝の吉田ルート','The Yoshida trail in the morning','朝の吉田ルート','The Yoshida trail in the morning','Photos of Japan','trail','fuji_yoshida',0,'CC0','https://commons.wikimedia.org/wiki/File:Mt._Fuji_Yoshida_Trail_Jun_21_621am.jpg','35.360833','138.7275');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('fuji_yoshida_fuji1','commons/fuji1','八合目の太子舘','Taishikan hut at the 8th station','八合目の太子舘','Taishikan hut at the 8th station','Fabio Achilli','trail','fuji_yoshida',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Taishikan,_Yoshida_Trail,_Mount_Fuji_(29232997087).jpg','35.37408333','138.74143889');

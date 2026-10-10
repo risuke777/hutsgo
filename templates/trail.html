@@ -128,7 +128,8 @@
   {% if t.photos %}
   <div class="photo-strip">
     {% for p in t.photos[:2] %}
-    <figure class="photo">{{ img(p, sizes="(max-width: 760px) 50vw, 360px") }}<figcaption>{{ p.caption_t }}</figcaption></figure>
+    <figure class="photo">{{ img(p, sizes="(max-width: 760px) 50vw, 360px") }}<figcaption>{{ p.caption_t }}{% if p.credit_t %}
+      <span class="credit">{{ p.credit_t }}{% if p.license %} / {% if p.source_url %}<a href="{{ p.source_url }}" rel="noopener">{{ p.license }}（Wikimedia Commons）</a>{% else %}{{ p.license }}{% endif %}{% endif %}</span>{% endif %}</figcaption></figure>
     {% endfor %}
   </div>
   {% endif %}

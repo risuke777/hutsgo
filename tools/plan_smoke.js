@@ -539,7 +539,8 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   const lab = read("lab/flyover/index.html");
   ok("試作ページは noindex", /<meta name="robots" content="noindex, nofollow">/.test(lab));
   ok("試作ページはサイトマップに入らない", !/\/lab\//.test(sitemap));
-  ok("試作ページへのリンクがサイト本体に無い", !/\/lab\/flyover/.test(read("index.html") + read("en/index.html") + read("trails/omote_ginza/index.html")));
+  // 2026-10-10 からトップのカードは山ムービーの埋め込み（iframe）を重ねて流す（C2 の変更記録）。人が押すリンクは置かない
+  ok("試作ページへのリンクがサイト本体に無い", !/href="[^"]*\/lab\/flyover/.test(read("index.html") + read("en/index.html") + read("trails/omote_ginza/index.html")));
   const flyRoutes = JSON.parse(read("lab/flyover/routes.json"));
   const og = flyRoutes.find((r) => r.id === "omote_ginza");
   ok("試作のルートデータ: 表銀座は登山道沿いの線と、座標のある小屋・登山口", og && og.traced && og.line.length > 100 && og.stops.length >= 6

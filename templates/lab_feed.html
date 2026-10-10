@@ -35,6 +35,7 @@
     <span class="fd-label" id="fd-l-n">日数</span>
     <div class="fd-chips" role="radiogroup" aria-labelledby="fd-l-n" data-group="nights">
       <button type="button" role="radio" data-v="">すべて</button>
+      <button type="button" role="radio" data-v="0">日帰り</button>
       <button type="button" role="radio" data-v="1">1泊2日</button>
       <button type="button" role="radio" data-v="2">2泊3日</button>
       <button type="button" role="radio" data-v="3">3泊〜</button>
@@ -51,6 +52,24 @@
       <button type="button" role="radio" data-v="6">〜6</button>
       <button type="button" role="radio" data-v="8">7〜8</button>
       <button type="button" role="radio" data-v="10">9〜</button>
+    </div>
+    <span class="fd-label" id="fd-l-r">エリア</span>
+    <div class="fd-chips" role="radiogroup" aria-labelledby="fd-l-r" data-group="range">
+      <button type="button" role="radio" data-v="">すべて</button>
+      <button type="button" role="radio" data-v="kita_alps">北アルプス</button>
+      <button type="button" role="radio" data-v="minami_alps">南アルプス</button>
+      <button type="button" role="radio" data-v="chuo_alps">中央アルプス</button>
+      <button type="button" role="radio" data-v="yatsugatake">八ヶ岳</button>
+      <button type="button" role="radio" data-v="fuji">富士山</button>
+      <button type="button" role="radio" data-v="joshinetsu">上信越</button>
+      <button type="button" role="radio" data-v="kanto">関東</button>
+    </div>
+    <span class="fd-label" id="fd-l-t">難易度</span>
+    <div class="fd-chips" role="radiogroup" aria-labelledby="fd-l-t" data-group="tech">
+      <button type="button" role="radio" data-v="">すべて</button>
+      <button type="button" role="radio" data-v="AB">A〜B</button>
+      <button type="button" role="radio" data-v="C">C</button>
+      <button type="button" role="radio" data-v="DE">D〜E</button>
     </div>
     <button type="button" id="fd-filter-done" class="fd-done"><span id="fd-count">0</span> ルートを見る</button>
   </div>

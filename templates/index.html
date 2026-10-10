@@ -29,6 +29,14 @@
     <button type="button" data-f="stamina" data-v="5" aria-pressed="false">{{ T.find_st5 }}</button>
     <button type="button" data-f="stamina" data-v="10" aria-pressed="false">{{ T.find_st10 }}</button>
   </div>
+  <div class="finder-row" role="group" aria-label="{{ T.find_area }}">
+    {% for r in ranges %}<button type="button" data-f="range" data-v="{{ r.id }}" aria-pressed="false">{{ r.name }}</button>{% endfor %}
+  </div>
+  <div class="finder-row" role="group" aria-label="{{ T.ans_tech }}">
+    <button type="button" data-f="tech" data-v="AB" aria-pressed="false">{{ T.find_tech_ab }}</button>
+    <button type="button" data-f="tech" data-v="C" aria-pressed="false">{{ T.find_tech_c }}</button>
+    <button type="button" data-f="tech" data-v="DE" aria-pressed="false">{{ T.find_tech_de }}</button>
+  </div>
   <p class="finder-n" aria-live="polite" id="route-n" data-fmt="{{ T.find_n }}" data-none="{{ T.find_none }}"></p>
 </section>
 
@@ -38,14 +46,17 @@
   <p class="quiet now-note">{{ T.now_note }}</p>
 </section>
 
-<section class="route-list" aria-labelledby="trails-h">
+<section class="route-list" aria-labelledby="trails-h" data-player="{{ BASE }}/lab/flyover/?embed=1" data-player-title="{{ T.route_player_title }}">
   <h2 id="trails-h">{{ T.home_routes_h }}</h2>
   {% for t in trails %}
   {% set sm = t.profile %}{% set gr = t.grading %}
   <a class="route-card" href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}"
-     data-q="{{ t.search }}" data-nights="{{ t.nights_typical }}" data-stamina="{{ gr.stamina if gr else '' }}"
+     data-q="{{ t.search }}" data-nights="{{ t.nights_typical }}" data-stamina="{{ gr.stamina if gr else '' }}" data-tech="{{ gr.technical if gr else '' }}" data-range="{{ t.range.id if t.range else '' }}"
      data-public="{{ 1 if t.public_modes else 0 }}" data-season="{{ t.seasons_json }}" data-stays="{{ t.stays_json }}">
-    {{ t.svg_mini }}
+    {% if t.poster %}<div class="route-media" data-play="{{ t.id }}">
+      <img src="{{ BASE }}/static/img/routes/{{ t.id }}.jpg" width="720" height="720" alt="{{ T.route_poster_alt.format(name=t.name) }}" loading="lazy" decoding="async">
+      <span class="route-media-attr">{{ T.route_poster_attr }}</span>
+    </div>{% else %}{{ t.svg_mini }}{% endif %}
     <div class="route-body">
       <strong>{{ t.name }}</strong>
       <span class="route-summary">{{ t.summary_t }}</span>

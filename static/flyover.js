@@ -1948,6 +1948,11 @@
       var sc = Math.max(w / sw, h / sh) * (1.02 + 0.08 * k);
       ctx.drawImage(src, x + (w - sw * sc) / 2, y + (h - sh * sc) / 2, sw * sc, sh * sc);
     }
+    if (m.credit) {   // 他の人の写真: 右下に撮影者とライセンス（Wikimedia Commons の条件）
+      ctx.font = "600 22px system-ui, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+      ctx.shadowColor = "rgba(0,0,0,.8)"; ctx.shadowBlur = 6; ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.fillText(m.credit, x + w - 18, y + h > H - 40 ? H - 52 : y + h - 14); ctx.shadowBlur = 0;   // 画面の下端では地図の出典と重ねない
+    }
     ctx.restore();
   }
   // 写真のピン（YAMAP のような丸いサムネイル）: 出し終えた写真・動画のピンを道の地図に立てていく。今の写真は青い縁で少し大きく
@@ -2093,7 +2098,8 @@
     }
     var k = st.e.kind;
     // 埋め込み（ルート選びのフィード）: 題字・数字・締めの文字は出さない（カードに同じ情報がある。上の帯とも重なる）
-    if (EMBED && (k === "hook" || k === "draw" || k === "swoop")) k = "embed";
+    // ただし写真（ハイライト）があるときは、冒頭のアイキャッチ（写真＋山名＋数字）を出す
+    if (EMBED && (k === "draw" || k === "swoop" || (k === "hook" && !highlight()))) k = "embed";
     if (k === "hook") {
       shade(0.35, 0.75);
       ctx.save();
@@ -2689,6 +2695,24 @@
   }
 
   // ------------------------------------------------------------------ 起動
+  // HutsGo のルート（地図から作る道）の写真。1 枚目がハイライト（冒頭のアイキャッチ）。ルートを替えたら入れ替える
+  var photoGen = 0;
+  async function loadRoutePhotos(r) {
+    var gen = ++photoGen;
+    for (var i = media.length - 1; i >= 0; i--) if (media[i].builtin) media.splice(i, 1);
+    var ps = (r && r.photos) || [];
+    for (var j = 0; j < ps.length; j++) {
+      var p = ps[j], img = null;
+      try { img = await createImageBitmap(await (await fetch(p.u)).blob()); } catch (e) { img = null; }
+      if (gen !== photoGen) return;
+      if (!img) continue;
+      media.push({ kind: "image", builtin: true, name: p.cap, url: p.u, thumb: p.u, img: img, aspect: img.width / img.height,
+                   q: frameScore(img, img.width, img.height), gps: [p.lat, p.lon], dir: null, star: j === 0, credit: p.cr,
+                   file: { name: p.cap, lastModified: j } });
+    }
+    place();
+    sp.show = buildShow();
+  }
   async function useRoute(r) {
     pauseSp(); sp.t = 0;
     route = prepRoute(r); route._pv = null; route.profile = null; lastLight = null; overviewCamCache = null; outroCamCache = null;
@@ -2741,6 +2765,7 @@
         if (!r) return;
         pauseSp(); $("fly-title").value = tt;
         await useRoute(r);
+        await loadRoutePhotos(d.type === "route" ? r : null);
         sp.t = 0; playSp();
       });
     }
@@ -2752,6 +2777,7 @@
       VIEWER = true; document.body.classList.add("is-viewer"); $("fly-viewer").hidden = false;
       if (link.title) $("fly-title").value = link.title;
       await useRoute(link.gpx || routes.find(function (r) { return r.id === sel.value; }));
+      if (!link.gpx) await loadRoutePhotos(route && routes.find(function (r) { return r.id === sel.value; }));
       if (!EMBED) track("flyover_view");
       if (EMBED && window.parent !== window) window.parent.postMessage({ type: "ready" }, location.origin);
       setTimeout(function () { sp.t = 0; playSp(); }, 600);
