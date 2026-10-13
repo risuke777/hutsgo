@@ -493,3 +493,19 @@ CREATE TABLE trail_seasons (
   checked_on  TEXT NOT NULL,
   confidence  TEXT NOT NULL DEFAULT 'reported'
 );
+
+-- ---------------------------------------------------------------
+-- 山の説明に使う事実（出典つき）。山の id は build.py が通過点の英語名から作る（mountains/<id>/ と同じ）。
+-- 名山の区分と、標高の順位のような「確かめられること」だけを持つ。感想や見どころの作文は入れない（A1）。
+-- ---------------------------------------------------------------
+CREATE TABLE mountain_meta (
+  id          TEXT PRIMARY KEY,
+  meizan      TEXT CHECK (meizan IN ('100','200')),   -- 日本百名山 / 日本二百名山（百名山以外の 100 山）
+  meizan_note TEXT,          -- 「穂高岳」として、のような補足
+  meizan_note_en TEXT,
+  fact_ja     TEXT,          -- 標高の順位など
+  fact_en     TEXT,
+  source_name TEXT NOT NULL,
+  source_url  TEXT NOT NULL,
+  checked_on  TEXT NOT NULL
+);

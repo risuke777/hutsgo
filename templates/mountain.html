@@ -15,6 +15,14 @@
   <h1>{{ m.name }}</h1>
   <p class="lede">{{ T.mtp_lede.format(elev=m.elev | metres, n=m.trails | length) }}</p>
 </header>
+{% if m.photo %}
+<figure class="photo photo-hero">
+  <img src="{{ BASE }}/static/img/{{ m.photo.file }}.jpg" srcset="{{ BASE }}/static/img/{{ m.photo.file }}-800.jpg 800w, {{ BASE }}/static/img/{{ m.photo.file }}.jpg 1400w"
+       sizes="(max-width: 760px) 100vw, 720px" alt="{{ m.photo.alt_t }}" width="1400" height="933" fetchpriority="high">
+  <figcaption>{{ m.photo.caption_t }} <span class="credit">{{ m.photo.credit_t }}{% if m.photo.license %} / {% if m.photo.source_url %}<a href="{{ m.photo.source_url }}" rel="noopener">{{ m.photo.license }}（Wikimedia Commons）</a>{% else %}{{ m.photo.license }}{% endif %}{% endif %}</span></figcaption>
+</figure>
+{% endif %}
+<p class="mt-desc mt-desc-page">{{ m.desc }}{% if m.meta %} <small class="quiet">{{ T.mt_d_src.format(src=m.meta.source_name) }}</small>{% endif %}</p>
 
 <section class="route-list" aria-labelledby="mt-routes">
   <h2 id="mt-routes">{{ T.mtp_routes_h.format(name=m.short) }}</h2>

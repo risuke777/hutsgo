@@ -1,7 +1,7 @@
 {# ルートのカード（トップ・山のページで同じもの）。絵は 3D の静止画、数字は県の表と式の目安 #}
 {% macro route_card(t) %}
   {% set sm = t.profile %}{% set gr = t.grading %}
-  <a class="route-card" href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}"
+  <a class="route-card" data-item href="{{ LB }}/trails/{{ t.id }}/" data-track="route" data-trail="{{ t.id }}" data-routes="{{ t.routes_json }}"
      data-q="{{ t.search }}" data-nights="{{ t.nights_typical }}" data-stamina="{{ gr.stamina if gr else '' }}" data-tech="{{ gr.technical if gr else '' }}" data-range="{{ t.range.id if t.range else '' }}"
      data-public="{{ 1 if t.public_modes else 0 }}" data-season="{{ t.seasons_json }}" data-stays="{{ t.stays_json }}">
     {% if t.poster %}<div class="route-media" data-play="{{ t.id }}">

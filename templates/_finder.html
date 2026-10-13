@@ -1,0 +1,79 @@
+{# 一覧の「探す」。トップ（ルート）と「山から探す」で同じ見た目・同じ言葉を使う。動きは static/routes.js #}
+{% macro finder(ranges, placeholder, n_fmt, n_none, with_meizan=false) %}
+<section class="finder" aria-label="{{ T.find_aria }}">
+  <label class="vh" for="route-q">{{ T.find_label }}</label>
+  <input type="search" id="route-q" class="finder-q" placeholder="{{ placeholder }}" autocomplete="off" enterkeyhint="search">
+
+  <div class="finder-presets" role="group" aria-label="{{ T.find_presets }}">
+    <span class="finder-label">{{ T.find_presets }}</span>
+    <div class="finder-row">
+      <button type="button" data-preset='{"days":"0","level":"easy","path":"AB"}' aria-pressed="false">{{ T.find_p_beginner }}</button>
+      <button type="button" data-preset='{"days":"0","public":"1"}' aria-pressed="false">{{ T.find_p_transit }}</button>
+      <button type="button" data-preset='{"days":"1"}' aria-pressed="false">{{ T.find_p_hut }}</button>
+      <button type="button" data-preset='{"now":"1"}' aria-pressed="false">{{ T.find_p_now }}</button>
+    </div>
+  </div>
+
+  <details class="finder-more">
+    <summary>{{ T.find_more }}</summary>
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_days }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_days }}">
+        <button type="button" data-f="days" data-v="0" aria-pressed="false">{{ T.ans_day_trip }}</button>
+        <button type="button" data-f="days" data-v="1" aria-pressed="false">{{ T.find_n1 }}</button>
+        <button type="button" data-f="days" data-v="2" aria-pressed="false">{{ T.find_n2 }}</button>
+      </div>
+    </div>
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_level }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_level }}">
+        <button type="button" data-f="level" data-v="easy" aria-pressed="false">{{ T.find_lv_easy }}<small>{{ T.find_lv_easy_s }}</small></button>
+        <button type="button" data-f="level" data-v="mid" aria-pressed="false">{{ T.find_lv_mid }}<small>{{ T.find_lv_mid_s }}</small></button>
+        <button type="button" data-f="level" data-v="hard" aria-pressed="false">{{ T.find_lv_hard }}<small>{{ T.find_lv_hard_s }}</small></button>
+      </div>
+    </div>
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_path }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_path }}">
+        <button type="button" data-f="path" data-v="AB" aria-pressed="false">{{ T.find_pa_ab }}<small>{{ T.find_pa_ab_s }}</small></button>
+        <button type="button" data-f="path" data-v="C" aria-pressed="false">{{ T.find_pa_c }}<small>{{ T.find_pa_c_s }}</small></button>
+        <button type="button" data-f="path" data-v="DE" aria-pressed="false">{{ T.find_pa_de }}<small>{{ T.find_pa_de_s }}</small></button>
+      </div>
+    </div>
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_access }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_access }}">
+        <button type="button" data-f="public" data-v="1" aria-pressed="false">{{ T.find_public }}</button>
+      </div>
+    </div>
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_area }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_area }}">
+        {% for r in ranges %}<button type="button" data-f="range" data-v="{{ r.id }}" aria-pressed="false">{{ r.name }}</button>{% endfor %}
+      </div>
+    </div>
+    {% if with_meizan %}
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_meizan }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_meizan }}">
+        <button type="button" data-f="meizan" data-v="100" aria-pressed="false">{{ T.meizan_100 }}</button>
+        <button type="button" data-f="meizan" data-v="200" aria-pressed="false">{{ T.meizan_200 }}</button>
+      </div>
+    </div>
+    {% endif %}
+    <div class="finder-group">
+      <span class="finder-label">{{ T.find_when }}</span>
+      <div class="finder-row" role="group" aria-label="{{ T.find_when }}">
+        <button type="button" data-f="now" data-v="1" aria-pressed="false">{{ T.find_p_now }}<small>{{ T.find_now_s }}</small></button>
+      </div>
+    </div>
+    <p class="finder-note">{{ T.find_note }}</p>
+  </details>
+
+  <p class="finder-status">
+    <span class="finder-n" aria-live="polite" id="route-n" data-fmt="{{ n_fmt }}" data-none="{{ n_none }}"></span>
+    <span class="finder-sort">{{ T.find_sorted }}</span>
+    <button type="button" id="finder-clear" class="finder-clear" hidden>{{ T.find_clear }}</button>
+  </p>
+</section>
+{% endmacro %}

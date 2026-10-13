@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_finder.html" import finder with context %}
 {% block title %}{{ T.mt_title }}{% endblock %}
 {% block desc %}{{ T.mt_desc.format(n=mountains | length) }}{% endblock %}
 {% block head %}
@@ -6,6 +7,7 @@
 {"@context":"https://schema.org","@type":"ItemList","name":"{{ T.mt_h1 }}",
  "itemListElement":[{% for m in mountains %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/mountains/{{ m.id }}/","name":"{{ m.name }}"}{{ "," if not loop.last }}{% endfor %}]}
 </script>
+<script src="{{ BASE }}/static/routes.js" defer></script>
 {% endblock %}
 {% block body %}
 <header class="page-head">
@@ -13,43 +15,26 @@
   <p class="lede">{{ T.mt_lede.format(n=mountains | length, r=n_routes) }}</p>
 </header>
 
-<section class="finder" aria-label="{{ T.mt_find }}">
-  <label class="vh" for="mt-q">{{ T.mt_find }}</label>
-  <input type="search" id="mt-q" class="finder-q" placeholder="{{ T.mt_ph }}" autocomplete="off" enterkeyhint="search">
-  <p class="finder-n" id="mt-n" aria-live="polite" data-fmt="{{ T.mt_n }}" data-none="{{ T.mt_none }}"></p>
-</section>
+{{ finder(ranges, T.mt_ph, T.mt_n, T.mt_none, with_meizan=true) }}
 
-{% for g in groups %}
-<section class="mt-group" aria-labelledby="mt-{{ g.range.id }}">
-  <h2 id="mt-{{ g.range.id }}">{{ g.range.name }}</h2>
-  <ul class="mt-list">
-    {% for m in g.mts %}
-    <li data-q="{{ m.name_ja }} {{ m.name_en }}">
-      <a href="{{ LB }}/mountains/{{ m.id }}/">
-        <strong>{{ m.name }}</strong>
-        <span class="mt-elev">{{ m.elev | metres }}</span>
-        <span class="mt-facts">{{ T.mt_routes_n.format(n=m.trails | length) }}{{ T.mid }}{% if m.easiest.nights_typical %}{{ T.nights.format(n=m.easiest.nights_typical, m=m.easiest.nights_typical + 1) }}{% else %}{{ T.ans_day_trip }}{% endif %}{% if m.easiest.grading %}{{ T.mid }}{{ T.ans_stamina }} {{ m.easiest.grading.stamina }}{{ T.mt_from }}{% endif %}</span>
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-{% endfor %}
+<div class="mt-cards" data-sort-now>
+  {% for m in mountains %}
+  <a class="mt-card" data-item href="{{ LB }}/mountains/{{ m.id }}/" data-q="{{ m.name_ja }} {{ m.name_en }}" data-routes="{{ m.routes_json }}"
+     data-range="{{ m.range.id if m.range else '' }}" data-meizan="{{ m.meta.meizan if m.meta and m.meta.meizan else '' }}" data-minor="{{ 1 if m.minor else 0 }}" data-season="{{ m.seasons_json }}" data-stays="{{ m.stays_json }}">
+    <div class="mt-media">
+      {% if m.photo %}<img src="{{ BASE }}/static/img/{{ m.photo.file }}-800.jpg" alt="{{ m.photo.alt_t }}" width="800" height="533" loading="lazy" decoding="async">
+      <span class="mt-credit">{{ m.photo.credit_t }}{% if m.photo.license %} / {{ m.photo.license }}{% endif %}</span>
+      {% elif m.poster %}<img src="{{ BASE }}/static/img/routes/{{ m.poster }}.jpg" alt="{{ T.route_poster_alt.format(name=m.name) }}" width="720" height="720" loading="lazy" decoding="async">
+      <span class="mt-credit">{{ T.route_poster_attr }}</span>{% endif %}
+    </div>
+    <div class="mt-body">
+      <p class="mt-tags">{{ m.range.name if m.range else '' }}{% if m.meta and m.meta.meizan %}<span class="mt-meizan">{{ T['meizan_' ~ m.meta.meizan] }}</span>{% endif %}</p>
+      <p class="mt-name"><strong>{{ m.name }}</strong><span class="mt-elev">{{ m.elev | metres }}</span></p>
+      <p class="mt-desc">{{ m.desc }}</p>
+      <p class="route-now" hidden></p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
 <p class="quiet">{{ T.mt_note }}</p>
-{% endblock %}
-{% block scripts %}
-<script>
-(function () {
-  var q = document.getElementById("mt-q"), n = document.getElementById("mt-n"), items = [].slice.call(document.querySelectorAll(".mt-list li"));
-  function norm(s) { return String(s || "").normalize("NFKC").toLowerCase().replace(/[ヶヵ]/g, "ケ").replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }).replace(/\s+/g, ""); }
-  items.forEach(function (li) { li._q = norm(li.dataset.q); });
-  function render() {
-    var w = norm(q.value), k = 0;
-    items.forEach(function (li) { var ok = !w || li._q.indexOf(w) >= 0; li.hidden = !ok; if (ok) k++; });
-    [].forEach.call(document.querySelectorAll(".mt-group"), function (g) { g.hidden = !g.querySelector("li:not([hidden])"); });
-    n.textContent = k ? n.dataset.fmt.replace("{n}", k) : n.dataset.none;
-  }
-  q.addEventListener("input", render); render();
-})();
-</script>
 {% endblock %}

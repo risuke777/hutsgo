@@ -483,3 +483,36 @@ button.btn{font:inherit;cursor:pointer}
 .mt-elev{font-weight:700;font-variant-numeric:tabular-nums}
 .mt-facts{grid-column:1/-1;font-size:.82rem;color:var(--granite)}
 .finder-links{margin:0;font-size:.9rem;font-weight:700}
+
+/* 探す（作り直し）: 見出しつきの条件。よく使う組み合わせは 1 回押すだけ。細かい条件はたたんでおく */
+.finder-label{display:block;margin:0 0 .25rem;font-size:.78rem;font-weight:700;color:var(--granite)}
+.finder-presets .finder-row button{font-weight:700;border-color:var(--ink)}
+.finder-more{border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.finder-more summary{padding:.6rem .8rem;font-size:.92rem;font-weight:700;cursor:pointer}
+.finder-more[open] summary{border-bottom:1px solid var(--line)}
+.finder-group{padding:.55rem .8rem 0}
+.finder-row button small{display:block;font-size:.66rem;font-weight:400;color:var(--granite);line-height:1.2}
+.finder-row button[aria-pressed="true"] small{color:inherit;opacity:.8}
+.finder-row button:has(small){padding-top:.25rem;padding-bottom:.25rem;border-radius:12px;text-align:left}
+.finder-note{margin:.6rem .8rem .7rem;font-size:.72rem;color:var(--granite)}
+.finder-status{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .8rem;margin:0}
+.finder-sort{font-size:.78rem;color:var(--granite)}
+.finder-clear{margin-left:auto;min-height:36px;padding:.1rem .8rem;border:0;border-radius:999px;background:var(--moss-tint);color:var(--moss-deep);font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.finder-clear[hidden]{display:none}
+/* 山のカード: 写真・名山の区分・説明 */
+.mt-cards{display:grid;gap:1rem;margin:0 0 1.2rem}
+.mt-card{display:block;border:1px solid var(--line);border-radius:6px;background:var(--card);overflow:hidden;color:inherit;text-decoration:none}
+.mt-card[hidden]{display:none}
+.mt-card:hover{border-color:var(--moss)}
+.mt-media{position:relative;aspect-ratio:16/9;background:#1d2b24;overflow:hidden}
+.mt-media img{display:block;width:100%;height:100%;object-fit:cover}
+.mt-credit{position:absolute;right:6px;bottom:4px;font-size:.62rem;color:rgba(255,255,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.85)}
+.mt-body{padding:.75rem .9rem .9rem}
+.mt-tags{margin:0 0 .15rem;font-size:.78rem;color:var(--granite)}
+.mt-meizan{margin-left:.5rem;padding:.02rem .45rem;border:1px solid var(--line-strong);border-radius:4px;color:var(--ink);font-weight:700}
+.mt-name{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;margin:0}
+.mt-name strong{font-size:1.15rem}
+.mt-desc{margin:.35rem 0 0;font-size:.9rem;line-height:1.65;color:var(--ink-soft)}
+.mt-desc-page{margin:0 0 1.2rem;font-size:1rem}
+.mt-desc-page small{display:block;margin-top:.3rem;font-size:.75rem}
+@media (min-width:700px){.mt-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}

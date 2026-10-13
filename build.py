@@ -646,6 +646,8 @@ def build_model(lang):
                                        ensure_ascii=False, separators=(",", ":"))
         t["stays_json"] = json.dumps([[(h["season"] or {}).get("status"), (h["season"] or {}).get("open_date"),
                                        (h["season"] or {}).get("close_date")] for h in t["stays"]], separators=(",", ":"))
+        t["routes_json"] = json.dumps([dict(n=t["nights_typical"] or 0, s=(t["grading"] or {}).get("stamina"),
+                                            t=(t["grading"] or {}).get("technical"), p=1 if t["public_modes"] else 0)], separators=(",", ":"))
         t["photos"] = [p for p in photos if p["trail_id"] == t["id"] and p["role"] == "trail"]
         t["points"] = build_points(t)
         # 標高が分かれば断面図は描ける。コースタイムが無い場合は横軸を行程順にする
@@ -728,13 +730,71 @@ def build_model(lang):
         m["name"] = m["name_ja"] if lang == "ja" else f"{m['name_en']} ({m['name_ja']})"
         m["short"] = m["name_ja"] if lang == "ja" else m["name_en"]
         # いちばん軽いルート（体力度の小さい順、無ければ日数の少ない順）を先に
-        m["trails"].sort(key=lambda t: ((t.get("grading") or {}).get("stamina") or 99, t["nights_typical"] or 0))
+        # 歩く時間の短い順（公式の合計 → 県の表の合計 → 式の目安）。時間が無ければ体力度
+        m["trails"].sort(key=lambda t: ((t["total_min"] if t["times_known"] else t.get("official_min") or (t.get("est") or {}).get("total") or 99999),
+                                        (t.get("grading") or {}).get("stamina") or 99))
         m["easiest"] = m["trails"][0]
         seen, m["huts"] = set(), []
         for t in m["trails"]:
             for h in t["stays"]:
                 if h["id"] not in seen:
                     seen.add(h["id"]); m["huts"].append(h)
+
+    # 山の説明・アイキャッチ・絞り込み用のデータ。説明は確かめられる事実だけで組む（名山の区分・標高の順位・いちばん軽いルート・小屋の数）
+    _meta = {r["id"]: r for r in rows("SELECT * FROM mountain_meta")}
+
+    def _walk(t):
+        if t["times_known"]:
+            return fmt_time(t["total_min"])
+        if t.get("official_min"):
+            return fmt_time(t["official_min"])
+        return (T.approx + fmt_time(t["est"]["total"])) if t.get("est") else None
+
+    def _is_top(m, t):
+        tops = [s for s in t["stops"] if s.get("label") and s.get("elevation_m")]
+        if not tops:
+            return False
+        top = max(tops, key=lambda s: s["elevation_m"])["label"]
+        return MT_ALIAS.get(top, (top,))[0] == m["name_ja"]
+
+    for m in mountains.values():
+        m["meta"] = _meta.get(m["id"])
+        key = m["name_ja"].replace("ヶ", "").replace("ケ", "")
+        named = lambda p: key in (p["alt"] or "").replace("ヶ", "").replace("ケ", "")
+        own = [p for t in m["trails"] if _is_top(m, t) for p in t["photos"]]
+        allp = [p for t in m["trails"] for p in t["photos"]]
+        m["photo"] = next((p for p in own if named(p)), None) or next((p for p in allp if named(p)), None) or (own[0] if own else None)
+        m["poster"] = next((t["id"] for t in m["trails"] if t.get("poster")), None)
+        m["minor"] = not any(_is_top(m, t) for t in m["trails"])   # どのルートでも最高地点でない山（通過点）は、おすすめ順で少し後ろへ
+        e = m["easiest"]
+        g = e.get("grading")
+        days = T.nights.format(n=e["nights_typical"], m=e["nights_typical"] + 1) if e["nights_typical"] else T.ans_day_trip
+        start = re.sub(r"\s*[（(].*$", "", (e.get("start_th") or {}).get("short") or "") or None
+        parts = []
+        if m["meta"] and m["meta"]["meizan"]:
+            note = pick(m["meta"], "meizan_note", lang)
+            parts.append(T["meizan_" + m["meta"]["meizan"]] + (T.mt_d_note.format(note=note) if note else "") + T.mt_d_stop)
+        if m["meta"] and pick(m["meta"], "fact", lang) if m["meta"] and lang == "en" else (m["meta"] and m["meta"]["fact_ja"]):
+            parts.append((m["meta"]["fact_en"] if lang == "en" and m["meta"]["fact_en"] else m["meta"]["fact_ja"]) + T.mt_d_stop)
+        w = _walk(e)
+        parts.append(T.mt_d_route.format(start=start or T.unknown, days=days, time=w or T.unknown)
+                     + (T.mt_d_grade.format(s=g["stamina"], t=g["technical"]) if g else "") + T.mt_d_stop)
+        if len(m["trails"]) > 1:
+            parts.append(T.mt_d_routes.format(n=len(m["trails"])) + T.mt_d_stop)
+        if m["huts"]:
+            parts.append(T.mt_d_huts.format(n=len(m["huts"])) + T.mt_d_stop)
+        m["desc"] = T.mt_d_join.join(parts)
+        m["routes_json"] = json.dumps([dict(n=t["nights_typical"] or 0, s=(t.get("grading") or {}).get("stamina"),
+                                            t=(t.get("grading") or {}).get("technical"), p=1 if t["public_modes"] else 0)
+                                       for t in m["trails"]], separators=(",", ":"))
+        seen_s, ss = set(), []
+        for t in m["trails"]:
+            for s in json.loads(t["seasons_json"]):
+                if (s["k"], s["l"]) not in seen_s:
+                    seen_s.add((s["k"], s["l"])); ss.append(s)
+        m["seasons_json"] = json.dumps(ss, ensure_ascii=False, separators=(",", ":"))
+        m["stays_json"] = json.dumps([[(h["season"] or {}).get("status"), (h["season"] or {}).get("open_date"),
+                                       (h["season"] or {}).get("close_date")] for h in m["huts"]], separators=(",", ":"))
 
     client = [{
         "id": h["id"], "name": h["name"], "type": h["type_label"],
@@ -956,7 +1016,7 @@ for lang, prefix in LOCALES:
         _r = _m["range"] or dict(id="other", name=g["T"].mt_other)
         _groups.setdefault(_r["id"], dict(range=_r, mts=[]))["mts"].append(_m)
     write(f"{d}mountains/index.html", "mountains.html", page="/mountains/", mountains=_mts, n_routes=len(trails_l),
-          groups=sorted(_groups.values(), key=lambda x: -len(x["mts"])), **g)
+          ranges=[x["range"] for x in sorted(_groups.values(), key=lambda x: -len(x["mts"])) if x["range"]["id"] != "other"], **g)
     for _m in _mts:
         write(f"{d}mountains/{_m['id']}/index.html", "mountain.html", page=f"/mountains/{_m['id']}/", m=_m, **g)
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
