@@ -96,7 +96,7 @@
   var list0 = document.querySelector(".route-list[data-player]");
   var noAuto = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) || (navigator.connection && navigator.connection.saveData);
   if (!medias.length || !list0 || noAuto || !("IntersectionObserver" in window)) return;
-  var fr = null, ready = false, cur = null, timer = 0, vis = new Map();
+  var fr = null, ready = false, cur = null, timer = 0, vis = new Map(), shown = "";   // shown = 今 iframe が流しているルート
   function put(el) {
     var r = el.getBoundingClientRect();
     fr.style.top = (r.top + window.scrollY) + "px"; fr.style.left = (r.left + window.scrollX) + "px";
@@ -109,17 +109,22 @@
       fr = document.createElement("iframe");
       fr.className = "route-player"; fr.title = list0.dataset.playerTitle; fr.setAttribute("allow", "autoplay"); fr.tabIndex = -1;
       fr.src = list0.dataset.player + "&route=" + encodeURIComponent(el.dataset.play);
+      shown = el.dataset.play;
       document.body.appendChild(fr);
       window.addEventListener("message", function (e) {
         if (e.origin !== location.origin || !e.data || e.data.type !== "ready") return;
-        ready = true; if (cur) setTimeout(function () { if (cur) fr.classList.add("is-on"); }, 300);
+        ready = true;
+        // 読み終える前に別のカードで止まっていたら、そのルートに替えてから見せる（前のルートを別のカードに重ねない）
+        if (cur && cur.dataset.play !== shown) { var c0 = cur; cur = null; start(c0); }
+        else if (cur) setTimeout(function () { if (cur) fr.classList.add("is-on"); }, 300);
       });
       put(el);
       return;
     }
     put(el); fr.classList.remove("is-on");
     if (ready) {
-      fr.contentWindow.postMessage({ type: "route", id: el.dataset.play }, location.origin);
+      if (shown !== el.dataset.play) { shown = el.dataset.play; fr.contentWindow.postMessage({ type: "route", id: shown }, location.origin); }
+      else fr.contentWindow.postMessage({ type: "play" }, location.origin);
       setTimeout(function () { if (cur === el) fr.classList.add("is-on"); }, 1400);   // 新しいルートを読み終えるまで絵を見せておく
     }
   }
