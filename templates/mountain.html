@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_route_card.html" import route_card with context %}
+{% block title %}{{ T.mtp_title.format(name=m.name, elev=m.elev | metres) }}{% endblock %}
+{% block desc %}{{ T.mtp_desc.format(name=m.name, elev=m.elev | metres, n=m.trails | length) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Mountain","name":"{{ m.name_ja }}","alternateName":"{{ m.name_en }}",
+ "geo":{"@type":"GeoCoordinates","latitude":{{ m.lat }},"longitude":{{ m.lon }},"elevation":"{{ m.elev }} m"},
+ "url":"{{ SITE_URL }}{{ PREFIX }}/mountains/{{ m.id }}/"}
+</script>
+{% endblock %}
+{% block body %}
+<header class="page-head">
+  <p class="crumb"><a href="{{ LB }}/mountains/">{{ T.mt_h1 }}</a>{% if m.range %} › {{ m.range.name }}{% endif %}</p>
+  <h1>{{ m.name }}</h1>
+  <p class="lede">{{ T.mtp_lede.format(elev=m.elev | metres, n=m.trails | length) }}</p>
+</header>
+
+<section class="route-list" aria-labelledby="mt-routes">
+  <h2 id="mt-routes">{{ T.mtp_routes_h.format(name=m.short) }}</h2>
+  {% for t in m.trails %}{{ route_card(t) }}{% endfor %}
+</section>
+
+{% if m.huts %}
+<section class="block" aria-labelledby="mt-huts">
+  <h2 id="mt-huts">{{ T.mtp_huts_h }}</h2>
+  <ul class="link-list">
+    {% for h in m.huts %}<li><a href="{{ LB }}/huts/{{ h.id }}/">{{ h.name }}</a>
+      <span class="quiet">{{ h.type_label }}{% if h.elevation_m %}{{ T.mid }}{{ h.elevation_m | metres }}{% endif %}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+<p class="quiet">{{ T.mtp_note }}</p>
+{% endblock %}

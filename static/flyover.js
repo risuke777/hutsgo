@@ -2100,7 +2100,9 @@
     // 埋め込み（ルート選びのフィード）: 題字・数字・締めの文字は出さない（カードに同じ情報がある。上の帯とも重なる）
     // ただし写真（ハイライト）があるときは、冒頭のアイキャッチ（写真＋山名＋数字）を出す
     if (EMBED && (k === "draw" || k === "swoop" || (k === "hook" && !highlight()))) k = "embed";
-    if (k === "hook") {
+    if (k === "hook" && EMBED) {
+      // 埋め込み（トップ・フィード）の冒頭は写真だけ。題字と数字は出さない（カードに同じ情報がある）
+    } else if (k === "hook") {
       shade(0.35, 0.75);
       ctx.save();
       var z = 1 + 0.06 * (1 - easeOut(Math.min(1, st.f * 2)));
@@ -2696,7 +2698,7 @@
 
   // ------------------------------------------------------------------ 起動
   // HutsGo のルート（地図から作る道）の写真。1 枚目がハイライト（冒頭のアイキャッチ）。ルートを替えたら入れ替える
-  var photoGen = 0;
+  var photoGen = 0, holdEmbed = false;
   async function loadRoutePhotos(r) {
     var gen = ++photoGen;
     for (var i = media.length - 1; i >= 0; i--) if (media[i].builtin) media.splice(i, 1);
@@ -2760,13 +2762,14 @@
         var d = e.data, r = null, tt = "";
         if (d.type === "route") r = routes.find(function (x) { return x.id === d.id; });
         else if (d.type === "link") { try { var l = await readLink("#" + d.link); r = l && l.gpx; tt = (l && l.title) || d.title || ""; } catch (err) { r = null; } }
-        else if (d.type === "pause") { pauseSp(); return; }
-        else if (d.type === "play") { if (!sp.playing) playSp(); return; }
+        else if (d.type === "pause") { holdEmbed = true; pauseSp(); return; }
+        else if (d.type === "play") { holdEmbed = false; if (!sp.playing) playSp(); return; }
         if (!r) return;
+        holdEmbed = false;   // 新しいルートは流す。読み込み中に「止める」が来たら、読み終えても流さない
         pauseSp(); $("fly-title").value = tt;
         await useRoute(r);
         await loadRoutePhotos(d.type === "route" ? r : null);
-        sp.t = 0; playSp();
+        sp.t = 0; if (!holdEmbed) playSp();
       });
     }
     var want = (link && link.route) || Q.get("route") || "omote_ginza";

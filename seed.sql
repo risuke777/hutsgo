@@ -1287,3 +1287,257 @@ INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,s
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kitadake_kitadake9','commons/kitadake9','中白根山から見た北岳','Kitadake from Nakashirane','中白根山から見た北岳','Kitadake from Nakashirane','alpsdake','trail','kitadake',1,'CC0','https://commons.wikimedia.org/wiki/File:Mount_Kita_from_Mount_Nakashirane_2001-10-03.JPG',NULL,NULL);
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('fuji_yoshida_fuji0','commons/fuji0','朝の吉田ルート','The Yoshida trail in the morning','朝の吉田ルート','The Yoshida trail in the morning','Photos of Japan','trail','fuji_yoshida',0,'CC0','https://commons.wikimedia.org/wiki/File:Mt._Fuji_Yoshida_Trail_Jun_21_621am.jpg','35.360833','138.7275');
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('fuji_yoshida_fuji1','commons/fuji1','八合目の太子舘','Taishikan hut at the 8th station','八合目の太子舘','Taishikan hut at the 8th station','Fabio Achilli','trail','fuji_yoshida',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Taishikan,_Yoshida_Trail,_Mount_Fuji_(29232997087).jpg','35.37408333','138.74143889');
+
+-- 2026-10-13 富士山（剣ヶ峰）の位置: 国土地理院の標高点 3776（「山から探す」に出すため）
+UPDATE trail_stops SET lat=35.360737, lon=138.727373 WHERE trail_id='fuji_yoshida' AND label='富士山（剣ヶ峰）';
+
+-- ===============================================================
+-- 2026-10-13 山小屋を追加（運営者の依頼「山小屋を増やす」）。10-10 に足したルートの道沿いの小屋。
+-- 営業期間（2026 年）・標高・電話・予約の要否・公式サイトは長野県「山小屋情報」（八ヶ岳 2026-06-04 更新・南アルプス 05-27・北アルプス 06-03）。
+--   県のページは「掲載を承諾いただいた山小屋の情報一覧」。県の一覧に 2026 年の期間が無い小屋（唐松岳頂上山荘は 2025 年の記載）は期間を入れない。
+-- 位置は国土地理院の注記と、その近くの建物の形（BldA）の中心。料金は各小屋の公式で確かめてから（いまは未確認）。
+-- 黒百合ヒュッテ: 地理院の注記は縦書きで、文字の先頭（位置の点）は小屋から約 120m 北。注記の文字の下端が道に接する所
+--   （中山峠の西 約260m・地理院の標高 2,391m。県の一覧は「中山峠西方500m、黒百合平 標高2400m」）に置いた。位置は目安。
+-- 唐松岳頂上山荘: 注記にいちばん近い道の上の点（地理院の標高 2,623m、県の一覧 2,620m）。
+-- 北横岳ヒュッテ・長衛小屋は県の一覧に無いので、公式で確かめてから足す。仙丈小屋は小仙丈尾根の往復の道から外れる（山頂の先）ので行程に入れない。
+-- ===============================================================
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
+('oren_goya','オーレン小屋','Oren-goya','mountain_hut','yatsugatake','minami_yatsu',NULL,36.002973,138.357514,2330,'official','http://www.o-ren.net/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('natsuzawa_kosen','夏沢鉱泉','Natsuzawa Kosen','onsen','yatsugatake','minami_yatsu',NULL,36.003354,138.343498,2060,'official','https://iodake.jp/natsuzawa/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('kuroyuri_hutte','黒百合ヒュッテ','Kuroyuri Hutte','mountain_hut','yatsugatake','kita_yatsu',NULL,36.029467,138.357119,2400,'official','http://www.kuroyurihyutte.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('komorebi_sanso','北沢峠こもれび山荘','Kitazawa-toge Komorebi Sanso','mountain_hut','minami_alps','kitazawa',NULL,35.742600,138.213546,2032,'official','https://www.ina-city-kankou.co.jp/yamagoya/kitazawa/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_minamialps.html','2026-10-13','reported'),
+('happoike_sanso_hut','村営八方池山荘','Happo-ike Sanso','mountain_hut','kita_alps','hakuba',NULL,36.696900,137.798848,1850,'official','https://yamagoya.hakubakousha.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported'),
+('karamatsu_sanso','唐松岳頂上山荘','Karamatsudake Chojo Sanso','mountain_hut','kita_alps','hakuba',NULL,36.686237,137.758219,2620,'official','https://karamatsu.jp/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES
+('oren_goya',2026,'open','2026-04-25','2026-11-01',NULL,NULL,1,NULL,'0266-72-1279',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('natsuzawa_kosen',2026,'year_round',NULL,NULL,NULL,NULL,NULL,NULL,'0266-73-6673',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('kuroyuri_hutte',2026,'year_round',NULL,NULL,'完全予約制','Booking required for every stay',1,NULL,'0266-72-3613',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported'),
+('komorebi_sanso',2026,'open','2026-04-25','2026-11-02','完全予約制・テント場なし','Booking required; no tent site',1,NULL,'0265-94-6001',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_minamialps.html','2026-10-13','reported'),
+('happoike_sanso_hut',2026,'year_round',NULL,NULL,'予約の受付は 0261-72-2855','Bookings: 0261-72-2855',NULL,NULL,'0261-75-3788',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES
+('oren_goya','sakuradaira',NULL),('natsuzawa_kosen','sakuradaira',NULL),('kuroyuri_hutte','shibunoyu',NULL),
+('komorebi_sanso','kitazawatoge',NULL),('happoike_sanso_hut','happoike_sanso',NULL),('karamatsu_sanso','happoike_sanso',NULL);
+
+-- 行程に小屋を入れる（帰りに通る小屋は泊まる候補にしない）
+DELETE FROM trail_stops WHERE trail_id IN ('iodake','tengudake','karamatsudake','kaikoma','senjogatake');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('iodake',1,NULL,'sakuradaira',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake',2,'natsuzawa_kosen',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('iodake',3,'oren_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('iodake',4,NULL,NULL,NULL,0,'硫黄岳','Iodake',2760,35.998764,138.369933),
+('iodake',5,'oren_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake',6,'natsuzawa_kosen',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake',7,NULL,'sakuradaira',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tengudake',1,NULL,'shibunoyu',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tengudake',2,'kuroyuri_hutte',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tengudake',3,NULL,NULL,NULL,0,'西天狗岳','Nishi-Tengudake',2646,36.019171,138.355453),
+('tengudake',4,'kuroyuri_hutte',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tengudake',5,NULL,'shibunoyu',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',1,NULL,'happoike_sanso',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',2,'happoike_sanso_hut',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',3,'karamatsu_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',4,NULL,NULL,NULL,0,'唐松岳','Karamatsudake',2696,36.687234,137.754685),
+('karamatsudake',5,'karamatsu_sanso',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('karamatsudake',6,NULL,'happoike_sanso',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kaikoma',1,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kaikoma',2,'komorebi_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('kaikoma',3,NULL,NULL,NULL,0,'甲斐駒ヶ岳','Kaikomagatake',2967,35.757986,138.236685),
+('kaikoma',4,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('senjogatake',1,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('senjogatake',2,'komorebi_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('senjogatake',3,NULL,NULL,NULL,0,'仙丈ヶ岳','Senjogatake',3033,35.720068,138.183581),
+('senjogatake',4,NULL,'kitazawatoge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+
+-- ===============================================================
+-- 2026-10-13 山を増やす: 長野県の山のグレーディング一覧表の往復ルートから（tools/grading_routes.py が機械で確かめた行だけ）。
+-- 山頂は地理院の地名検索と標高点・三角点、登山口は地名検索・注記の近くで、山頂へ道がつながり、表の出発地点の標高に当たる点。
+-- 採用は、登山口から山頂までの道のりが表のルート長の半分と ±12% 以内のもの。体力度はルート定数から、難易度・時間・距離・登りは表の行のまま。
+-- 日数の目安は体力度の帯（県の表: 1〜3 日帰りが可能、4〜5 1泊以上、6〜 2泊以上）。交通・駐車場は公式で確かめてから（いまは未確認）。
+-- ===============================================================
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('takase_dam','高瀬ダム','Takase Dam',36.474766,137.690536,1271,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('eboshidake','烏帽子岳（高瀬ダムから）','Eboshidake from Takase Dam',1,NULL,'高瀬ダム（1,271m）から烏帽子岳（2,628m）へ登り、同じ道を戻る。','From Takase Dam (1,271 m) up to Eboshidake (2,628 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('eboshidake',1,NULL,'takase_dam',NULL,0,NULL,NULL,NULL,NULL,NULL),('eboshidake',2,NULL,NULL,NULL,0,'烏帽子岳','Eboshidake',2628,36.479495,137.650922),('eboshidake',3,NULL,'takase_dam',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('eboshidake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',3,'烏帽子岳（高瀬ダム）＜ブナ立尾根＞',4,'C','same',NULL,'unverified',9.8,12.1,1.55);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('shirasawa','白沢登山口','Shirasawa trailhead',36.467041,137.790718,994,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('gakidake','餓鬼岳（白沢登山口から）','Gakidake from Shirasawa trailhead',1,NULL,'白沢登山口（994m）から餓鬼岳（2,647m）へ登り、同じ道を戻る。','From Shirasawa trailhead (994 m) up to Gakidake (2,647 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('gakidake',1,NULL,'shirasawa',NULL,0,NULL,NULL,NULL,NULL,NULL),('gakidake',2,NULL,NULL,NULL,0,'餓鬼岳','Gakidake',2647,36.447225,137.736029),('gakidake',3,NULL,'shirasawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('gakidake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',7,'餓鬼岳（白沢登山口）',5,'C','same',NULL,'unverified',11.0,13.6,1.78);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('nanakura','七倉','Nanakura',36.493159,137.733333,1063,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('kitakuzudake','北葛岳（七倉から）','Kitakuzudake from Nanakura',1,NULL,'七倉（1,063m）から北葛岳（2,551m）へ登り、同じ道を戻る。','From Nanakura (1,063 m) up to Kitakuzudake (2,551 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('kitakuzudake',1,NULL,'nanakura',NULL,0,NULL,NULL,NULL,NULL,NULL),('kitakuzudake',2,NULL,NULL,NULL,0,'北葛岳','Kitakuzudake',2551,36.51765,137.705536),('kitakuzudake',3,NULL,'nanakura',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('kitakuzudake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',16,'北葛岳（七倉）',5,'B','same',NULL,'unverified',14.0,13.1,1.88);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('ogizawa_jii','扇沢（爺ヶ岳の登山口）','Ogizawa (Jiigatake trailhead)',36.55995,137.730388,1338,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('jiigatake','爺ヶ岳（扇沢から）','Jiigatake from Ogizawa (Jiigatake trailhead)',1,NULL,'扇沢（1,338m）から爺ヶ岳（2,670m）へ登り、同じ道を戻る。','From Ogizawa (Jiigatake trailhead) (1,338 m) up to Jiigatake (2,670 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('jiigatake',1,NULL,'ogizawa_jii',NULL,0,NULL,NULL,NULL,NULL,NULL),('jiigatake',2,NULL,NULL,NULL,0,'爺ヶ岳','Jiigatake',2670,36.588301,137.750922),('jiigatake',3,NULL,'ogizawa_jii',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('jiigatake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',20,'爺ヶ岳（扇沢）',4,'B','same',NULL,'unverified',8.3,12.3,1.57);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('ichinosawa','一ノ沢','Ichinosawa',36.333438,137.775921,1329,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('jonendake','常念岳（一ノ沢から）','Jonendake from Ichinosawa',1,NULL,'一ノ沢（1,329m）から常念岳（2,857m）へ登り、同じ道を戻る。','From Ichinosawa (1,329 m) up to Jonendake (2,857 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('jonendake',1,NULL,'ichinosawa',NULL,0,NULL,NULL,NULL,NULL,NULL),('jonendake',2,NULL,NULL,NULL,0,'常念岳','Jonendake',2857,36.325514,137.727593),('jonendake',3,NULL,'ichinosawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('jonendake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',21,'常念岳（一ノ沢）',4,'B','same',NULL,'unverified',10.0,12.1,1.53);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('mitsumata','三股','Mitsumata',36.303778,137.757208,1359,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('jonendake_mitsumata','常念岳（三股から）','Jonendake from Mitsumata',1,NULL,'三股（1,359m）から常念岳（2,857m）へ登り、同じ道を戻る。','From Mitsumata (1,359 m) up to Jonendake (2,857 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('jonendake_mitsumata',1,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL),('jonendake_mitsumata',2,NULL,NULL,NULL,0,'常念岳','Jonendake',2857,36.325514,137.727593),('jonendake_mitsumata',3,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('jonendake_mitsumata','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',22,'常念岳（三股）',5,'B','same',NULL,'unverified',13.7,10.5,1.53);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('sarukura','猿倉','Sarukura',36.74572,137.801007,1242,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('shiroumadake','白馬岳（猿倉から）','Shiroumadake from Sarukura',1,NULL,'猿倉（1,242m）から白馬岳（2,932m）へ登り、同じ道を戻る。','From Sarukura (1,242 m) up to Shiroumadake (2,932 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('shiroumadake',1,NULL,'sarukura',NULL,0,NULL,NULL,NULL,NULL,NULL),('shiroumadake',2,NULL,NULL,NULL,0,'白馬岳','Shiroumadake',2932,36.75851,137.758554),('shiroumadake',3,NULL,'sarukura',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('shiroumadake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',24,'白馬岳（猿倉）',4,'C','same',NULL,'unverified',9.8,13.2,1.72);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('chougatake_mitsumata','蝶ヶ岳（三股から）','Chougatake from Mitsumata',1,NULL,'三股（1,359m）から蝶ヶ岳（2,664m）へ登り、同じ道を戻る。','From Mitsumata (1,359 m) up to Chougatake (2,664 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('chougatake_mitsumata',1,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL),('chougatake_mitsumata',2,NULL,NULL,NULL,0,'蝶ヶ岳','Chougatake',2664,36.287482,137.72614),('chougatake_mitsumata',3,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('chougatake_mitsumata','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',29,'蝶ヶ岳（三股）',4,'B','same',NULL,'unverified',7.7,9.7,1.33);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('ogizawa','扇沢駅','Ogizawa',36.55867,137.721023,1418,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('harinokidake','針ノ木岳（扇沢駅から）','Harinokidake from Ogizawa',1,NULL,'扇沢駅（1,418m）から針ノ木岳（2,821m）へ登り、同じ道を戻る。','From Ogizawa (1,418 m) up to Harinokidake (2,821 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('harinokidake',1,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL),('harinokidake',2,NULL,NULL,NULL,0,'針ノ木岳','Harinokidake',2821,36.538077,137.684427),('harinokidake',3,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('harinokidake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',38,'針ノ木岳（扇沢）',4,'B','same',NULL,'unverified',9.5,12.3,1.51);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('maehotakadake','前穂高岳（上高地から）','Maehotakadake from Kamikochi',1,NULL,'上高地（1,504m）から前穂高岳（3,090m）へ登り、同じ道を戻る。','From Kamikochi (1,504 m) up to Maehotakadake (3,090 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('maehotakadake',1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL,NULL,NULL),('maehotakadake',2,NULL,NULL,NULL,0,'前穂高岳','Maehotakadake',3090,36.281979,137.660574),('maehotakadake',3,NULL,'kamikochi',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('maehotakadake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',41,'前穂高岳（上高地）＜重太郎新道＞',4,'D','same',NULL,'unverified',10.3,12.5,1.62);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('rengedake','蓮華岳（扇沢駅から）','Rengedake from Ogizawa',1,NULL,'扇沢駅（1,418m）から蓮華岳（2,799m）へ登り、同じ道を戻る。','From Ogizawa (1,418 m) up to Rengedake (2,799 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('rengedake',1,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL),('rengedake',2,NULL,NULL,NULL,0,'蓮華岳','Rengedake',2799,36.535747,137.710543),('rengedake',3,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('rengedake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',46,'蓮華岳（扇沢）',4,'B','same',NULL,'unverified',10.0,13.5,1.54);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('minoto','美濃戸','Minoto',35.982062,138.326096,1690,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('akadake','赤岳（美濃戸から）','Akadake from Minoto',0,NULL,'美濃戸（1,690m）から赤岳（2,899m）へ登り、同じ道を戻る。','From Minoto (1,690 m) up to Akadake (2,899 m) and back the same way.','yatsugatake');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('akadake',1,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL),('akadake',2,NULL,NULL,NULL,0,'赤岳','Akadake',2899,35.970797,138.370067),('akadake',3,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('akadake','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',73,'赤岳（美濃戸）＜南沢・文三郎＞',3,'C','same',NULL,'unverified',7.3,10.6,1.23);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('iodake_minoto','硫黄岳（美濃戸から）','Iodake from Minoto',0,NULL,'美濃戸（1,690m）から硫黄岳（2,760m）へ登り、同じ道を戻る。','From Minoto (1,690 m) up to Iodake (2,760 m) and back the same way.','yatsugatake');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('iodake_minoto',1,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL),('iodake_minoto',2,NULL,NULL,NULL,0,'硫黄岳','Iodake',2760,35.998764,138.369933),('iodake_minoto',3,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('iodake_minoto','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',79,'硫黄岳（美濃戸）＜北沢＞',3,'B','same',NULL,'unverified',7.3,13.0,1.16);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('ogawara_toge','大河原峠','Ogawara Pass',36.112423,138.318823,2090,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('tateshinayama_ogawara','蓼科山（大河原峠から）','Tateshinayama from Ogawara Pass',0,NULL,'大河原峠（2,090m）から蓼科山（2,530m）へ登り、同じ道を戻る。','From Ogawara Pass (2,090 m) up to Tateshinayama (2,530 m) and back the same way.','yatsugatake');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('tateshinayama_ogawara',1,NULL,'ogawara_toge',NULL,0,NULL,NULL,NULL,NULL,NULL),('tateshinayama_ogawara',2,NULL,NULL,NULL,0,'蓼科山','Tateshinayama',2530,36.10373,138.295071),('tateshinayama_ogawara',3,NULL,'ogawara_toge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('tateshinayama_ogawara','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',84,'蓼科山（大河原峠）',2,'B','same',NULL,'unverified',4.0,5.4,0.51);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('kurumazaka_toge','車坂峠','Kurumazaka Pass',36.404567,138.469602,1973,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('kurofuyama','黒斑山（車坂峠から）','Kurofuyama from Kurumazaka Pass',0,NULL,'車坂峠（1,973m）から黒斑山（2,404m）へ登り、同じ道を戻る。','From Kurumazaka Pass (1,973 m) up to Kurofuyama (2,404 m) and back the same way.','joshinetsu');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('kurofuyama',1,NULL,'kurumazaka_toge',NULL,0,NULL,NULL,NULL,NULL,NULL),('kurofuyama',2,NULL,NULL,NULL,0,'黒斑山','Kurofuyama',2404,36.40522,138.488548),('kurofuyama',3,NULL,'kurumazaka_toge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('kurofuyama','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',110,'黒斑山（車坂峠）　※３',2,'A','same',NULL,'unverified',3.6,5.2,0.51);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('jizo_toge','地蔵峠','Jizo Pass',36.427406,138.419555,1732,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('yunomaruyama','湯ノ丸山（地蔵峠から）','Yunomaruyama from Jizo Pass',0,NULL,'地蔵峠（1,732m）から湯ノ丸山（2,101m）へ登り、同じ道を戻る。','From Jizo Pass (1,732 m) up to Yunomaruyama (2,101 m) and back the same way.','joshinetsu');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('yunomaruyama',1,NULL,'jizo_toge',NULL,0,NULL,NULL,NULL,NULL,NULL),('yunomaruyama',2,NULL,NULL,NULL,0,'湯ノ丸山','Yunomaruyama',2101,36.434729,138.400946),('yunomaruyama',3,NULL,'jizo_toge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('yunomaruyama','長野県 信州 山のグレーディング（令和8年4月）','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/documents/2026_grading_list.pdf',123,'湯ノ丸山（地蔵峠）',1,'A','same',NULL,'unverified',2.3,4.2,0.41);
+
+-- ===============================================================
+-- 2026-10-13 新しいルートの道沿いの山小屋。営業期間（2026 年）・標高・電話・予約は長野県「山小屋情報」（北アルプス 06-03 更新・八ヶ岳 06-04 更新）。
+-- 県の一覧に 2026 年の期間が無い小屋（大沢小屋は「例年7月上旬〜9月下旬」）は期間を入れない。位置は地理院の注記と建物の形。料金は未確認。
+-- 道から 250m 以内の小屋だけを行程に入れる（登山口からの道のりの順。帰りは泊まる候補にしない）。
+-- ===============================================================
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('akadake_chojo','赤岳頂上山荘','Akadake Chojo Sanso','mountain_hut','yatsugatake','minami_yatsu',NULL,35.97121,138.370571,2899,'official','http://www.yatsu-honzawaonsen.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('akadake_chojo',2026,'open','2026-07-04','2026-10-25',NULL,NULL,1,NULL,'090-5446-1205',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('akadake_kosen','赤岳鉱泉','Akadake Kosen','mountain_hut','yatsugatake','minami_yatsu',NULL,35.986886,138.360267,2220,'official','http://userweb.alles.or.jp/akadake/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('akadake_kosen',2026,'year_round',NULL,NULL,'完全予約制','Booking required for every stay',1,NULL,'090-4824-9986',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('gyoja_goya','行者小屋','Gyoja-goya','mountain_hut','yatsugatake','minami_yatsu',NULL,35.978896,138.362069,2340,'official','http://userweb.alles.or.jp/akadake/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('gyoja_goya',2026,'open','2026-05-30','2026-10-31','完全予約制','Booking required for every stay',1,NULL,'090-4740-3808',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('hakuba_chojo','村営白馬岳頂上宿舎','Hakubadake Chojo Shukusha','mountain_hut','kita_alps','hakuba',NULL,36.75283,137.753336,2730,'official','https://yamagoya.hakubakousha.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('hakuba_chojo',2026,'open','2026-06-27','2026-09-27',NULL,NULL,1,NULL,'0261-75-3788','宿泊予約は 5月8日 9:00 から','Bookings open 8 May, 09:00 JST',NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('hakuba_sanso','白馬山荘','Hakuba Sanso','mountain_hut','kita_alps','hakuba',NULL,36.755311,137.756922,2832,'official','https://www.hakubakan.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('hakuba_sanso',2026,'open','2026-04-25','2026-10-12',NULL,NULL,1,NULL,'0261-72-2002','夏季シーズン（6月20日〜）の宿泊予約は 5月20日 7:00 から Web で受付','Summer season (from 20 Jun): web bookings open 20 May, 07:00 JST',NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('harinoki_goya','針ノ木小屋','Harinoki-goya','mountain_hut','kita_alps','hakuba',NULL,36.537135,137.694085,2536,'official','https://www.harinoki.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('harinoki_goya',2026,'open','2026-07-01','2026-09-27','完全予約制','Booking required for every stay',1,NULL,'0261-22-1584',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('osawa_goya','大沢小屋','Osawa-goya','mountain_hut','kita_alps','hakuba',NULL,36.554454,137.702579,1700,'official','https://www.harinoki.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('sarukuraso','猿倉荘','Sarukura-so','mountain_hut','kita_alps','hakuba',NULL,36.745635,137.800912,1250,'official','https://www.hakubakan.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('sarukuraso',2026,'open','2026-06-27','2026-09-26',NULL,NULL,1,NULL,'0261-72-2002','5月20日 7:00 から Web で予約受付','Web bookings open 20 May, 07:00 JST',NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('taneike_sanso','種池山荘','Taneike Sanso','mountain_hut','kita_alps','hakuba',NULL,36.587916,137.735564,2450,'official','https://www.kasimayari.jp/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('taneike_sanso',2026,'open','2026-07-01','2026-10-17','完全予約制','Booking required for every stay',1,NULL,'0261-22-1263',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_kitaalps.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('tateshina_chojo','蓼科山頂ヒュッテ','Tateshina Sancho Hutte','mountain_hut','yatsugatake','kita_yatsu',NULL,36.104179,138.295833,2531,'official','http://tateshinayama.com/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('tateshina_chojo',2026,'open','2026-04-25','2026-10-31',NULL,NULL,NULL,NULL,'049-266-9264',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES ('tateshina_sanso','蓼科山荘','Tateshina Sanso','mountain_hut','yatsugatake','kita_yatsu',NULL,36.107211,138.298454,2350,'official','http://www7a.biglobe.ne.jp/~g-factory/','https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,capacity_tents,source_url,last_verified_at,confidence) VALUES ('tateshina_sanso',2026,'open','2026-04-25','2026-10-31',NULL,NULL,NULL,NULL,'090-1553-4500',NULL,NULL,NULL,NULL,'https://www.pref.nagano.lg.jp/kankoki/sangyo/kanko/sotaikyo/yamagoya/yamagoya_yatsugatake.html','2026-10-13','reported');
+DELETE FROM trail_stops WHERE trail_id='shiroumadake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('shiroumadake',1,NULL,'sarukura',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',2,'sarukuraso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',3,'hakuba_chojo',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',4,'hakuba_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',5,NULL,NULL,NULL,0,'白馬岳','Shiroumadake',2932,36.75851,137.758554),
+('shiroumadake',6,'hakuba_sanso',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',7,'hakuba_chojo',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',8,'sarukuraso',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('shiroumadake',9,NULL,'sarukura',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('sarukuraso','sarukura',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('hakuba_chojo','sarukura',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('hakuba_sanso','sarukura',NULL);
+DELETE FROM trail_stops WHERE trail_id='jiigatake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('jiigatake',1,NULL,'ogizawa_jii',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('jiigatake',2,'taneike_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('jiigatake',3,NULL,NULL,NULL,0,'爺ヶ岳','Jiigatake',2670,36.588301,137.750922),
+('jiigatake',4,'taneike_sanso',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('jiigatake',5,NULL,'ogizawa_jii',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('taneike_sanso','ogizawa_jii',NULL);
+DELETE FROM trail_stops WHERE trail_id='harinokidake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('harinokidake',1,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('harinokidake',2,'osawa_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('harinokidake',3,'harinoki_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('harinokidake',4,NULL,NULL,NULL,0,'針ノ木岳','Harinokidake',2821,36.538077,137.684427),
+('harinokidake',5,'harinoki_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('harinokidake',6,'osawa_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('harinokidake',7,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('osawa_goya','ogizawa',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('harinoki_goya','ogizawa',NULL);
+DELETE FROM trail_stops WHERE trail_id='rengedake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('rengedake',1,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('rengedake',2,'osawa_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('rengedake',3,'harinoki_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('rengedake',4,NULL,NULL,NULL,0,'蓮華岳','Rengedake',2799,36.535747,137.710543),
+('rengedake',5,'harinoki_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('rengedake',6,'osawa_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('rengedake',7,NULL,'ogizawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('osawa_goya','ogizawa',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('harinoki_goya','ogizawa',NULL);
+DELETE FROM trail_stops WHERE trail_id='jonendake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('jonendake',1,NULL,'ichinosawa',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('jonendake',2,'jonen_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('jonendake',3,NULL,NULL,NULL,0,'常念岳','Jonendake',2857,36.325514,137.727593),
+('jonendake',4,'jonen_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('jonendake',5,NULL,'ichinosawa',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('jonen_goya','ichinosawa',NULL);
+DELETE FROM trail_stops WHERE trail_id='chougatake_mitsumata';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('chougatake_mitsumata',1,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('chougatake_mitsumata',2,'chougatake_hutte',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('chougatake_mitsumata',3,NULL,NULL,NULL,0,'蝶ヶ岳','Chougatake',2664,36.287482,137.72614),
+('chougatake_mitsumata',4,'chougatake_hutte',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('chougatake_mitsumata',5,NULL,'mitsumata',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('chougatake_hutte','mitsumata',NULL);
+DELETE FROM trail_stops WHERE trail_id='maehotakadake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('maehotakadake',1,NULL,'kamikochi',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('maehotakadake',2,'dakesawa_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('maehotakadake',3,NULL,NULL,NULL,0,'前穂高岳','Maehotakadake',3090,36.281979,137.660574),
+('maehotakadake',4,'dakesawa_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('maehotakadake',5,NULL,'kamikochi',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('dakesawa_goya','kamikochi',NULL);
+DELETE FROM trail_stops WHERE trail_id='akadake';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('akadake',1,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('akadake',2,'gyoja_goya',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('akadake',3,'akadake_chojo',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('akadake',4,NULL,NULL,NULL,0,'赤岳','Akadake',2899,35.970797,138.370067),
+('akadake',5,'akadake_chojo',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('akadake',6,'gyoja_goya',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('akadake',7,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('gyoja_goya','minoto',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('akadake_chojo','minoto',NULL);
+DELETE FROM trail_stops WHERE trail_id='iodake_minoto';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('iodake_minoto',1,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake_minoto',2,'akadake_kosen',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('iodake_minoto',3,NULL,NULL,NULL,0,'硫黄岳','Iodake',2760,35.998764,138.369933),
+('iodake_minoto',4,'akadake_kosen',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('iodake_minoto',5,NULL,'minoto',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('akadake_kosen','minoto',NULL);
+DELETE FROM trail_stops WHERE trail_id='tateshinayama_ogawara';
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('tateshinayama_ogawara',1,NULL,'ogawara_toge',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tateshinayama_ogawara',2,'tateshina_sanso',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tateshinayama_ogawara',3,'tateshina_chojo',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tateshinayama_ogawara',4,NULL,NULL,NULL,0,'蓼科山','Tateshinayama',2530,36.10373,138.295071),
+('tateshinayama_ogawara',5,'tateshina_chojo',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tateshinayama_ogawara',6,'tateshina_sanso',NULL,NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tateshinayama_ogawara',7,NULL,'ogawara_toge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('tateshina_sanso','ogawara_toge',NULL);
+INSERT OR IGNORE INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min) VALUES ('tateshina_chojo','ogawara_toge',NULL);

@@ -705,6 +705,37 @@ def build_model(lang):
         t["gsi3d"] = gsi3d_url(t["map_line"])
         trails.append(t)
 
+    # 山から探す: ルートの通過点のうち山頂（名前が 岳・山・峰 で終わり、位置と標高のあるもの）を「山」としてまとめる。
+    # 同じ山に登るルートが 1 つのページに並ぶ。乗越・コル・独標は山にしない
+    MT_ALIAS = {"富士山（剣ヶ峰）": ("富士山", "Mount Fuji"), "西天狗岳": ("天狗岳", "Tengudake")}
+    mountains = {}
+    for t in trails:
+        for s in t["stops"]:
+            lb = s.get("label")
+            if not lb or s.get("lat") is None or not s.get("elevation_m"):
+                continue
+            ja, en = MT_ALIAS.get(lb, (lb, s.get("label_en") or lb))
+            if not re.search(r"(岳|山|峰)$", ja):
+                continue
+            mid = re.sub(r"[^a-z0-9]+", "-", en.lower()).strip("-")
+            m = mountains.setdefault(mid, dict(id=mid, name_ja=ja, name_en=en, elev=s["elevation_m"], lat=s["lat"], lon=s["lon"],
+                                               trails=[], range=t.get("range")))
+            if s["elevation_m"] > m["elev"]:
+                m.update(elev=s["elevation_m"], lat=s["lat"], lon=s["lon"])
+            if all(x["id"] != t["id"] for x in m["trails"]):
+                m["trails"].append(t)
+    for m in mountains.values():
+        m["name"] = m["name_ja"] if lang == "ja" else f"{m['name_en']} ({m['name_ja']})"
+        m["short"] = m["name_ja"] if lang == "ja" else m["name_en"]
+        # いちばん軽いルート（体力度の小さい順、無ければ日数の少ない順）を先に
+        m["trails"].sort(key=lambda t: ((t.get("grading") or {}).get("stamina") or 99, t["nights_typical"] or 0))
+        m["easiest"] = m["trails"][0]
+        seen, m["huts"] = set(), []
+        for t in m["trails"]:
+            for h in t["stays"]:
+                if h["id"] not in seen:
+                    seen.add(h["id"]); m["huts"].append(h)
+
     client = [{
         "id": h["id"], "name": h["name"], "type": h["type_label"],
         "area": h["area"]["name"] if h["area"] else "", "area_id": h["sub_area_id"],
@@ -719,7 +750,7 @@ def build_model(lang):
         "conf": h["season"]["confidence"] if h["season"] else "unknown",
     } for h in huts.values()]
 
-    return dict(T=T, huts=huts, trails=trails, areas=areas, photos=photos, client=client,
+    return dict(T=T, huts=huts, trails=trails, areas=areas, photos=photos, client=client, mountains=mountains,
                 trailheads=trailheads,
                 fmt_time=fmt_time, fmt_date=fmt_date, metres=metres_t, conf_text=conf_text)
 
@@ -918,6 +949,16 @@ for lang, prefix in LOCALES:
             _rc.setdefault(_t["range"]["id"], [_t["range"], 0])[1] += 1
     write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", articles=arts[:3],
           ranges=[v[0] for v in sorted(_rc.values(), key=lambda v: -v[1])], **g)
+    # 山から探す: 山域ごとに、高い順
+    _mts = sorted(m["mountains"].values(), key=lambda x: -x["elev"])
+    _groups = {}
+    for _m in _mts:
+        _r = _m["range"] or dict(id="other", name=g["T"].mt_other)
+        _groups.setdefault(_r["id"], dict(range=_r, mts=[]))["mts"].append(_m)
+    write(f"{d}mountains/index.html", "mountains.html", page="/mountains/", mountains=_mts, n_routes=len(trails_l),
+          groups=sorted(_groups.values(), key=lambda x: -len(x["mts"])), **g)
+    for _m in _mts:
+        write(f"{d}mountains/{_m['id']}/index.html", "mountain.html", page=f"/mountains/{_m['id']}/", m=_m, **g)
     write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
           client_json=json.dumps(m["client"], ensure_ascii=False), **g)
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
