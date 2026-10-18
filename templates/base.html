@@ -16,7 +16,7 @@
 {% if HERO %}<meta property="og:image" content="{{ SITE_URL }}{{ BASE }}/static/img/{{ HERO.file }}.jpg">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ BASE }}/static/site.css">
 <link rel="icon" href="{{ BASE }}/static/favicon.svg" type="image/svg+xml">
 <meta name="hutsgo-api" content="{{ API_URL }}">
@@ -24,7 +24,7 @@
 {% block head %}{% endblock %}
 {{ ANALYTICS | safe }}
 </head>
-<body>
+<body{% block bodyattr %}{% endblock %}>
 <a class="skip" href="#main">{{ T.skip }}</a>
 <header class="site-head">
   <a class="wordmark" href="{{ LB }}/" aria-label="{{ T.home_aria }}">

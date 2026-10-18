@@ -24,6 +24,10 @@ CNAME = SITE_HOST if SITE_HOST and not SITE_HOST.endswith("github.io") and SITE_
 ANALYTICS = os.environ.get("ANALYTICS_SNIPPET", "")
 API_URL = os.environ.get("API_URL", "").rstrip("/")   # XServer 上の計測/投稿 API。空なら計測も投稿フォームも無効
 TODAY = datetime.date.today().isoformat()
+# ルートページ「いつ泊まれる？」の横軸（営業期間のデータは 2026 年）
+GANTT_W0, GANTT_W1 = datetime.date(2026, 4, 1), datetime.date(2026, 11, 30)
+GANTT_SPAN = (GANTT_W1 - GANTT_W0).days + 1
+GANTT_TICKS = [(m, round((datetime.date(2026, m, 1) - GANTT_W0).days / GANTT_SPAN * 100, 2)) for m in (4, 6, 8, 10)]
 
 LOCALES = [("ja", ""), ("en", "/en")]   # (言語, URL 接頭辞)
 
@@ -627,6 +631,27 @@ def build_model(lang):
             if s["hut"] and s["is_overnight_candidate"] and s["hut_id"] not in _seen_h:
                 _seen_h.add(s["hut_id"])
                 t["stays"].append(s["hut"])
+        # 「いつ泊まれる？」の帯: 4/1〜11/30 を横幅いっぱいにして、泊まれる小屋の営業期間（2026 年）を並べる。
+        #  日付の分からない小屋は帯を描かない（未確認と書く）。今日の線と色は見ている人の端末の日付で site.js が付け直す
+        t["gantt"] = []
+        for h in t["stays"]:
+            se = h["season"] or {}
+            bar = None
+            if se.get("status") == "year_round":
+                bar = (0, 100)
+            elif se.get("status") == "open" and se.get("open_date") and se.get("close_date"):
+                a = max(GANTT_W0, datetime.date.fromisoformat(se["open_date"]))
+                b = min(GANTT_W1, datetime.date.fromisoformat(se["close_date"]))
+                if b >= a:
+                    bar = (round((a - GANTT_W0).days / GANTT_SPAN * 100, 2), round(((b - a).days + 1) / GANTT_SPAN * 100, 2))
+            t["gantt"].append(dict(hut=h, bar=bar, status=se.get("status"), open=se.get("open_date"), close=se.get("close_date"),
+                                   now=bool(se.get("status") == "year_round" or (se.get("open_date") and se.get("close_date")
+                                                                                    and se["open_date"] <= TODAY <= se["close_date"]))))
+        # 下山口の乗り物（縦走で出口が違うとき）
+        t["end_access"] = rows("SELECT * FROM access_routes WHERE trailhead_id=?", t["end_th"]["id"]) if t["end_th"] else []
+        t["end_modes"] = [m for m in ("train", "bus", "shuttle", "ropeway", "ferry", "taxi")
+                          if any(_a["mode"] == m for _a in t["end_access"])]
+        t["end_car_restricted"] = any(_a["private_car_restricted"] for _a in t["end_access"])
         t["poster"] = (ROOT / "static" / "img" / "routes" / f"{t['id']}.jpg").exists()   # tools/route_posters.mjs が作る 3D の静止画
         _rg = rows("SELECT * FROM mountain_ranges WHERE id=?", t.get("range_id"))
         t["range"] = dict(id=_rg[0]["id"], name=disp(_rg[0], lang, with_ja=False)) if _rg else None
@@ -928,7 +953,8 @@ def transit_model(lang):
 # ---------------------------------------------------------------- render
 env = Environment(loader=FileSystemLoader(ROOT / "templates", encoding="utf-8"),
                   autoescape=select_autoescape(["html"]))
-env.globals.update(SITE_URL=SITE_URL, BASE=BASE, ANALYTICS=ANALYTICS, API_URL=API_URL, TODAY=TODAY)
+env.globals.update(SITE_URL=SITE_URL, BASE=BASE, ANALYTICS=ANALYTICS, API_URL=API_URL, TODAY=TODAY,
+                   GANTT_TICKS=GANTT_TICKS, GANTT_W0=GANTT_W0.isoformat(), GANTT_W1=GANTT_W1.isoformat())
 
 DIST.mkdir(exist_ok=True)
 for p in DIST.iterdir():

@@ -69,6 +69,35 @@
     dateInput.addEventListener("change", function () { paint(dateInput.value); track("change_date", {}); });
   }
 
+  // ---- ルートページ「いつ泊まれる？」: 見ている人の今日で、線の位置・営業中の色・「今日◯軒」を付け直す
+  var when = document.getElementById("d-when");
+  if (when) {
+    var d0 = new Date(), today = d0.getFullYear() + "-" + ("0" + (d0.getMonth() + 1)).slice(-2) + "-" + ("0" + d0.getDate()).slice(-2);
+    var rows = when.querySelectorAll(".gantt-rows li"), k = 0;
+    each(rows, function (li) {
+      var st = status(li, today) === "open";
+      li.classList.toggle("is-now", st);
+      if (st) k++;
+    });
+    var lead = when.querySelector("[data-when-lead]");
+    var dd = (d0.getMonth() + 1) + "/" + d0.getDate();
+    lead.textContent = (k ? lead.dataset.fmt : lead.dataset.none).replace("{d}", dd).replace("{n}", lead.dataset.n).replace("{k}", k);
+    var line = when.querySelector(".gantt-today"), box = when.querySelector(".gantt");
+    var w0 = new Date(when.dataset.w0 + "T00:00:00"), w1 = new Date(when.dataset.w1 + "T00:00:00");
+    // 営業期間のデータは 2026 年。月日だけを 2026 年の横軸に置く
+    var t0 = new Date(w0.getFullYear(), d0.getMonth(), d0.getDate());
+    var frac = (t0 - w0) / (w1 - w0 + 864e5);
+    var placeLine = function () {
+      var tr = when.querySelector(".gantt-track");
+      if (!tr || frac < 0 || frac > 1) { line.hidden = true; return; }
+      var a = box.getBoundingClientRect(), b = tr.getBoundingClientRect();
+      line.style.left = (b.left - a.left + frac * b.width) + "px";
+      line.hidden = false;
+    };
+    placeLine();
+    window.addEventListener("resize", placeLine);
+  }
+
   // ---- contribution form: only shown when an API endpoint is configured
   var contrib = document.getElementById("contrib");
   if (contrib && API) {

@@ -9,6 +9,8 @@
   var q = document.getElementById("route-q"), nOut = document.getElementById("route-n"), clearBtn = document.getElementById("finder-clear");
   var en = document.documentElement.lang === "en";
   var f = {};
+  // 「山域から探す」などのリンク: ?range=… で開いたらその山域で絞っておく
+  try { var sp0 = new URLSearchParams(location.search); if (sp0.get("range")) f.range = sp0.get("range"); } catch (e) {}
 
   // 槍ヶ岳／槍ケ岳、カタカナ／ひらがな、全角／半角を同じに扱う
   function norm(s) {

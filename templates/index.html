@@ -4,6 +4,7 @@
 {% from "_route_card.html" import route_card with context %}
 {% from "_finder.html" import finder with context %}
 {% block title %}{{ T.home_title }}{% endblock %}
+{% block bodyattr %} class="is-home"{% endblock %}
 {% block head %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"HutsGo","url":"{{ SITE_URL }}{{ PREFIX }}/","inLanguage":"{{ LANG }}",
@@ -12,12 +13,46 @@
 <script src="{{ BASE }}/static/routes.js" defer></script>
 {% endblock %}
 {% block body %}
-<section class="hero">
-  <h1>{{ T.home_h1_a }}<br>{{ T.home_h1_b }}</h1>
-  <p class="lede">{{ T.home_lede }}</p>
+{#- 最初の画面: 夜明けの稜線（飾りの絵。写真ではない）。字は絵の上、下の白いカードが「探す」 -#}
+<section class="home-hero" aria-labelledby="home-h1">
+  {#- 横長の画面でも切れないよう、真ん中の絵の左右に裏返した絵を並べて 1170 幅にする（つなぎ目の高さが揃う） -#}
+  <svg class="home-scene" viewBox="15 0 1170 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="hgSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#22345A"/><stop offset="0.45" stop-color="#5E6B9A"/>
+        <stop offset="0.7" stop-color="#E7A27C"/><stop offset="0.85" stop-color="#F7D6A4"/>
+      </linearGradient>
+    </defs>
+    <rect width="1200" height="600" fill="url(#hgSky)"/>
+    <g class="hs-sun"><circle cx="667" cy="352" r="64" fill="#FFE2B0" opacity="0.28"/><circle cx="667" cy="352" r="30" fill="#FFE6BC"/></g>
+    <rect class="hs-night" width="1200" height="600" fill="#0E1730" opacity="0.75"/>
+    <g fill="#FFFFFF">
+      {% for x, y, r in [(445,60,1.6),(501,120,1.2),(555,44,1.8),(619,96,1.2),(705,52,1.6),(757,130,1.2),(475,180,1),(735,200,1),(120,80,1.4),(230,150,1.1),(320,50,1.6),(880,70,1.5),(960,160,1.1),(1060,40,1.7),(1130,120,1.2)] %}
+      <circle class="hs-tw hs-t{{ loop.index0 % 5 + 1 }}" cx="{{ x }}" cy="{{ y }}" r="{{ r }}"/>{% endfor %}
+    </g>
+    {% for tf in ['translate(405,0) scale(-1,1)', 'translate(405,0)', 'translate(1185,0) scale(-1,1)'] %}
+    <g transform="{{ tf }}">
+      <path d="M0 384 L40 356 L84 370 L132 326 L172 348 L214 334 L254 304 L292 338 L334 318 L390 342 V600 H0 Z" fill="#8E90B8" opacity="0.75"/>
+      <path d="{{ 'M0 424 L48 394 L96 408 L142 374 L186 398 L212 366 L224 304 L236 364 L268 388 L318 366 L390 398 V600 H0 Z' if loop.index == 2 else 'M0 424 L48 394 L96 408 L142 374 L186 398 L224 362 L268 388 L318 366 L390 398 V600 H0 Z' }}" fill="#4A5482" stroke="#4A5482" stroke-width="1.5"/>
+      <g class="hs-drift" fill="#FFFFFF" opacity="0.62"><ellipse cx="60" cy="424" rx="90" ry="14"/><ellipse cx="200" cy="432" rx="110" ry="12"/><ellipse cx="350" cy="420" rx="80" ry="13"/></g>
+      <g class="hs-drift2" fill="#FFFFFF" opacity="0.45"><ellipse cx="120" cy="444" rx="120" ry="10"/><ellipse cx="300" cy="448" rx="120" ry="11"/></g>
+      <path d="M0 470 L60 452 L122 470 L184 446 L242 468 L302 454 L390 478 V600 H0 Z" fill="#273150" stroke="#273150" stroke-width="1.5"/>
+      <path d="M0 520 L78 498 L150 512 L228 492 L300 508 L390 498 V600 H0 Z" fill="#141B30" stroke="#141B30" stroke-width="1.5"/>
+      {% if loop.index == 2 %}<g class="hs-glow"><path d="M254 384 L262 371 L270 384 Z" fill="#F2B544"/><path d="M273 388 L279 378 L285 388 Z" fill="#F2B544" opacity="0.8"/></g>{% endif %}
+    </g>
+    {% endfor %}
+  </svg>
+  <div class="home-hero-text">
+    <p class="home-eyebrow hs-up hs-d1">{{ T.home_eyebrow }}</p>
+    <h1 id="home-h1" class="hs-up hs-d2">{{ T.home_h1_a }}<br>{{ T.home_h1_b }}</h1>
+  </div>
 </section>
-{{ finder(ranges, T.find_ph, T.find_n, T.find_none) }}
-<p class="finder-links"><a href="{{ LB }}/mountains/">{{ T.mt_link }}</a></p>
+
+<div class="home-search hs-up hs-d3">
+  {{ finder(ranges, T.find_ph, T.find_n, T.find_none) }}
+  <p class="finder-links"><a href="{{ LB }}/mountains/">{{ T.mt_link }}</a></p>
+</div>
+<p class="home-lede">{{ T.home_lede }}</p>
 
 <section class="now" id="route-now" hidden aria-labelledby="now-h">
   <h2 id="now-h" data-fmt="{{ T.now_h }}">{{ T.now_h }}</h2>
@@ -30,6 +65,22 @@
   {% for t in trails %}{{ route_card(t) }}{% endfor %}
   <p class="quiet" data-after-items>{{ T.home_more_routes }}<a href="{{ LB }}/huts/">{{ T.home_more_link }}</a>{{ T.home_more_tail }}</p>
   <p class="quiet" data-after-items><a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}<a href="{{ LB }}/plan/">{{ T.plan_link }}</a></p>
+</section>
+
+{#- 山域: 横に流して選ぶ。押すと「山から探す」をその山域で絞った状態で開く -#}
+<section class="ranges" aria-labelledby="ranges-h">
+  <h2 id="ranges-h">{{ T.home_ranges_h }}</h2>
+  <ul class="range-row">
+    {% for r in ranges %}
+    <li><a class="range-card rc{{ loop.index0 % 7 }}" href="{{ LB }}/mountains/?range={{ r.id }}">
+      <svg viewBox="0 0 136 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path class="rc-far" d="M0 96 L0 62 L26 48 L50 56 L76 30 L96 44 L116 36 L136 46 L136 96 Z"/>
+        <path class="rc-near" d="M0 96 L0 78 L40 70 L80 80 L120 68 L136 74 L136 96 Z"/>
+      </svg>
+      <span>{{ r.name }}</span>
+    </a></li>
+    {% endfor %}
+  </ul>
 </section>
 
 {% if HERO %}
@@ -49,32 +100,20 @@
 </section>
 {% endif %}
 
-<section class="areas" aria-labelledby="areas-h">
-  <h2 id="areas-h">{{ T.home_areas_h }}</h2>
-  <ul class="chip-row">
-    {% for a in areas %}
-    <li><a class="chip" href="{{ LB }}/huts/?area={{ a.id }}">{{ a.name }}</a></li>
-    {% endfor %}
-  </ul>
-</section>
-
 {% if TEASER %}
 <section class="teaser" aria-labelledby="teaser-h">
-  <div class="teaser-photos">
-    {% for p in TEASER[:3] %}
-    <figure class="photo {{ 'photo-main' if loop.first else 'photo-sub' }}">
-      {{ img(p, sizes="(max-width: 760px) 100vw, 480px" if loop.first else "(max-width: 760px) 50vw, 240px") }}
-      <figcaption>{{ p.caption_t }}</figcaption>
-    </figure>
-    {% endfor %}
-  </div>
+  {% set p = TEASER[0] %}
+  <figure class="teaser-photo">
+    {{ img(p, sizes="(max-width: 760px) 100vw, 720px") }}
+    <figcaption>{{ p.caption_t }}{% if p.credit_t %} <span class="credit">{{ p.credit_t }}</span>{% endif %}</figcaption>
+  </figure>
   <div class="teaser-body">
     <p class="eyebrow">{{ T.teaser_eyebrow }}</p>
     <h2 id="teaser-h">{{ T.teaser_h }}</h2>
     <p>{{ T.teaser_body }}</p>
     <p class="teaser-cta">
-      <button type="button" class="btn btn-primary" data-track="interest_dolomiti" data-done="{{ T.teaser_done }}">{{ T.teaser_btn }}</button>
-      <span class="quiet">{{ T.teaser_note }}</span>
+      <button type="button" class="btn teaser-btn" data-track="interest_dolomiti" data-done="{{ T.teaser_done }}">{{ T.teaser_btn }}</button>
+      <span>{{ T.teaser_note }}</span>
     </p>
   </div>
 </section>
@@ -83,10 +122,10 @@
 <section class="promise" aria-labelledby="promise-h">
   <h2 id="promise-h">{{ T.home_promise_h }}</h2>
   <ul class="promise-list">
-    <li><span class="dot dot-verified" aria-hidden="true"></span><span><b>{{ T.home_promise_1a }}</b>{{ T.home_promise_1b }}</span></li>
-    <li><span class="dot dot-unknown" aria-hidden="true"></span><span>{{ T.home_promise_2a }}<b>{{ T.home_promise_2b }}</b>{{ T.home_promise_2c }}</span></li>
-    <li><span class="dot dot-none" aria-hidden="true"></span><span>{{ T.home_promise_3 }}</span></li>
+    <li><span class="pill pill-official">{{ T.home_pr_official }}</span><span>{{ T.home_pr_official_t }}</span></li>
+    <li><span class="pill pill-second">{{ T.home_pr_second }}</span><span>{{ T.home_pr_second_t }}</span></li>
+    <li><span class="pill pill-unknown">{{ T.home_pr_unknown }}</span><span>{{ T.home_pr_unknown_t }}</span></li>
   </ul>
-  <p class="quiet"><a href="{{ LB }}/about/">{{ T.foot_about }}</a></p>
+  <p class="promise-foot">{{ T.home_promise_3 }} <a href="{{ LB }}/about/">{{ T.foot_about }}</a></p>
 </section>
 {% endblock %}
