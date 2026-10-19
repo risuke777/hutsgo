@@ -61,7 +61,7 @@
         <div><dt>{{ T.ans_climb }}</dt><dd>{% if gr and gr.match == 'same' and gr.ascent_km %}{{ T.approx }}{{ (gr.ascent_km * 1000) | round | int | metres }}{% elif t.est %}{{ T.approx }}{{ (((t.est.up / 10) | round | int) * 10) | metres }}{% elif sm %}{{ T.approx }}{{ sm.gain | metres }}{% else %}{{ T.unknown }}{% endif %}
           {% if sm %}<small>{{ T.ans_top.format(name=sm.top.short, elev=sm.top.elev | metres) }}</small>{% endif %}</dd></div>
       </dl>
-      {% if gr %}<p class="ans-src">{{ T.ans_grading_src.format(no=gr.source_route_no) }}{% if gr.match == 'near' %}{{ T.ans_grading_near }}{% endif %}{% if gr.confidence != 'verified' %}{{ T.ans_grading_unv }}{% endif %}
+      {% if gr %}<p class="ans-src">{{ T.ans_grading_src.format(src=gr.src_short, no=gr.source_route_no) }}{% if gr.match == 'near' %}{{ T.ans_grading_near }}{% endif %}{% if gr.confidence != 'verified' %}{{ T.ans_grading_unv }}{% endif %}
         <a href="{{ gr.source_url }}" rel="noopener">{{ T.ans_src_link }}</a></p>
       {% else %}<p class="ans-src">{{ T.ans_grading_none }}</p>{% endif %}
     </section>
@@ -135,7 +135,7 @@
       {#- ルートを丸ごと行程に入れるボタンは置かない（泊まる小屋は 1 軒ずつ選ぶ。PLAN_BOARD.md 2026-09-24）-#}
       <a class="dbtn dbtn-primary" href="#timeline">{{ T.d_book_cta }}</a>
       {% else %}
-      <p class="dcard-lead">{{ T.ans_book_none }}</p>
+      <p class="dcard-lead">{{ T.ans_book_none if not t.nights_typical else T.ans_book_nohuts }}</p>
       {% endif %}
     </section>
   </div>

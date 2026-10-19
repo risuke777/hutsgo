@@ -33,6 +33,11 @@ LOCALES = [("ja", ""), ("en", "/en")]   # (言語, URL 接頭辞)
 
 # 口コミから出していいリンク先。自社サイトと、その小屋自身の公式サイトだけ。
 # 承認制でもリンクを自由にすると投稿がスパムの的になる。出口を塞いでおけば的にならない。
+# 県のグレーディングの表の英語名（trail_grading.source_name の先頭で引く）
+GRADING_EN = {"長野県": "Nagano Prefecture mountain grading", "富山県": "Toyama Prefecture mountain grading",
+              "岐阜県": "Gifu Prefecture mountain grading", "栃木県": "Tochigi Prefecture mountain grading",
+              "秋田県": "Akita Prefecture mountain grading", "山形県": "Yamagata Prefecture mountain grading",
+              "日本百名山": "the 100 Famous Mountains grading table (Gunma Prefecture)"}
 REVIEW_LINK_HOSTS = {"emospot.com", "www.emospot.com", SITE_HOST} - {""}
 
 # ---------------------------------------------------------------- data
@@ -616,6 +621,10 @@ def build_model(lang):
         # ページの最初に出す「3つの答え」（どれくらい大変か・どう行くか・予約）の材料
         _gr = rows("SELECT * FROM trail_grading WHERE trail_id=?", t["id"])
         t["grading"] = _gr[0] if _gr else None
+        if t["grading"]:   # 出典の表の名前（県ごとに違う）。英語は県名から
+            _sn = t["grading"]["source_name"]
+            _en = next((v for k, v in GRADING_EN.items() if _sn.startswith(k)), "prefectural mountain grading")
+            t["grading"]["src_short"] = re.sub(r"（[^）]*）$", "", _sn).strip() if lang == "ja" else _en
         _ths = [s["trailhead"] for s in t["stops"] if s["trailhead"]]
         t["start_th"] = _ths[0] if _ths else None
         t["end_th"] = _ths[-1] if len(_ths) > 1 and _ths[-1]["id"] != _ths[0]["id"] else None
@@ -734,7 +743,8 @@ def build_model(lang):
 
     # 山から探す: ルートの通過点のうち山頂（名前が 岳・山・峰 で終わり、位置と標高のあるもの）を「山」としてまとめる。
     # 同じ山に登るルートが 1 つのページに並ぶ。乗越・コル・独標は山にしない
-    MT_ALIAS = {"富士山（剣ヶ峰）": ("富士山", "Mount Fuji"), "西天狗岳": ("天狗岳", "Tengudake")}
+    MT_ALIAS = {"富士山（剣ヶ峰）": ("富士山", "Mount Fuji"), "西天狗岳": ("天狗岳", "Tengudake"),
+                "乗鞍岳（剣ヶ峰）": ("乗鞍岳", "Norikuradake"), "谷川岳（トマの耳）": ("谷川岳", "Tanigawadake"), "鳥海山（新山）": ("鳥海山", "Chokaisan")}
     mountains = {}
     for t in trails:
         for s in t["stops"]:

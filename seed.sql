@@ -1638,3 +1638,131 @@ INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,sourc
 
 -- 2026-10-14 木曽駒ヶ岳（千畳敷から）は県の表で体力度 2＝「日帰りが可能」。目安を日帰りに（小屋に泊まることもできる）
 UPDATE trails SET nights_typical=0 WHERE id='kisokoma';
+
+-- ===============================================================
+-- 2026-10-19 剱岳と紅葉で人気の山を足す（運営者の依頼「剱岳とかが出ていない。栗駒山とか紅葉シーズンに人気の山も」）。
+-- 長野県以外の県の山のグレーディングの表から、往復ルートを tools/grading_routes.py で機械で確かめた行だけ（10-13 と同じ決まり）:
+--   山頂は地理院の地名検索と標高点・三角点、登山口は地名検索・注記の近くで、山頂へ道がつながり、表の出発地点の標高に当たる点。
+--   採用は、登山口から山頂までの道のりが表のルート長の半分と ±12% 以内のもの。体力度はルート定数 ÷ 10 の切り上げ（県の表と同じ）、
+--   難易度・時間・距離・登りは表の行のまま。日数の目安は体力度の帯（1〜3 日帰り、4〜5 1泊以上、6〜 2泊以上）。
+-- 表: 富山県（剱岳・雄山）、群馬県の日本百名山のグレーディング一覧表（谷川岳・至仏山。群馬県の一覧は画像で読めないため）、
+--   栃木県（茶臼岳）、秋田県（鳥海山・栗駒山）、山形県（月山）。
+-- 落とした行: 茶臼岳（峠の茶屋駐車場から）・乗鞍岳（畳平から）＝「峠の茶屋」「畳平」が地理院の地名検索・注記に無く、登山口の位置を名前で
+--   確かめられない。茶臼岳は表の別の行（那須ロープウェイ山頂駅から）で入れた。
+-- 栗駒山・鳥海山は表のルート長と地図の道が合わないので、表の値は参考（near）にして下に別に書く。
+-- 山小屋（剣山荘・剱御前小舎・鳥海山の小屋 ほか）はまだ入れない（2026 年の営業期間・予約を公式で確かめてから）。
+-- ===============================================================
+INSERT INTO mountain_ranges (id, name_ja, name_en) VALUES ('tohoku', '東北', 'Tohoku');
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('murodo','室堂ターミナル','Murodo Terminal',36.576786,137.600001,2450,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('tsurugidake','剱岳（室堂ターミナルから）','Tsurugidake from Murodo Terminal',1,NULL,'室堂ターミナル（2,450m）から別山尾根で剱岳（2,999m）へ登り、同じ道を戻る。','From Murodo Terminal (2,450 m) up the Betsuzan ridge to Tsurugidake (2,999 m) and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('tsurugidake',1,NULL,'murodo',NULL,0,NULL,NULL,NULL,NULL,NULL),('tsurugidake',2,NULL,NULL,NULL,0,'剱岳','Tsurugidake',2999,36.623244,137.616877),('tsurugidake',3,NULL,'murodo',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('tsurugidake','富山県 山のグレーディング 一覧表','https://www.pref.toyama.jp/documents/8174/01399294r08.pdf',9,'剱岳（室堂ﾀｰﾐﾅﾙ） ＜別山尾根＞',5,'E','same',NULL,'unverified',13.2,16.7,1.9);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('oyama','雄山（室堂ターミナルから）','Oyama from Murodo Terminal',0,NULL,'室堂ターミナル（2,450m）から一ノ越を通って立山の雄山（3,003m）へ登り、同じ道を戻る。','From Murodo Terminal (2,450 m) via Ichinokoshi up to Oyama (3,003 m), the main summit of Tateyama, and back the same way.','kita_alps');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('oyama',1,NULL,'murodo',NULL,0,NULL,NULL,NULL,NULL,NULL),('oyama',2,NULL,NULL,NULL,0,'雄山','Oyama',3003,36.57319,137.617894),('oyama',3,NULL,'murodo',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('oyama','富山県 山のグレーディング 一覧表','https://www.pref.toyama.jp/documents/8174/01399294r08.pdf',1,'雄山（室堂ﾀｰﾐﾅﾙ）',2,'B','same',NULL,'unverified',3.5,5.8,0.59);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('tenjindaira','天神平','Tenjindaira',36.817315,138.949354,1313,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('tanigawadake','谷川岳（天神平から）','Tanigawadake from Tenjindaira',0,NULL,'ロープウェイで上がる天神平（1,313m）から天神尾根で谷川岳のトマの耳（1,963m）へ登り、同じ道を戻る。','From Tenjindaira (1,313 m, reached by ropeway) up the Tenjin ridge to Toma-no-Mimi (1,963 m) on Tanigawadake and back the same way.','joshinetsu');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('tanigawadake',1,NULL,'tenjindaira',NULL,0,NULL,NULL,NULL,NULL,NULL),('tanigawadake',2,NULL,NULL,NULL,0,'谷川岳（トマの耳）','Tanigawadake',1963,36.834403,138.930206),('tanigawadake',3,NULL,'tenjindaira',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('tanigawadake','日本百名山のグレーディング一覧表（十県一山域の表から抜粋。群馬県・令和3年1月更新）','https://www.pref.gunma.jp/uploaded/attachment/1232.pdf',42,'谷川岳（天神平）＜天神尾根＞',2,'B','same',NULL,'unverified',5.2,6.0,0.7);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('hatomachi_toge','鳩待峠','Hatomachi Pass',36.889873,139.20013,1592,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('shibutsusan','至仏山（鳩待峠から）','Shibutsusan from Hatomachi Pass',0,NULL,'鳩待峠（1,592m）から尾瀬の至仏山（2,228m）へ登り、同じ道を戻る。','From Hatomachi Pass (1,592 m) up to Shibutsusan (2,228 m) in Oze and back the same way.','kanto');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('shibutsusan',1,NULL,'hatomachi_toge',NULL,0,NULL,NULL,NULL,NULL,NULL),('shibutsusan',2,NULL,NULL,NULL,0,'至仏山','Shibutsusan',2228,36.903474,139.173248),('shibutsusan',3,NULL,'hatomachi_toge',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('shibutsusan','日本百名山のグレーディング一覧表（十県一山域の表から抜粋。群馬県・令和3年1月更新）','https://www.pref.gunma.jp/uploaded/attachment/1232.pdf',16,'至仏山（鳩待峠）',2,'B','same',NULL,'unverified',4.7,9.5,0.7);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('gassan_lift_top','月山リフト上駅','Gassan lift top station',38.532287,140.009658,1520,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('gassan','月山（月山リフト上駅から）','Gassan from Gassan lift top station',0,NULL,'月山リフト上駅（1,520m）から月山（1,984m）へ登り、同じ道を戻る。','From the Gassan lift top station (1,520 m) up to Gassan (1,984 m) and back the same way.','tohoku');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('gassan',1,NULL,'gassan_lift_top',NULL,0,NULL,NULL,NULL,NULL,NULL),('gassan',2,NULL,NULL,NULL,0,'月山','Gassan',1984,38.54912,140.026963),('gassan',3,NULL,'gassan_lift_top',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('gassan','山形県 山のグレーディング（やまがた山）','https://yamagatayama.com/wp-content/uploads/2024/06/yamagata_grading.pdf',50,'月山 姥沢コース',2,'B','same',NULL,'unverified',3.7,6.0,0.5);
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES ('nasu_ropeway_top','那須ロープウェイ山頂駅','Nasu Ropeway top station',37.123721,139.97052,1688,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES ('chausudake_nasu','茶臼岳（那須ロープウェイ山頂駅から）','Chausudake from Nasu Ropeway top station',0,NULL,'那須ロープウェイの山頂駅（1,688m）から那須の茶臼岳（1,915m）へ登り、同じ道を戻る。','From the Nasu Ropeway top station (1,688 m) up to Chausudake (1,915 m) in Nasu and back the same way.','kanto');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES ('chausudake_nasu',1,NULL,'nasu_ropeway_top',NULL,0,NULL,NULL,NULL,NULL,NULL),('chausudake_nasu',2,NULL,NULL,NULL,0,'茶臼岳','Chausudake (Nasu)',1915,37.12484,139.963137),('chausudake_nasu',3,NULL,'nasu_ropeway_top',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES ('chausudake_nasu','栃木県 山のグレーディング 地域別一覧表（令和4年9月改訂）','https://www.pref.tochigi.lg.jp/d04/yama/documents/r4-grading-tiikibetsu.pdf',55,'茶臼岳 山頂駅→茶臼岳（往復）',1,'A','same',NULL,'unverified',1.2,1.8,0.23);
+-- 栗駒山（須川温泉から）: 秋田県の表（No.33 栗駒山・須川温泉）はルート長が往復 14.4km。地図の道で須川温泉から山頂への最短は
+-- これより短く、表と同じ道かを確かめられない。表の体力度・難易度は match='near'（参考）とし、歩く時間・距離は HutsGo の式の目安で出す。
+-- 須川温泉: 国土地理院の注記「須川温泉」の位置、標高は秋田県の表（1,114m）。山頂: 国土地理院の三角点 1626.5（秋田県の表と同じ値）。
+-- 日数: 式の目安で日帰りの長さ（県の表の体力度 3 も「日帰りが可能」の帯）。
+-- 須川コースは火山ガスのため一部通行止めだったが、2026年7月18日に再開（岩手県「【開通情報】栗駒山須川コース」、林野庁 岩手南部森林管理署）。
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('sukawa_onsen','須川温泉','Sukawa Onsen',38.97974,140.770993,1114,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES
+('kurikomayama','栗駒山（須川温泉から）','Kurikomayama from Sukawa Onsen',0,NULL,
+ '須川温泉（1,114m）から栗駒山（1,626m）へ登り、同じ道を戻る。須川コースは火山ガスのため一部通行止めだったが、2026年7月18日に再開（岩手県）。',
+ 'From Sukawa Onsen (1,114 m) up to Kurikomayama (1,626 m) and back the same way. Part of the Sukawa trail was closed because of volcanic gas and reopened on 18 July 2026 (Iwate Prefecture).',
+ 'tohoku');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('kurikomayama',1,NULL,'sukawa_onsen',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('kurikomayama',2,NULL,NULL,NULL,0,'栗駒山','Kurikomayama',1626,38.960913,140.78843),
+('kurikomayama',3,NULL,'sukawa_onsen',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
+('kurikomayama','秋田県の山岳グレーディング 設定一覧表','https://www.pref.akita.lg.jp/uploads/public/archive_0000039872_00/%E3%82%B0%E3%83%AC%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%EF%BC%9A%E4%B8%80%E8%A6%A7%E8%A1%A8.pdf',33,'栗駒山（須川温泉）',3,'B','near','県の表のルート長は往復14.4km。地図の道の往復より長く、同じ道かは確かめられていない','unverified',6.0,14.4,0.8);
+-- 鳥海山（鉾立から）: 秋田県の表（No.25 鳥海山・鉾立ルート）はルート長が往復 18.2km。地図の道で鉾立から新山への最短は片道約 7.0km で
+-- 表の半分（9.1km）より 23% 短く、同じ道かを確かめられない。栗駒山と同じく match='near'（参考）とし、歩く時間・距離は式の目安で出す。
+-- 鉾立・新山の位置は tools/grading_routes.py（地理院の地名検索「新山」・注記「鉾立」の近く）。標高は秋田県の表。
+-- 日数: 県の表の体力度 4 は「1泊以上が適当」の帯。山小屋はまだ入れない。
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('hokodate','鉾立','Hokodate',39.122378,139.99126,1160,NULL,NULL,NULL);
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES
+('chokaisan','鳥海山（鉾立から）','Chokaisan from Hokodate',1,NULL,
+ '鉾立（1,160m）から鳥海山の新山（2,236m）へ登り、同じ道を戻る。',
+ 'From Hokodate (1,160 m) up to Shinzan (2,236 m), the summit of Chokaisan, and back the same way.',
+ 'tohoku');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('chokaisan',1,NULL,'hokodate',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('chokaisan',2,NULL,NULL,NULL,0,'鳥海山（新山）','Chokaisan',2236,39.099379,140.048882),
+('chokaisan',3,NULL,'hokodate',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
+('chokaisan','秋田県の山岳グレーディング 設定一覧表','https://www.pref.akita.lg.jp/uploads/public/archive_0000039872_00/%E3%82%B0%E3%83%AC%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%EF%BC%9A%E4%B8%80%E8%A6%A7%E8%A1%A8.pdf',25,'鳥海山（鉾立ルート）',4,'C','near','県の表のルート長は往復18.2km。地図の道の往復より長く、同じ道かは確かめられていない','unverified',9.5,18.2,1.3);
+-- 行き方（公式で確かめたものだけ。ほかの登山口は未確認のまま）
+INSERT INTO access_routes (id,trailhead_id,mode,operator_name,from_place,seasonal_only,requires_hut_stay,reservation_required,private_car_restricted,source_url,confidence) VALUES
+('murodo_tateyama','murodo','bus','立山黒部アルペンルート','立山駅（美女平でケーブルカーから高原バスに乗り継ぎ）',1,0,0,1,'https://www.alpen-route.com/timetable/','reported'),
+('murodo_ogizawa','murodo','bus','立山黒部アルペンルート','扇沢（黒部ダム・黒部平・大観峰で乗り継ぎ）',1,0,0,1,'https://www.alpen-route.com/timetable/','reported'),
+('tenjindaira_ropeway','tenjindaira','ropeway','谷川岳ヨッホ','麓の駅（谷川岳ヨッホ）',1,0,0,0,'https://tanigawadake-joch.com/','reported'),
+('hatomachi_shuttle','hatomachi_toge','shuttle','乗合バス・乗合タクシー','尾瀬戸倉',1,0,0,1,'https://www.pref.gunma.jp/uploaded/attachment/697963.pdf','reported');
+UPDATE trailheads SET parking_spaces=0, parking_note='マイカーは富山県側は立山駅、長野県側は扇沢駅まで（立山黒部アルペンルート）',
+  parking_note_en='Private cars can go only as far as Tateyama Station (Toyama side) or Ogizawa Station (Nagano side).' WHERE id='murodo';
+UPDATE trailheads SET parking_note='津奈木〜鳩待峠はマイカー・オートバイが通年通れない。尾瀬戸倉の駐車場から乗合バス・タクシー（群馬県）',
+  parking_note_en='Private cars and motorbikes cannot drive Tsunagi–Hatomachi Pass at any time of year; park at Oze-Tokura and take the shared bus or taxi.' WHERE id='hatomachi_toge';
+
+-- 季節（出典の文言の幅のまま。上旬=1〜10日、中旬=11〜20日、下旬=21日〜末）
+INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,source_name,source_url,checked_on,confidence) VALUES
+('tsurugidake','open','04-15','11-30','室堂までの乗り物が運行（2026年は4月15日〜11月30日）','Transport to Murodo runs (15 Apr – 30 Nov in 2026)','立山黒部アルペンルート（時刻表）','https://www.alpen-route.com/timetable/','2026-10-19','reported'),
+('tsurugidake','closed','12-01','04-14','室堂までの乗り物は冬期運休（2026年の運行は4月15日〜11月30日）','No transport to Murodo in winter (2026 service: 15 Apr – 30 Nov)','立山黒部アルペンルート（時刻表）','https://www.alpen-route.com/timetable/','2026-10-19','reported'),
+('tsurugidake','autumn','09-11','09-20','室堂平の紅葉（例年の見ごろ9月中旬ごろ）','Murodo-daira autumn colours (usually mid-Sep)','立山黒部アルペンルート（紅葉情報）','https://www.alpen-route.com/autumn-leaves/','2026-10-19','reported'),
+('oyama','open','04-15','11-30','室堂までの乗り物が運行（2026年は4月15日〜11月30日）','Transport to Murodo runs (15 Apr – 30 Nov in 2026)','立山黒部アルペンルート（時刻表）','https://www.alpen-route.com/timetable/','2026-10-19','reported'),
+('oyama','closed','12-01','04-14','室堂までの乗り物は冬期運休（2026年の運行は4月15日〜11月30日）','No transport to Murodo in winter (2026 service: 15 Apr – 30 Nov)','立山黒部アルペンルート（時刻表）','https://www.alpen-route.com/timetable/','2026-10-19','reported'),
+('oyama','autumn','09-11','09-20','室堂平の紅葉（例年の見ごろ9月中旬ごろ）','Murodo-daira autumn colours (usually mid-Sep)','立山黒部アルペンルート（紅葉情報）','https://www.alpen-route.com/autumn-leaves/','2026-10-19','reported'),
+('tanigawadake','open','04-18','11-15','谷川岳ヨッホのロープウェイが営業（2026年は4月18日〜11月15日の予定）','The Tanigawadake Joch ropeway runs (18 Apr – 15 Nov 2026, planned)','谷川岳ヨッホ','https://tanigawadake-joch.com/','2026-10-19','reported'),
+('tanigawadake','autumn','10-01','10-10','天神平〜天神峠の紅葉（例年の目安は10月5日頃）','Tenjindaira–Tenjin Pass autumn colours (usually around 5 Oct)','みなかみ町観光協会','https://www.enjoy-minakami.jp/pickup/8379/','2026-10-19','reported'),
+('shibutsusan','open','04-18','11-03','尾瀬戸倉〜鳩待峠の乗合バス・タクシー（2026年は4月18日〜11月3日）','Shared bus and taxi Oze-Tokura – Hatomachi Pass (18 Apr – 3 Nov in 2026)','群馬県（尾瀬国立公園の交通対策のお知らせ 2026年）','https://www.pref.gunma.jp/uploaded/attachment/697963.pdf','2026-10-19','reported'),
+('shibutsusan','closed','11-04','04-17','鳩待峠への乗合バス・タクシーは運休（2026年は4月18日〜11月3日）','No shared bus or taxi to Hatomachi Pass (2026 service: 18 Apr – 3 Nov)','群馬県（尾瀬国立公園の交通対策のお知らせ 2026年）','https://www.pref.gunma.jp/uploaded/attachment/697963.pdf','2026-10-19','reported'),
+('chausudake_nasu','autumn','09-21','10-10','茶臼岳の紅葉（例年9月下旬〜10月上旬）','Chausudake autumn colours (usually late Sep – early Oct)','とちぎ旅ネット（栃木県観光物産協会）','https://www.tochigiji.or.jp/spot/s10954','2026-10-19','reported'),
+('kurikomayama','autumn','09-21','10-10','栗駒山（須川）の紅葉（例年9月下旬〜10月上旬）','Kurikomayama (Sukawa side) autumn colours (usually late Sep – early Oct)','一関市観光協会','https://www.ichitabi.jp/qaf/index.html','2026-10-19','reported'),
+('gassan','autumn','09-01','10-20','月山の紅葉（9月上旬〜10月中旬。リフトは10月中旬まで）','Gassan autumn colours (early Sep – mid-Oct; the lift runs until mid-Oct)','やまがたへの旅（山形県の公式観光サイト）','https://yamagatakanko.com/features/detail_173.html','2026-10-19','reported');
+
+-- 名山の区分（Wikipedia「日本百名山」「日本二百名山」の一覧で照合）
+INSERT INTO mountain_meta (id,meizan,meizan_note,meizan_note_en,fact_ja,fact_en,source_name,source_url,checked_on) VALUES
+('tsurugidake','100',NULL,NULL,NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('oyama','100','「立山」として','listed as Tateyama',NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('tanigawadake','100',NULL,NULL,NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('shibutsusan','100',NULL,NULL,NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('chausudake-nasu','100','「那須岳」として','listed as Nasudake',NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('chokaisan','100',NULL,NULL,NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('gassan','100',NULL,NULL,NULL,NULL,'Wikipedia「日本百名山」','https://ja.wikipedia.org/wiki/日本百名山','2026-10-19'),
+('kurikomayama','200',NULL,NULL,NULL,NULL,'Wikipedia「日本二百名山」','https://ja.wikipedia.org/wiki/日本二百名山','2026-10-19');
+
+-- 山の写真（Wikimedia Commons。10-10 と同じ決まり: CC BY / BY-SA / CC0 / PD だけ、撮影者とライセンスを表示）。説明は写真のファイル名どおり
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tsurugidake_tsurugi4','commons/tsurugi4','爺ヶ岳から見た剱岳','Tsurugidake from Jiigatake','爺ヶ岳から見た剱岳','Tsurugidake from Jiigatake','Alpsdake','trail','tsurugidake',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Mount_Tsurugi_from_Mount_Jii.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tsurugidake_tsurugi10','commons/tsurugi10','立山高原バスから見た剱岳','Tsurugidake from the Tateyama Highland Bus','立山高原バスから見た剱岳','Tsurugidake from the Tateyama Highland Bus','Alpsdake','trail','tsurugidake',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Tsurugi_from_Tateyama_Highland_Bus.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('oyama_oyama10','commons/oyama10','雄山神社峰本社','Oyama Shrine summit hall','雄山神社峰本社','Oyama Shrine summit hall','Alpsdake','trail','oyama',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Oyama-jinja_(Mine-honsha).jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('oyama_oyama0','commons/oyama0','雄山から見た地獄谷','Jigokudani from Oyama','雄山から見た地獄谷','Jigokudani from Oyama','Alpsdake','trail','oyama',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Jigokudani_from_Oyama.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tanigawadake_tanigawa0','commons/tanigawa0','谷川岳','Tanigawadake','谷川岳','Tanigawadake','Raita Futo','trail','tanigawadake',0,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Mount_Tanigawa_(51982858582).jpg','36.836976','138.929773');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('tanigawadake_tanigawa3','commons/tanigawa3','谷川岳','Tanigawadake','谷川岳','Tanigawadake','Raita Futo','trail','tanigawadake',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Mount_Tanigawa_(52212084000).jpg','36.834302','138.930283');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('shibutsusan_shibutsu0','commons/shibutsu0','至仏山','Shibutsusan','至仏山','Shibutsusan','Captain76','trail','shibutsusan',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Mt.Shibutsu.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('shibutsusan_shibutsu9','commons/shibutsu9','木道と至仏山','A boardwalk and Shibutsusan','木道と至仏山','A boardwalk and Shibutsusan','Σ64','trail','shibutsusan',1,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Mt.Shibutsu_16.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chausudake_nasu_nasu5','commons/nasu5','那須の茶臼岳','Chausudake, Nasu','那須の茶臼岳','Chausudake, Nasu','uraomote_yamaneko','trail','chausudake_nasu',0,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Nasu_chausudake.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chausudake_nasu_nasu3','commons/nasu3','朝日岳から見た茶臼岳','Chausudake from Asahidake','朝日岳から見た茶臼岳','Chausudake from Asahidake','Kurosquare','trail','chausudake_nasu',1,'CC BY-SA 3.0','https://commons.wikimedia.org/wiki/File:Nasu-Moutains_Chausudake_from_Asahidake_20101812.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kurikomayama_kurikoma11','commons/kurikoma11','栗駒山','Kurikomayama','栗駒山','Kurikomayama','lumoplank','trail','kurikomayama',0,'CC0','https://commons.wikimedia.org/wiki/File:Mt._Kurikoma_-_Kurikoma7667.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('kurikomayama_kurikoma0','commons/kurikoma0','秋の栗駒山','Kurikomayama in autumn','秋の栗駒山','Kurikomayama in autumn','Raita Futo','trail','kurikomayama',1,'CC BY 2.0','https://commons.wikimedia.org/wiki/File:Autumn_came_to_Mount_Kurikoma_(30998188767).jpg','38.95628','140.800747');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chokaisan_chokai9','commons/chokai9','七高山から見た鳥海山の新山','Shinzan on Chokaisan from Shichikozan','七高山から見た鳥海山の新山','Shinzan on Chokaisan from Shichikozan','Koda6029','trail','chokaisan',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:%E4%B8%83%E9%AB%98%E5%B1%B1%E3%81%8B%E3%82%89%E6%96%B0%E5%B1%B1%E3%81%AE%E7%9C%BA%E3%82%81.jpg',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chokaisan_chokai5','commons/chokai5','フォレスタ鳥海から見た鳥海山','Chokaisan from Foresta Chokai','フォレスタ鳥海から見た鳥海山','Chokaisan from Foresta Chokai','掬茶','trail','chokaisan',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mt._Chokai_seen_from_Foresta_Chokai.jpg','39.174277','140.117136');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('gassan_gassan10','commons/gassan10','月山','Gassan','月山','Gassan','Qwert1234','trail','gassan',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Gassann_20190811.JPG',NULL,NULL);
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('gassan_gassan3','commons/gassan3','月山の稜線','The ridge of Gassan','月山の稜線','The ridge of Gassan','Crown of Lenten rose','trail','gassan',1,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Gassan_Ridge_2006B.jpg','38.54602','140.02479');

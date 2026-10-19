@@ -9,6 +9,9 @@
      無ければ、山頂へ道でつながる点のうち、表の出発地点の標高に当たる点（名前の候補にいちばん近いもの）。
   3. 道: 地理院の道路中心線で登山口→山頂の最短経路。往復の道のりが表のルート長と ±25% 以内なら採用。
 合わなかった行は理由を付けて落とす（推測で埋めない＝A1）。位置・道は確認用の画像を人が見てから公開する。
+
+長野県以外の表の行も同じ形で渡せる。行に "q"（山頂の地名検索に使う名前）・"sq"（登山口の名前）・
+"area"（[南, 北, 西, 東] の緯度経度。山頂の候補をこの範囲に絞る。省略時は長野県とその周り）を足す。
 """
 import heapq, json, math, pathlib, re, sys, urllib.parse, urllib.request
 
@@ -59,7 +62,8 @@ def dijkstra(adj, s):
 def solve(row):
     r = dict(no=row["no"], name=row["name"], ok=False)
     # 1. 山頂
-    cands = [(la, lo, t) for la, lo, t in geocode(row["peak"]) if 34.9 < la < 37.4 and 136.8 < lo < 139.6]
+    s0, n0, w0, e0 = row.get("area") or (34.9, 37.4, 136.8, 139.6)
+    cands = [(la, lo, t) for la, lo, t in geocode(row.get("q") or row["peak"]) if s0 < la < n0 and w0 < lo < e0]
     best = None
     for la, lo, t in cands:
         e = pf.elev(la, lo)
@@ -74,8 +78,9 @@ def solve(row):
         near.sort(); top = (near[0][1], near[0][2])
     r["top"] = [round(top[0], 6), round(top[1], 6)]
     # 2. 登山口の名前の候補
-    key = re.sub(r"(登山口|駐車場|駅)$", "", row["start"])
-    names = [(la, lo) for la, lo, t in geocode(row["start"]) + geocode(key) if tp.hav((la, lo), top) < 15000]
+    sq = row.get("sq") or row["start"]
+    key = re.sub(r"(登山口|駐車場|駅)$", "", sq)
+    names = [(la, lo) for la, lo, t in geocode(sq) + geocode(key) if tp.hav((la, lo), top) < 15000]
     names += [(la, lo) for c, t, la, lo in annos(top[0], top[1], 9) if key and key in t]
     # 3. 道
     span = max(0.06, row["L"] / 2 / 111 * 1.2)
