@@ -12,9 +12,10 @@
   // 「山域から探す」などのリンク: ?range=… で開いたらその山域で絞っておく
   try { var sp0 = new URLSearchParams(location.search); if (sp0.get("range")) f.range = sp0.get("range"); } catch (e) {}
 
-  // 槍ヶ岳／槍ケ岳、カタカナ／ひらがな、全角／半角を同じに扱う
+  // 槍ヶ岳／槍ケ岳、カタカナ／ひらがな、全角／半角、アクセント（Hütte／Hutte）、中黒・ハイフン（トレ・チーメ／トレチーメ）を同じに扱う
   function norm(s) {
-    return String(s || "").normalize("NFKC").toLowerCase().replace(/[ヶヵ]/g, "ケ")
+    return String(s || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").normalize("NFKC").toLowerCase().replace(/[ヶヵ]/g, "ケ")
+      .replace(/[・･·'’.\-‐]/g, "")
       .replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }).replace(/\s+/g, "");
   }
   function parse(s, d) { try { return JSON.parse(s || ""); } catch (e) { return d; } }
@@ -117,6 +118,34 @@
       var p = parse(b.dataset.preset, {}), keys = Object.keys(f).filter(function (x) { return f[x]; });
       b.setAttribute("aria-pressed", String(keys.length === Object.keys(p).length && keys.every(function (x) { return p[x] === f[x]; })));
     });
+    renderElse();
+  }
+
+  // ---- 行き先をまたぐ検索（docs/REGIONS.md「表示と検索」）: 一覧は今の行き先（地方）だけなので、
+  //      名前で探したときは、ほかの行き先で当たったルート・小屋・山を下に出す。索引 /search.json は打ち始めてから読む
+  var fin = document.querySelector(".finder[data-zone]"), elseBox = document.getElementById("finder-else"), idx = null, idxLoading = false;
+  function renderElse() {
+    if (!fin || !elseBox) return;
+    var words = q && norm(q.value).length ? String(q.value).split(/\s+/).map(norm).filter(Boolean) : [];
+    if (!words.length) { elseBox.hidden = true; elseBox.innerHTML = ""; return; }
+    if (!idx) {
+      if (!idxLoading) {
+        idxLoading = true;
+        fetch(fin.dataset.index).then(function (r) { return r.json(); }).then(function (j) {
+          idx = j.map(function (e) { e._q = norm(e.n + " " + e.q + " " + e.w); return e; });
+          renderElse();
+        }).catch(function () { idxLoading = false; });
+      }
+      return;
+    }
+    var kinds = parse(fin.dataset.kinds, {}), zone = fin.dataset.zone;
+    var hits = idx.filter(function (e) { return e.z !== zone && words.every(function (w) { return e._q.indexOf(w) >= 0; }); });
+    hits.sort(function (a, b) { return "thm".indexOf(a.k) - "thm".indexOf(b.k); });   // ルート → 小屋 → 山
+    if (!hits.length) { elseBox.hidden = true; elseBox.innerHTML = ""; return; }
+    elseBox.innerHTML = '<p class="finder-else-h">' + esc(fin.dataset.elseH) + "</p><ul>" + hits.slice(0, 8).map(function (e) {
+      return '<li><a href="' + esc(e.u) + '"><span class="finder-else-k">' + esc(kinds[e.k] || "") + "</span><b>" + esc(e.n) + "</b><small>" + esc(e.w) + "</small></a></li>";
+    }).join("") + "</ul>";
+    elseBox.hidden = false;
   }
   if (q) q.addEventListener("input", render);
   document.addEventListener("click", function (e) {

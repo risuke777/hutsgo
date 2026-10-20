@@ -744,3 +744,24 @@ h2,h3{font-weight:700}
 .area-hut-list li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.2rem 1rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
 .area-huts,.area-rules{margin-top:2rem}
 .area-rules .dfacts{border-top:0;padding-top:0;grid-template-columns:1fr}
+
+/* ---------- 行き先（地方）の切り替えと、行き先をまたぐ検索（docs/REGIONS.md「表示と検索」）---------- */
+.zone-switch{margin:0 0 .8rem;min-width:0}
+.zone-switch-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin:0 0 .35rem;font-size:.78rem;font-weight:700;letter-spacing:.06em;color:var(--granite)}
+.zone-switch-head .zone-all{font-weight:400;letter-spacing:0;color:var(--moss-deep)}
+.zone-switch ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.4rem;min-width:0}
+.zone-switch li{flex:0 0 auto}
+.zone-switch li a{display:flex;align-items:baseline;gap:.35rem;min-height:38px;padding:.45rem .85rem;border:1px solid var(--line-strong);border-radius:999px;background:var(--card);color:var(--ink);font-size:.88rem;font-weight:700;text-decoration:none;white-space:nowrap}
+.zone-switch li a small{display:inline;margin:0;font-size:.72rem;font-weight:400;color:var(--granite)}
+.zone-switch a[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.zone-switch a[aria-current="page"] small{color:inherit;opacity:.8}
+.zone-switch li a:hover:not([aria-current]){border-color:var(--ink)}
+.finder-else{margin:.2rem 0 0;padding:.75rem .9rem;border-radius:10px;background:var(--moss-tint)}
+.finder-else[hidden]{display:none}
+.finder-else-h{margin:0 0 .4rem;font-size:.82rem;font-weight:700;color:var(--moss-deep)}
+.finder-else ul{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}
+.finder-else a{display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:.5rem;color:var(--ink);text-decoration:none}
+.finder-else a:hover b,.finder-else a:focus-visible b{text-decoration:underline}
+.finder-else-k{justify-self:start;white-space:nowrap;font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;background:var(--card);color:var(--granite)}
+.finder-else small{grid-column:2;margin:0;font-size:.78rem}
+.zone-search{margin:0 0 1.6rem}

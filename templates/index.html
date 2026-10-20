@@ -3,6 +3,7 @@
 {% from "_article_link.html" import article_link %}
 {% from "_route_card.html" import route_card with context %}
 {% from "_finder.html" import finder with context %}
+{% from "_zone_switch.html" import zone_switch, other_zones_cards with context %}
 {% block title %}{{ T.home_title }}{% endblock %}
 {% block bodyattr %} class="is-home"{% endblock %}
 {% block head %}
@@ -49,7 +50,8 @@
 </section>
 
 <div class="home-search hs-up hs-d3">
-  {{ finder(ranges, T.find_ph, T.find_n, T.find_none) }}
+  {{ zone_switch(HOME_ZONE) }}
+  {{ finder(ranges, T.find_ph, T.find_n, T.find_none, zone=HOME_ZONE) }}
   <p class="finder-links"><a href="{{ LB }}/mountains/">{{ T.mt_link }}</a></p>
 </div>
 <p class="home-lede">{{ T.home_lede }}</p>
@@ -67,14 +69,12 @@
   <p class="quiet" data-after-items><a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}<a href="{{ LB }}/plan/">{{ T.plan_link }}</a></p>
 </section>
 
-{#- 山域: 地方（日本／ヨーロッパ・アルプス）ごとに横に流して選ぶ。押すと山域の入口ページ /areas/<山域>/ -#}
+{#- 山域: この地方（トップは日本）の山域を横に流して選ぶ。押すと山域の入口ページ /areas/<山域>/ -#}
 <section class="ranges" aria-labelledby="ranges-h">
   <h2 id="ranges-h">{{ T.home_ranges_h }}</h2>
-  {% for zg in ZONES %}{% set zl = loop %}
-  {% if ZONES | length > 1 %}<h3 class="zone-h">{{ zg.zone.name }}</h3>{% endif %}
   <ul class="range-row">
-    {% for r in zg.ranges %}
-    <li><a class="range-card rc{{ (loop.index0 + zl.index0 * 3) % 7 }}" href="{{ LB }}/areas/{{ r.slug }}/">
+    {% for r in ranges %}
+    <li><a class="range-card rc{{ loop.index0 % 7 }}" href="{{ LB }}/areas/{{ r.slug }}/">
       <svg viewBox="0 0 136 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
         <path class="rc-far" d="M0 96 L0 62 L26 48 L50 56 L76 30 L96 44 L116 36 L136 46 L136 96 Z"/>
         <path class="rc-near" d="M0 96 L0 78 L40 70 L80 80 L120 68 L136 74 L136 96 Z"/>
@@ -83,7 +83,6 @@
     </a></li>
     {% endfor %}
   </ul>
-  {% endfor %}
   <p class="finder-links"><a href="{{ LB }}/areas/">{{ T.home_areas_link }}</a></p>
 </section>
 
@@ -104,23 +103,8 @@
 </section>
 {% endif %}
 
-{#- ドロミテ（日本の外の最初の山域）。ルートが入ったので「ほしい」ボタンは外し、入口ページへの案内にした（2026-10-20）-#}
-{% set dolo = ranges | selectattr('id', 'equalto', 'dolomites') | first %}
-{% if TEASER and dolo %}
-<section class="teaser" aria-labelledby="teaser-h">
-  {% set p = TEASER[0] %}
-  <figure class="teaser-photo">
-    {{ img(p, sizes="(max-width: 760px) 100vw, 720px") }}
-    <figcaption>{{ p.caption_t }}{% if p.credit_t %} <span class="credit">{{ p.credit_t }}</span>{% endif %}</figcaption>
-  </figure>
-  <div class="teaser-body">
-    <p class="eyebrow">{{ T.teaser_eyebrow }}</p>
-    <h2 id="teaser-h">{{ T.teaser_h }}</h2>
-    <p>{{ T.teaser_body }}</p>
-    <p class="teaser-cta"><a class="btn teaser-btn" href="{{ LB }}/areas/{{ dolo.slug }}/">{{ T.teaser_btn }}</a></p>
-  </div>
-</section>
-{% endif %}
+{#- ほかの行き先（地方）。地方が増えたらカードが増えるだけ（docs/REGIONS.md「表示と検索」）-#}
+{{ other_zones_cards(other_zones) }}
 
 <section class="promise" aria-labelledby="promise-h">
   <h2 id="promise-h">{{ T.home_promise_h }}</h2>

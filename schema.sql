@@ -12,7 +12,16 @@ CREATE TABLE zones (
   id            TEXT PRIMARY KEY,      -- 'japan' / 'europe_alps'
   name_ja       TEXT NOT NULL,
   name_en       TEXT,
-  sort          INTEGER NOT NULL DEFAULT 0
+  sort          INTEGER NOT NULL DEFAULT 0,
+  lede          TEXT,                  -- 入口ページ /areas/<地方>/ とトップの「ほかの行き先」の一文（事実だけ）
+  lede_en       TEXT
+);
+
+-- 検索の別名（表記ゆれ・現地名・英語名）。表示には使わず、探す欄で当てるためだけに使う（docs/REGIONS.md）
+CREATE TABLE search_aliases (
+  kind          TEXT NOT NULL CHECK (kind IN ('zone','range','trail','hut','mountain')),
+  target_id     TEXT NOT NULL,
+  words         TEXT NOT NULL          -- 空白区切り
 );
 
 -- 国ごとに切り替わる決まり（通貨・時刻・緊急通報・体力と難易度の区分・道の線の出どころ）

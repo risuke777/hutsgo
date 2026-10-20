@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_route_card.html" import route_card with context %}
+{% from "_finder.html" import finder with context %}
+{% from "_zone_switch.html" import zone_switch, other_zones_cards with context %}
+{#- 行き先（地方）の入口 /areas/<地方>/（docs/REGIONS.md「表示と検索」）。いつもの地方（日本）はトップが入口なので作らない。
+    作りはトップと同じ: 行き先の切り替え → 探す → ルート → 山域 → ほかの行き先 -#}
+{% block title %}{{ T.zone_title.format(name=z.name) }}{% endblock %}
+{% block desc %}{{ T.zone_desc.format(name=z.name, n=zg.n, h=zg.n_huts) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"{{ T.zone_title.format(name=z.name) }}",
+ "itemListElement":[{% for t in trails %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/trails/{{ t.id }}/","name":"{{ t.name }}"}{{ "," if not loop.last }}{% endfor %}]}
+</script>
+<script src="{{ BASE }}/static/routes.js" defer></script>
+{% endblock %}
+{% block body %}
+<header class="page-head">
+  <p class="crumb"><a href="{{ LB }}/areas/">{{ T.areas_h1 }}</a></p>
+  <h1>{{ z.name }}</h1>
+  {% if z.lede_t %}<p class="lede">{{ z.lede_t }}</p>{% endif %}
+  <p class="quiet">{% if zg.countries %}{{ T.zone_countries.format(countries=zg.countries | join('・' if LANG == 'ja' else ', ')) }}{% endif %}{{ T.zone_facts.format(n=zg.n, h=zg.n_huts) }}</p>
+</header>
+
+<div class="home-search zone-search">
+  {{ zone_switch(z.id) }}
+  {{ finder(ranges, T.find_ph_plain, T.find_n, T.find_none, zone=z.id) }}
+</div>
+
+<section class="route-list" data-sort-now aria-labelledby="trails-h">
+  <h2 id="trails-h">{{ T.home_routes_h }}</h2>
+  {% for t in trails %}{{ route_card(t) }}{% endfor %}
+</section>
+
+<section class="ranges" aria-labelledby="ranges-h">
+  <h2 id="ranges-h">{{ T.zone_ranges_h }}</h2>
+  <ul class="area-list">
+    {% for r in ranges %}
+    <li><a href="{{ LB }}/areas/{{ r.slug }}/"><b>{{ r.name }}</b><span>{{ r.country.name }}{{ T.mid }}{{ T.area_n.format(n=r.n_trails, h=r.n_huts) }}</span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+
+{{ other_zones_cards(other_zones) }}
+{% endblock %}

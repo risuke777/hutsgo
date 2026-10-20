@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
+{% from "_zone_switch.html" import zone_switch with context %}
 {% block title %}{{ T.filter_title }}{% endblock %}
 {% block body %}
 <section class="page-head">
   <h1>{{ T.filter_h1 }}</h1>
   <p class="lede">{{ T.filter_lede }}</p>
 </section>
+{{ zone_switch(HOME_ZONE) }}
 {% if AREA_PHOTO %}<figure class="photo photo-band">{{ img(AREA_PHOTO) }}<figcaption>{{ AREA_PHOTO.caption_t }}</figcaption></figure>{% endif %}
 
 <form class="filter" id="filter" onsubmit="return false">

@@ -11,7 +11,7 @@
 {% endblock %}
 {% block body %}
 <header class="page-head">
-  <p class="crumb"><a href="{{ LB }}/areas/">{{ T.areas_h1 }}</a>{% if r.zone %} › {{ r.zone.name }}{% endif %}</p>
+  <p class="crumb"><a href="{{ LB }}/areas/">{{ T.areas_h1 }}</a>{% if r.zone %} › <a href="{{ LB }}{{ r.zone.path }}">{{ r.zone.name }}</a>{% endif %}</p>
   <h1>{{ r.name }}</h1>
   <p class="lede">{{ T.area_facts.format(zone=r.zone.name if r.zone else '', country=r.country.name, n=trails | length, h=huts | length) }}</p>
 </header>

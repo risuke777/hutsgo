@@ -1,6 +1,6 @@
 {# 一覧の「探す」。トップ（ルート）と「山から探す」で同じ見た目・同じ言葉を使う。動きは static/routes.js #}
-{% macro finder(ranges, placeholder, n_fmt, n_none, with_meizan=false) %}
-<section class="finder" aria-label="{{ T.find_aria }}">
+{% macro finder(ranges, placeholder, n_fmt, n_none, with_meizan=false, zone=none) %}
+<section class="finder" aria-label="{{ T.find_aria }}"{% if zone and ZONES | length > 1 %} data-zone="{{ zone }}" data-index="{{ LB }}/search.json" data-else-h="{{ T.find_else_h }}" data-kinds='{"t":"{{ T.find_kind_t }}","h":"{{ T.find_kind_h }}","m":"{{ T.find_kind_m }}"}'{% endif %}>
   <label class="vh" for="route-q">{{ T.find_label }}</label>
   <input type="search" id="route-q" class="finder-q" placeholder="{{ placeholder }}" autocomplete="off" enterkeyhint="search">
 
@@ -75,5 +75,6 @@
     <span class="finder-sort">{{ T.find_sorted }}</span>
     <button type="button" id="finder-clear" class="finder-clear" hidden>{{ T.find_clear }}</button>
   </p>
+  <div class="finder-else" id="finder-else" aria-live="polite" hidden></div>
 </section>
 {% endmacro %}

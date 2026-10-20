@@ -24,7 +24,7 @@
       <path d="M0 76 L80 64 L160 74 L240 60 L320 70 L390 62 V90 H0 Z" fill="#273150"/>
     </svg>
     <div class="trail-hero-in">
-      <p class="crumb"><a href="{{ LB }}/">{{ T.crumb_routes }}</a>{% if t.range %} › {{ t.range.name }}{% endif %}</p>
+      <p class="crumb"><a href="{{ LB }}{{ t.zone.path }}">{{ t.zone.name }}</a>{% if t.range %} › <a href="{{ LB }}/areas/{{ t.range.slug }}/">{{ t.range.name }}</a>{% endif %}</p>
       <p class="trail-hero-facts">{{ days_t }}{% if t.est %}{{ T.mid }}{{ T.approx }}{{ '%.1f' | format(t.est.km) }} km{% endif %}{% if sm %}{{ T.mid }}{{ T.l_highest }} {{ sm.top.elev | metres }}{% endif %}</p>
       <h1>{{ t.name }}</h1>
       {% if th and sm %}<p class="trail-hero-path">{{ th.short }} → {{ sm.top.short }} → {{ t.end_th.short if t.end_th else th.short }}</p>{% endif %}

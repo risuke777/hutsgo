@@ -18,7 +18,7 @@
 {% block body %}
 <article class="hut">
   <header class="page-head">
-    <p class="crumb"><a href="{{ LB }}/huts/">{{ T.crumb_huts }}</a>{% if h.area %} / {{ h.area.name }}{% endif %}</p>
+    <p class="crumb"><a href="{{ LB }}{{ h.zone.path }}">{{ h.zone.name }}</a>{% if h.range %} › <a href="{{ LB }}/areas/{{ h.range.slug }}/">{{ h.range.name }}</a>{% endif %}{% if h.area %} › {{ h.area.name }}{% endif %}</p>
     <h1>{{ h.name }}</h1>
     <p class="lede">{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}{{ T.sep }}{{ T.operated_by.format(op=h.operator.name) }}{% endif %}</p>
     <dl class="facts-inline">

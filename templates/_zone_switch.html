@@ -1,0 +1,38 @@
+{% from "_photo.html" import img %}
+{#- 行き先（地方）の切り替え（docs/REGIONS.md「表示と検索」）。一覧は 1 つの地方ずつ出し、ほかの地方へはここから。
+    地方が増えても横に流れるだけ。地方が 1 つしか無いあいだは出さない -#}
+{% macro zone_switch(current) %}
+{% if ZONES | length > 1 %}
+<nav class="zone-switch" aria-label="{{ T.zone_switch }}">
+  <p class="zone-switch-head"><span>{{ T.zone_switch }}</span><a class="zone-all" href="{{ LB }}/areas/">{{ T.zone_all }}</a></p>
+  <ul>
+    {% for zg in ZONES %}
+    <li><a href="{{ LB }}{{ zg.zone.path }}"{% if zg.zone.id == current %} aria-current="page"{% endif %}>{{ zg.zone.name }}<small>{{ T.zone_count.format(n=zg.n) }}</small></a></li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{#- ほかの行き先のカード（トップと地方の入口の下）。写真はその地方の山域の写真、無ければルートの 3D の絵 -#}
+{% macro other_zones_cards(zgs) %}
+{% for zg in zgs %}
+<section class="teaser zone-card" aria-labelledby="zc-{{ zg.zone.id }}">
+  {% if zg.photo %}
+  <figure class="teaser-photo">
+    {{ img(zg.photo, sizes="(max-width: 760px) 100vw, 720px") }}
+    <figcaption>{{ zg.photo.caption_t }}{% if zg.photo.credit_t %} <span class="credit">{{ zg.photo.credit_t }}</span>{% endif %}</figcaption>
+  </figure>
+  {% elif zg.poster %}
+  <figure class="teaser-photo"><img src="{{ BASE }}/static/img/routes/{{ zg.poster }}.jpg" width="720" height="720" alt="" loading="lazy" decoding="async"></figure>
+  {% endif %}
+  <div class="teaser-body">
+    <p class="eyebrow">{{ T.elsewhere_h }}</p>
+    <h2 id="zc-{{ zg.zone.id }}">{{ zg.zone.name }}</h2>
+    {% if zg.zone.lede_t %}<p>{{ zg.zone.lede_t }}</p>{% endif %}
+    <p class="quiet">{% if zg.countries %}{{ T.zone_countries.format(countries=zg.countries | join('・' if LANG == 'ja' else ', ')) }}{% endif %}{{ T.zone_facts.format(n=zg.n, h=zg.n_huts) }}</p>
+    <p class="teaser-cta"><a class="btn teaser-btn" href="{{ LB }}{{ zg.zone.path }}">{{ T.zone_go.format(name=zg.zone.name) }}</a></p>
+  </div>
+</section>
+{% endfor %}
+{% endmacro %}

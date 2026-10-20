@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_finder.html" import finder with context %}
+{% from "_zone_switch.html" import zone_switch with context %}
 {% block title %}{{ T.mt_title }}{% endblock %}
 {% block desc %}{{ T.mt_desc.format(n=mountains | length) }}{% endblock %}
 {% block head %}
@@ -15,7 +16,8 @@
   <p class="lede">{{ T.mt_lede.format(n=mountains | length, r=n_routes) }}</p>
 </header>
 
-{{ finder(ranges, T.mt_ph, T.mt_n, T.mt_none, with_meizan=true) }}
+{{ zone_switch(HOME_ZONE) }}
+{{ finder(ranges, T.mt_ph, T.mt_n, T.mt_none, with_meizan=true, zone=HOME_ZONE) }}
 
 <div class="mt-cards" data-sort-now>
   {% for m in mountains %}

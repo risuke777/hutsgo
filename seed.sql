@@ -1839,3 +1839,24 @@ INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,sourc
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,range_id,sort) VALUES
 ('tre_cime_loop_trecime','dolomiti-trecime','夕日に染まるトレ・チーメ・ディ・ラヴァレードの岩峰','The Tre Cime di Lavaredo lit by the evening sun','トレ・チーメ。夕方、岩壁だけが赤く残る。','Tre Cime di Lavaredo. At dusk only the walls stay lit.','撮影：HutsGo','trail','tre_cime_loop','dolomites',0),
 ('tre_cime_loop_locatelli','dolomiti-locatelli','岩峰に囲まれた赤い屋根のロカテッリ小屋','Rifugio Locatelli with its red roof among the rock towers','ロカテッリ小屋（ドライツィンネン小屋）。','Rifugio Locatelli (Dreizinnenhütte).','撮影：HutsGo','trail','tre_cime_loop','dolomites',1);
+
+-- ---------------------------------------------------------------
+-- 2026-10-21 行き先（地方）ごとに見せる・行き先をまたいで探す（docs/REGIONS.md「表示と検索」）
+-- 運営者「ドロミテが日本の山に対して唐突すぎる、全世界に展開してくのに最適な分け方と表示と検索を検討」
+-- ---------------------------------------------------------------
+UPDATE zones SET lede='日本の山小屋と登山ルート。体力度・難易度は各県の山のグレーディング、道の線と標高は国土地理院。',
+  lede_en='Mountain huts and routes in Japan. Difficulty from the prefectural mountain gradings; trails and elevation from GSI.'
+  WHERE id='japan';
+UPDATE zones SET lede='アルプスの山小屋（リフージオ・ヒュッテ）と登山ルート。通貨・緊急通報・難易度の区分は国ごとに違います。',
+  lede_en='Mountain huts (rifugi, Hütten) and routes in the Alps. Currency, emergency number and difficulty scale differ by country.'
+  WHERE id='europe_alps';
+-- 入口のカードの写真に使う（地方のカードは、その地方の山域の写真を探す）
+UPDATE photos SET range_id='dolomites' WHERE id IN ('dolomiti_trecime','dolomiti_locatelli','dolomiti_pano');
+-- 検索の別名。表記ゆれ・現地の名前（伊・独）・英語の通称。表示には使わない
+INSERT INTO search_aliases (kind, target_id, words) VALUES
+  ('zone',  'europe_alps', 'ヨーロッパ 欧州 アルプス Europe Alps Alpen Alpi'),
+  ('range', 'dolomites', 'ドロミティ ドロミーティ Dolomiti Dolomiten'),
+  ('trail', 'tre_cime_loop', 'トレチーメ トレ・チーメ・ディ・ラヴァレード ドライツィンネン Tre Cime di Lavaredo Drei Zinnen Three Peaks'),
+  ('hut',   'rifugio_locatelli', 'ドライツィンネン小屋 Dreizinnenhütte Antonio Locatelli'),
+  ('hut',   'rifugio_auronzo', 'Auronzohütte'),
+  ('hut',   'rifugio_lavaredo', 'Lavaredohütte');

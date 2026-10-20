@@ -11,7 +11,7 @@
 {% endblock %}
 {% block body %}
 <header class="page-head">
-  <p class="crumb"><a href="{{ LB }}/mountains/">{{ T.mt_h1 }}</a>{% if m.range %} › {{ m.range.name }}{% endif %}</p>
+  <p class="crumb"><a href="{{ LB }}{{ m.zone.path }}">{{ m.zone.name }}</a>{% if m.range %} › <a href="{{ LB }}/areas/{{ m.range.slug }}/">{{ m.range.name }}</a>{% endif %}</p>
   <h1>{{ m.name }}</h1>
   <p class="lede">{{ T.mtp_lede.format(elev=m.elev | metres, n=m.trails | length) }}</p>
 </header>

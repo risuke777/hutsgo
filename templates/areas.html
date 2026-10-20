@@ -9,7 +9,8 @@
 </header>
 {% for zg in ZONES %}
 <section class="zone" aria-labelledby="zone-{{ zg.zone.id }}">
-  <h2 id="zone-{{ zg.zone.id }}">{{ zg.zone.name }}</h2>
+  <h2 id="zone-{{ zg.zone.id }}"><a href="{{ LB }}{{ zg.zone.path }}">{{ zg.zone.name }}</a></h2>
+  {% if zg.zone.lede_t %}<p class="quiet">{{ zg.zone.lede_t }}</p>{% endif %}
   <ul class="area-list">
     {% for r in zg.ranges %}
     <li><a href="{{ LB }}/areas/{{ r.slug }}/"><b>{{ r.name }}</b><span>{{ T.area_n.format(n=r.n_trails, h=r.n_huts) }}</span></a></li>

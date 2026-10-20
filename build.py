@@ -39,8 +39,9 @@ GRADING_EN = {"長野県": "Nagano Prefecture mountain grading", "富山県": "T
               "秋田県": "Akita Prefecture mountain grading", "山形県": "Yamagata Prefecture mountain grading",
               "日本百名山": "the 100 Famous Mountains grading table (Gunma Prefecture)",
               "3 Zinnen Dolomites": "3 Zinnen Dolomites (local tourist board), “Summer-walk around the Drei Zinnen/Tre Cime”"}
-# 山域の別名（検索の文字に足す）。表示の名前は mountain_ranges.name_ja / name_en
-RANGE_ALIAS = {"dolomites": "ドロミティ Dolomiti Dolomiten"}
+# 言語ごとの「いつもの行き先」（docs/REGIONS.md）。トップ（/）がこの地方の入口になり、ほかの地方は /areas/<地方>/。
+# イタリア語版・ドイツ語版を作る日は "europe_alps" にする
+HOME_ZONE = {"ja": "japan", "en": "japan"}
 REVIEW_LINK_HOSTS = {"emospot.com", "www.emospot.com", SITE_HOST} - {""}
 
 # ---------------------------------------------------------------- data
@@ -291,7 +292,13 @@ def build_model(lang):
     # 地域の分け方（docs/REGIONS.md）: 地方 → 山域 → 山群。国は決まり（通貨・地図・難易度の区分）の切り替え
     countries = {c["id"]: dict(c, name=disp(c, lang, with_ja=False), emergency_t=pick(c, "emergency", lang))
                  for c in rows("SELECT * FROM countries")}
-    zones = {z["id"]: dict(z, name=disp(z, lang, with_ja=False)) for z in rows("SELECT * FROM zones ORDER BY sort")}
+    zones = {z["id"]: dict(z, name=disp(z, lang, with_ja=False), lede_t=pick(z, "lede", lang), slug=z["id"].replace("_", "-"),
+                           path="/" if z["id"] == HOME_ZONE[lang] else f"/areas/{z['id'].replace('_', '-')}/")
+             for z in rows("SELECT * FROM zones ORDER BY sort")}
+    # 検索の別名（表記ゆれ・現地名・英語名）。表示には使わない
+    aliases = {}
+    for a in rows("SELECT * FROM search_aliases"):
+        aliases[(a["kind"], a["target_id"])] = (aliases.get((a["kind"], a["target_id"]), "") + " " + a["words"]).strip()
     ranges = {}
     for r in rows("SELECT * FROM mountain_ranges"):
         ranges[r["id"]] = dict(id=r["id"], name=disp(r, lang, with_ja=False), name_ja=r["name_ja"], name_en=r["name_en"],
@@ -323,6 +330,8 @@ def build_model(lang):
     for h in rows("SELECT * FROM huts ORDER BY name_ja"):
         hid = h["id"]
         h["country"] = (ranges.get(h["range_id"]) or {}).get("country", {}).get("id", "JP")
+        h["range"] = ranges.get(h["range_id"])
+        h["zone"] = (h["range"] or {}).get("zone") or zones[HOME_ZONE[lang]]
         h["name"] = disp(h, lang, with_ja=h["country"] == "JP")
         h["short"] = disp(h, lang, short=True)
         h["type_label"] = T["type_" + h["hut_type"]]
@@ -689,11 +698,18 @@ def build_model(lang):
         t["osm"] = _tp.exists() and json.loads(_tp.read_text(encoding="utf-8")).get("source_kind") == "osm"
         # トップのカード: 検索の文字（日英の名前・小屋・山頂・登山口）、季節、泊まる小屋の営業期間
         _words = [t["name_ja"], t.get("name_en") or "", t["summary_t"] or ""]
+        t["zone"] = (t["range"] or {}).get("zone") or zones[HOME_ZONE[lang]]
         if t["range"]:
-            _words += [t["range"]["name_ja"], t["range"]["name_en"] or "", RANGE_ALIAS.get(t["range"]["id"], "")]
+            # 山域・地方・国の名前と別名も探す文字に入れる（「イタリア」「アルプス」「海外」で当たる）
+            _z, _c = t["range"]["zone"] or {}, t["range"]["country"]
+            _words += [t["range"]["name_ja"], t["range"]["name_en"] or "", aliases.get(("range", t["range"]["id"]), ""),
+                       _z.get("name_ja", ""), _z.get("name_en") or "", aliases.get(("zone", _z.get("id")), ""),
+                       _c["name_ja"], _c["name_en"] or "", "海外" if _c["id"] != "JP" else ""]
+        _words.append(aliases.get(("trail", t["id"]), ""))
         for s in t["stops"]:
             if s["hut_id"]:
                 _words += [r["name_ja"] + " " + (r["name_en"] or "") for r in rows("SELECT name_ja,name_en FROM huts WHERE id=?", s["hut_id"])]
+                _words.append(aliases.get(("hut", s["hut_id"]), ""))
             elif s["trailhead_id"]:
                 _words += [r["name_ja"] + " " + (r["name_en"] or "") for r in rows("SELECT name_ja,name_en FROM trailheads WHERE id=?", s["trailhead_id"])]
             elif s.get("label"):
@@ -787,7 +803,9 @@ def build_model(lang):
             if all(x["id"] != t["id"] for x in m["trails"]):
                 m["trails"].append(t)
     for m in mountains.values():
-        m["name"] = m["name_ja"] if lang == "ja" else f"{m['name_en']} ({m['name_ja']})"
+        _jp = (m["range"] or {}).get("country", {}).get("id", "JP") == "JP"
+        m["name"] = m["name_ja"] if lang == "ja" else (f"{m['name_en']} ({m['name_ja']})" if _jp else m["name_en"])
+        m["zone"] = (m["range"] or {}).get("zone") or zones[HOME_ZONE[lang]]
         m["short"] = m["name_ja"] if lang == "ja" else m["name_en"]
         # いちばん軽いルート（体力度の小さい順、無ければ日数の少ない順）を先に
         # 歩く時間の短い順（公式の合計 → 県の表の合計 → 式の目安）。時間が無ければ体力度
@@ -871,7 +889,7 @@ def build_model(lang):
     } for h in huts.values()]
 
     return dict(T=T, huts=huts, trails=trails, areas=areas, photos=photos, client=client, mountains=mountains,
-                trailheads=trailheads, ranges=ranges, zones=zones, countries=countries,
+                trailheads=trailheads, ranges=ranges, zones=zones, countries=countries, aliases=aliases,
                 fmt_time=fmt_time, fmt_date=fmt_date, metres=metres_t, conf_text=conf_text)
 
 
@@ -1069,11 +1087,26 @@ for lang, prefix in LOCALES:
         if _t["range"]:
             _rc.setdefault(_t["range"]["id"], [_t["range"], 0])[1] += 1
     _ranges = [v[0] for v in sorted(_rc.values(), key=lambda v: -v[1])]
-    # 地方ごとにまとめる（docs/REGIONS.md）。地方の並びは zones.sort、中は山域のルートの多い順
-    zone_groups = [dict(zone=z, ranges=[r for r in _ranges if (r["zone"] or {}).get("id") == z["id"]]) for z in m["zones"].values()]
-    zone_groups = [zg for zg in zone_groups if zg["ranges"]]
-    for zg in zone_groups:
-        zg["n"] = sum(_rc[r["id"]][1] for r in zg["ranges"])
+    # 行き先（地方）ごとにまとめる（docs/REGIONS.md）。地方の並びは zones.sort、中は山域のルートの多い順。
+    # 一覧（トップ・山・小屋）はいつも 1 つの地方だけを出す。ほかの地方へは「行き先」の切り替えと検索から
+    home_zone = HOME_ZONE[lang]
+    zone_groups = []
+    for z in m["zones"].values():
+        zg = dict(zone=z, ranges=[r for r in _ranges if (r["zone"] or {}).get("id") == z["id"]],
+                  trails=[t for t in trails_l if t["zone"]["id"] == z["id"]],
+                  huts=[h for h in huts_l if h["zone"]["id"] == z["id"]])
+        zg["n"], zg["n_huts"] = len(zg["trails"]), len(zg["huts"])
+        # 入口のカードの写真: その地方の山域の写真（案内・エリア）、無ければいちばん上のルートの 3D の絵
+        _rids = {r["id"] for r in zg["ranges"]}
+        zg["photo"] = next((p for p in photos if p["role"] in ("teaser", "area") and p["range_id"] in _rids), None)
+        zg["poster"] = next((t["id"] for t in zg["trails"] if t["poster"]), None)
+        # 国の名前（地方の名前と同じとき＝日本は出さない）
+        zg["countries"] = [c for c in dict.fromkeys(r["country"]["name"] for r in zg["ranges"]) if c != z["name"]]
+        if zg["trails"]:
+            zone_groups.append(zg)
+    _slugs = [zg["zone"]["slug"] for zg in zone_groups] + [r["slug"] for r in _ranges]
+    assert len(_slugs) == len(set(_slugs)), f"地方と山域の slug が重なっている: {_slugs}"
+    _home = next(zg for zg in zone_groups if zg["zone"]["id"] == home_zone)
     # 山域の入口ページ /areas/<山域>/。ルートのある山域だけ作る（空のページを作らない）
     _area_pages = []
     for r in _ranges:
@@ -1083,24 +1116,45 @@ for lang, prefix in LOCALES:
         r["n_trails"], r["n_huts"] = len(r_trails), len(r_huts)
         _area_pages.append((r, r_trails, r_huts, r_mts))
     g["ZONES"] = zone_groups
-    write(f"{d}index.html", "index.html", trails=trails_l, huts=huts_l, page="/", articles=arts[:3],
-          ranges=_ranges, **g)
+    g["HOME_ZONE"] = home_zone
+    _others = [zg for zg in zone_groups if zg["zone"]["id"] != home_zone]
+    write(f"{d}index.html", "index.html", trails=_home["trails"], huts=huts_l, page="/", articles=arts[:3],
+          ranges=_home["ranges"], other_zones=_others, **g)
+    # ほかの地方の入口 /areas/<地方>/（トップと同じ作り: 山域・探す・ルート）
+    for zg in _others:
+        write(f"{d}areas/{zg['zone']['slug']}/index.html", "zone.html", page=zg["zone"]["path"], zg=zg, z=zg["zone"],
+              trails=zg["trails"], ranges=zg["ranges"], other_zones=[x for x in zone_groups if x is not zg], **g)
     for r, r_trails, r_huts, r_mts in _area_pages:
         write(f"{d}areas/{r['slug']}/index.html", "area.html", page=f"/areas/{r['slug']}/", r=r,
               trails=r_trails, huts=r_huts, mts=r_mts, any_osm=any(t["osm"] for t in r_trails), **g)
     write(f"{d}areas/index.html", "areas.html", page="/areas/", **g)
     # 山から探す: 山域ごとに、高い順
-    _mts = sorted(m["mountains"].values(), key=lambda x: -x["elev"])
+    _mts = sorted([x for x in m["mountains"].values() if x["zone"]["id"] == home_zone], key=lambda x: -x["elev"])
     _groups = {}
     for _m in _mts:
         _r = _m["range"] or dict(id="other", name=g["T"].mt_other)
         _groups.setdefault(_r["id"], dict(range=_r, mts=[]))["mts"].append(_m)
     write(f"{d}mountains/index.html", "mountains.html", page="/mountains/", mountains=_mts, n_routes=len(trails_l),
           ranges=[x["range"] for x in sorted(_groups.values(), key=lambda x: -len(x["mts"])) if x["range"]["id"] != "other"], **g)
-    for _m in _mts:
+    for _m in m["mountains"].values():
         write(f"{d}mountains/{_m['id']}/index.html", "mountain.html", page=f"/mountains/{_m['id']}/", m=_m, **g)
-    write(f"{d}huts/index.html", "huts.html", huts=huts_l, page="/huts/",
-          client_json=json.dumps(m["client"], ensure_ascii=False), **g)
+    # 小屋をさがす（料金は円）: いつもの地方の小屋だけ。ほかの地方の小屋は山域の入口ページに並ぶ
+    _home_hut_ids = {h["id"] for h in _home["huts"]}
+    _home_rids = {r["id"] for r in _home["ranges"]}
+    write(f"{d}huts/index.html", "huts.html", huts=_home["huts"], page="/huts/",
+          client_json=json.dumps([c for c in m["client"] if c["id"] in _home_hut_ids], ensure_ascii=False),
+          **dict(g, areas=[a for a in g["areas"] if a["range_id"] in _home_rids]))
+    # 行き先をまたぐ検索の索引（/search.json）。一覧に出ていない地方のルート・小屋・山を、探す欄から見つけられるように
+    def _where(z, r):
+        return " › ".join(x for x in (z["name"], (r or {}).get("name")) if x)
+    _idx = [dict(k="t", n=t["name"], u=f"{g['LB']}/trails/{t['id']}/", z=t["zone"]["id"], w=_where(t["zone"], t["range"]), q=t["search"])
+            for t in trails_l]
+    _idx += [dict(k="h", n=h["name"], u=f"{g['LB']}/huts/{h['id']}/", z=h["zone"]["id"], w=_where(h["zone"], h["range"]),
+                  q=" ".join(x for x in (h["name_ja"], h["name_en"] or "", m["aliases"].get(("hut", h["id"]), "")) if x))
+             for h in huts_l]
+    _idx += [dict(k="m", n=x["name"], u=f"{g['LB']}/mountains/{x['id']}/", z=x["zone"]["id"], w=_where(x["zone"], x["range"]),
+                  q=f"{x['name_ja']} {x['name_en']}") for x in m["mountains"].values()]
+    (DIST / f"{d}search.json").write_text(json.dumps(_idx, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
     # 行程ボードは JS 側にも文言が要る。i18n を唯一の出どころにするため、ここで渡す
     plan_strings = {k[len("plan_js_"):]: v for k, v in m["T"].items() if k.startswith("plan_js_")}
@@ -1162,6 +1216,7 @@ for lang, prefix in LOCALES:
     urls += th_urls_for(prefix)         + [f"{prefix}/", f"{prefix}/huts/", f"{prefix}/about/", f"{prefix}/booking/", f"{prefix}/plan/"] \
         + ([f"{prefix}/access/"] if tr["gateways"] else []) \
         + [f"{prefix}/areas/"] + [f"{prefix}/areas/{r['slug']}/" for r in _ranges] \
+        + [f"{prefix}{zg['zone']['path']}" for zg in _others] \
         + [f"{prefix}/huts/{h['id']}/" for h in huts_l] \
         + [f"{prefix}/trails/{t['id']}/" for t in trails_l]
 
