@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_route_card.html" import route_card with context %}
+{#- 山域の入口ページ /areas/<山域>/（docs/REGIONS.md）。ルート・山小屋・山と、その国の決まり（通貨・通報・難易度の区分・道の線）-#}
+{% block title %}{{ T.area_title.format(name=r.name) }}{% endblock %}
+{% block desc %}{{ T.area_desc.format(name=r.name, country=r.country.name, n=trails | length, h=huts | length) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"{{ T.area_title.format(name=r.name) }}",
+ "itemListElement":[{% for t in trails %}{"@type":"ListItem","position":{{ loop.index }},"url":"{{ SITE_URL }}{{ PREFIX }}/trails/{{ t.id }}/","name":"{{ t.name }}"}{{ "," if not loop.last }}{% endfor %}]}
+</script>
+{% endblock %}
+{% block body %}
+<header class="page-head">
+  <p class="crumb"><a href="{{ LB }}/areas/">{{ T.areas_h1 }}</a>{% if r.zone %} › {{ r.zone.name }}{% endif %}</p>
+  <h1>{{ r.name }}</h1>
+  <p class="lede">{{ T.area_facts.format(zone=r.zone.name if r.zone else '', country=r.country.name, n=trails | length, h=huts | length) }}</p>
+</header>
+
+<section class="route-list" aria-labelledby="area-routes-h">
+  <h2 id="area-routes-h">{{ T.area_routes_h }}</h2>
+  {% for t in trails %}{{ route_card(t) }}{% else %}<p>{{ T.area_none }}</p>{% endfor %}
+</section>
+
+{% if huts %}
+<section class="area-huts" aria-labelledby="area-huts-h">
+  <h2 id="area-huts-h">{{ T.area_huts_h }}</h2>
+  <ul class="area-hut-list">
+    {% for h in huts %}{% set s = h.season %}
+    <li><a href="{{ LB }}/huts/{{ h.id }}/"><b>{{ h.name }}</b></a>
+      <span>{% if h.elevation_m %}{{ h.elevation_m | metres }}{% else %}{{ T.elev_unknown }}{% endif %}{{ T.mid }}
+        {%- if s and s.status == 'year_round' %}{{ T.season_year_round }}
+        {%- elif s and s.status == 'open' and (s.open_date or s.close_date) %}{{ s.open_date | fmt_date }}{{ T.range }}{{ s.close_date | fmt_date }}
+        {%- else %}{{ T.unknown }}{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if mts %}
+<section aria-labelledby="area-mts-h">
+  <h2 id="area-mts-h">{{ T.area_mts_h }}</h2>
+  <ul class="link-list">
+    {% for x in mts %}<li><a href="{{ LB }}/mountains/{{ x.id }}/">{{ x.name }}</a> {{ x.elev | metres }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="area-rules" aria-labelledby="area-rules-h">
+  <h2 id="area-rules-h">{{ T.area_rules_h }}</h2>
+  <dl class="dfacts">
+    {% if r.country.emergency_t %}<div><dt>{{ T.area_emergency }}</dt><dd>{{ r.country.emergency_t }}</dd></div>{% endif %}
+    <div><dt>{{ T.area_currency }}</dt><dd>{{ r.country.currency }}</dd></div>
+    <div><dt>{{ T.area_tz }}</dt><dd>{{ r.country.tz }}</dd></div>
+    <div><dt>{{ T.area_grading }}</dt><dd>{{ T['area_grading_' ~ r.country.grading_system] }}</dd></div>
+    <div><dt>{{ T.area_lines }}</dt><dd>{{ T['area_lines_' ~ r.country.line_source] }}</dd></div>
+  </dl>
+</section>
+{% endblock %}

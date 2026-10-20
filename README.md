@@ -47,9 +47,10 @@ GitHub を使わない場合は `dist/` をそのまま Netlify Drop にドラ�
 `static/img/` は運営者撮影のみ。`materials/` の元写真から PIL で 1600px / 800px に書き出し、EXIF（位置情報）は全て除去する。
 掲載位置は `seed.sql` の `photos` テーブルで管理（hero / trail / hut / teaser / area）。背景には敷かない。
 
-## 次の山域（ドロミティ）
-Alta Via 1 は表銀座と同じ「線」のルートなので UI はそのまま使える。`hut_rates.currency` と `mountain_ranges.dolomites` は準備済み。
-着手条件はトップの「ドロミティ版がほしい」の押下数。データは各リフージオの公式サイトで確認したものだけ載せる（日本と同じ基準）。
+## 日本の外（ドロミテ）
+2026-10-20 着手。地域の分け方・国ごとに変わる決まりは `../docs/REGIONS.md`。
+線は `python tools/trail_paths.py <id>`（山域の国が `line_source='osm'` なら OpenStreetMap の道）→ `python tools/trail_profile.py <id>`（標高は AWS Terrain Tiles）。
+OSM の線は ODbL なのでページに描くだけ。/data/・MCP・GPX には入れない。データは各リフージオの公式サイトで確認したものだけ載せる（日本と同じ基準）。
 
 ## データセット公開（/data/ と /api/）
 サイト本体とは別に、確度メタデータを保ったまま JSON を公開している。

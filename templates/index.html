@@ -67,12 +67,14 @@
   <p class="quiet" data-after-items><a href="{{ LB }}/booking/">{{ T.booking_link }}</a>{{ T.mid }}<a href="{{ LB }}/plan/">{{ T.plan_link }}</a></p>
 </section>
 
-{#- 山域: 横に流して選ぶ。押すと「山から探す」をその山域で絞った状態で開く -#}
+{#- 山域: 地方（日本／ヨーロッパ・アルプス）ごとに横に流して選ぶ。押すと山域の入口ページ /areas/<山域>/ -#}
 <section class="ranges" aria-labelledby="ranges-h">
   <h2 id="ranges-h">{{ T.home_ranges_h }}</h2>
+  {% for zg in ZONES %}{% set zl = loop %}
+  {% if ZONES | length > 1 %}<h3 class="zone-h">{{ zg.zone.name }}</h3>{% endif %}
   <ul class="range-row">
-    {% for r in ranges %}
-    <li><a class="range-card rc{{ loop.index0 % 7 }}" href="{{ LB }}/mountains/?range={{ r.id }}">
+    {% for r in zg.ranges %}
+    <li><a class="range-card rc{{ (loop.index0 + zl.index0 * 3) % 7 }}" href="{{ LB }}/areas/{{ r.slug }}/">
       <svg viewBox="0 0 136 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
         <path class="rc-far" d="M0 96 L0 62 L26 48 L50 56 L76 30 L96 44 L116 36 L136 46 L136 96 Z"/>
         <path class="rc-near" d="M0 96 L0 78 L40 70 L80 80 L120 68 L136 74 L136 96 Z"/>
@@ -81,6 +83,8 @@
     </a></li>
     {% endfor %}
   </ul>
+  {% endfor %}
+  <p class="finder-links"><a href="{{ LB }}/areas/">{{ T.home_areas_link }}</a></p>
 </section>
 
 {% if HERO %}
@@ -100,7 +104,9 @@
 </section>
 {% endif %}
 
-{% if TEASER %}
+{#- ドロミテ（日本の外の最初の山域）。ルートが入ったので「ほしい」ボタンは外し、入口ページへの案内にした（2026-10-20）-#}
+{% set dolo = ranges | selectattr('id', 'equalto', 'dolomites') | first %}
+{% if TEASER and dolo %}
 <section class="teaser" aria-labelledby="teaser-h">
   {% set p = TEASER[0] %}
   <figure class="teaser-photo">
@@ -111,10 +117,7 @@
     <p class="eyebrow">{{ T.teaser_eyebrow }}</p>
     <h2 id="teaser-h">{{ T.teaser_h }}</h2>
     <p>{{ T.teaser_body }}</p>
-    <p class="teaser-cta">
-      <button type="button" class="btn teaser-btn" data-track="interest_dolomiti" data-done="{{ T.teaser_done }}">{{ T.teaser_btn }}</button>
-      <span>{{ T.teaser_note }}</span>
-    </p>
+    <p class="teaser-cta"><a class="btn teaser-btn" href="{{ LB }}/areas/{{ dolo.slug }}/">{{ T.teaser_btn }}</a></p>
   </div>
 </section>
 {% endif %}

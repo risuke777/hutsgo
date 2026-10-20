@@ -733,3 +733,14 @@ h2,h3{font-weight:700}
   .route-card{transition:box-shadow .2s ease,transform .2s ease}
   .route-card:active{transform:scale(.985)}
 }
+
+/* 地方の見出しと山域の入口ページ（docs/REGIONS.md） */
+.zone-h{font-size:.82rem;letter-spacing:.06em;color:var(--granite);margin:1rem 0 .45rem;font-weight:700}
+.zone{margin:1.6rem 0 0}
+.area-list,.area-hut-list{list-style:none;margin:.5rem 0 0;padding:0;display:grid;gap:.5rem}
+.area-list a{display:flex;justify-content:space-between;gap:1rem;align-items:baseline;padding:.85rem 1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r);color:var(--ink);text-decoration:none}
+.area-list a:hover b,.area-list a:focus-visible b{text-decoration:underline}
+.area-list span,.area-hut-list span{color:var(--granite);font-size:.85rem}
+.area-hut-list li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.2rem 1rem;padding:.6rem 0;border-bottom:1px solid var(--line)}
+.area-huts,.area-rules{margin-top:2rem}
+.area-rules .dfacts{border-top:0;padding-top:0;grid-template-columns:1fr}

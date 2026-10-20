@@ -1766,3 +1766,76 @@ INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,s
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('chokaisan_chokai5','commons/chokai5','フォレスタ鳥海から見た鳥海山','Chokaisan from Foresta Chokai','フォレスタ鳥海から見た鳥海山','Chokaisan from Foresta Chokai','掬茶','trail','chokaisan',1,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mt._Chokai_seen_from_Foresta_Chokai.jpg','39.174277','140.117136');
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('gassan_gassan10','commons/gassan10','月山','Gassan','月山','Gassan','Qwert1234','trail','gassan',0,'CC BY-SA 4.0','https://commons.wikimedia.org/wiki/File:Mount_Gassann_20190811.JPG',NULL,NULL);
 INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,sort,license,source_url,lat,lon) VALUES ('gassan_gassan3','commons/gassan3','月山の稜線','The ridge of Gassan','月山の稜線','The ridge of Gassan','Crown of Lenten rose','trail','gassan',1,'CC BY 3.0','https://commons.wikimedia.org/wiki/File:Gassan_Ridge_2006B.jpg','38.54602','140.02479');
+
+-- ===============================================================
+-- 2026-10-20 地域の分け方（docs/REGIONS.md）。地方 → 山域 → 山群、国は決まりの切り替えに使う。
+-- 運営者の判断「ドロミテ版にも拡大したい」「地域拡大の際の分類も検討」から。
+-- ===============================================================
+INSERT INTO zones (id, name_ja, name_en, sort) VALUES
+  ('japan', '日本', 'Japan', 0),
+  ('europe_alps', 'ヨーロッパ・アルプス', 'European Alps', 1);
+INSERT INTO countries (id, name_ja, name_en, currency, tz, emergency, emergency_en, grading_system, line_source) VALUES
+  ('JP', '日本', 'Japan', 'JPY', 'Asia/Tokyo', '110（警察）・119（消防・救急）', '110 (police) / 119 (fire and ambulance)', 'jp_pref', 'gsi'),
+  ('IT', 'イタリア', 'Italy', 'EUR', 'Europe/Rome', '112（欧州共通の緊急通報）', '112 (European emergency number)', 'cai', 'osm');
+UPDATE mountain_ranges SET zone_id='japan', country='JP' WHERE id <> 'dolomites';
+UPDATE mountain_ranges SET zone_id='europe_alps', country='IT' WHERE id = 'dolomites';
+
+-- ===============================================================
+-- 2026-10-20 ドロミテ（イタリア）の最初のルート: トレ・チーメ一周（アウロンツォ小屋から）。
+-- 山域の名前は日本語で通りのよい「ドロミテ」に（検索の文字に「ドロミティ」も残す）。
+-- 出典（すべて 2026-10-20 に人が読んで確認）:
+--   周回の道のり・時間・登り: 3 Zinnen Dolomites（地元の観光局のサイト）「Summer-walk around the Drei Zinnen/Tre Cime」
+--     8.8km・4 時間・登り下り 550m・easy・101 番でラヴァレード小屋とパテルノ鞍部（2,454m）、分かれ道でロカテッリ小屋か、
+--     105 番でランガルムを通って戻る。HutsGo のルートはロカテッリ小屋に寄るので、表の値は参考（near）。歩く時間は式の目安。
+--   2026 年の小屋の閉まる日: アウロンツォ・ディ・カドーレ町の公式サイト（2026-09-11 のお知らせ）。開く日は 2026 年分が見つからず未確認。
+--   予約: 各小屋の公式サイト。マイカーの予約制の有料道路とバス: アウロンツォ・ディ・カドーレ町の公式サイト。
+--   位置: OpenStreetMap（小屋・バス停・鞍部の数点だけ。ODbL の「わずかな部分」）。標高は公式の値、無いものは OSM の ele。
+-- 料金は年の書いていないもの・2025 年のものしか見つからないので入れない（A1）。
+-- ===============================================================
+UPDATE mountain_ranges SET name_ja='ドロミテ' WHERE id='dolomites';
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
+  ('sesto_dolomites', 'dolomites', 'セスト山群（トレ・チーメ）', 'Sexten Dolomites (Tre Cime)');
+INSERT INTO huts (id,name_ja,name_en,name_kana,hut_type,range_id,sub_area_id,operator_id,lat,lon,elevation_m,elevation_source,official_url,source_url,last_verified_at,confidence) VALUES
+('rifugio_auronzo','アウロンツォ小屋','Rifugio Auronzo',NULL,'mountain_hut','dolomites','sesto_dolomites',NULL,46.6122046,12.2960952,2333,'official','https://rifugioauronzo.it/en/','https://rifugioauronzo.it/en/','2026-10-20','reported'),
+('rifugio_lavaredo','ラヴァレード小屋','Rifugio Lavaredo',NULL,'mountain_hut','dolomites','sesto_dolomites',NULL,46.6183265,12.3120936,2344,'official','https://www.rifugiolavaredo.com/','https://www.rifugiolavaredo.com/','2026-10-20','reported'),
+('rifugio_locatelli','ロカテッリ小屋（ドライツィンネン小屋）','Rifugio Locatelli / Dreizinnenhütte',NULL,'mountain_hut','dolomites','sesto_dolomites',NULL,46.6369375,12.3104861,2405,'official','https://www.dreizinnenhuette.com/antonio-locatelli-hut.php','https://www.dreizinnenhuette.com/antonio-locatelli-hut.php','2026-10-20','reported');
+INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,capacity_beds,source_url,last_verified_at,confidence) VALUES
+('rifugio_auronzo',2026,'open',NULL,'2026-10-31','2026年は10月末まで（天候しだい。町のお知らせ）。開いた日は未確認。冬は週末にバー・食堂だけ開けることが多い（公式）','Open until the end of October 2026, weather permitting (municipal notice). Opening date unconfirmed. In winter it usually opens at weekends for the bar and restaurant only (official site).',NULL,'https://rifugioauronzo.it/en/booking/','+39 0435 39002',NULL,NULL,99,'https://auronzo.info/en/news/closure-of-the-auronzo-and-misurina-mountain-huts-in-the-summer-of-2026/','2026-10-20','reported'),
+('rifugio_lavaredo',2026,'open',NULL,'2026-10-11','2026年は10月11日まで（町のお知らせ）。開いた日は未確認。予約のときに半額を前払い（返金なし）。支払いは現金かカード（天気が悪いとカードが使えないことがある。公式）','Open until 11 October 2026 (municipal notice). Opening date unconfirmed. 50% non-refundable deposit when booking; cash or card (cards may not work in bad weather; official site).',NULL,'https://rifugiolavaredo.bukly.com/',NULL,NULL,NULL,24,'https://auronzo.info/en/news/closure-of-the-auronzo-and-misurina-mountain-huts-in-the-summer-of-2026/','2026-10-20','reported'),
+('rifugio_locatelli',2026,'open',NULL,'2026-09-27','2026年は9月27日まで（町のお知らせ）。開いた日は未確認（2025年は6月28日〜9月28日）。泊まりは公式サイトの申し込みだけ（メール不可）。土曜は2食付きだけ。予約金 1人40ユーロ（返金なし）。支払いは現金だけ（公式）','Open until 27 September 2026 (municipal notice). Opening date unconfirmed (2025: 28 Jun – 28 Sep). Beds only via the official website (not by email). Saturdays: half board only. Deposit €40 per person (non-refundable). Cash only (official site).',1,'https://www.dreizinnenhuette.com/booking/index_en.php',NULL,'年明けに公式サイトで受付開始（返事は2月中旬〜下旬から順に。3週間待つことも）','Requests open on the official website at the start of the year (answered from mid/late February; waits of up to 3 weeks).',NULL,'https://www.dreizinnenhuette.com/antonio-locatelli-hut.php','2026-10-20','reported');
+INSERT INTO hut_booking_channels (hut_id,year,seq,kind,operator,url,url_en,english,guide_en_url,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('rifugio_auronzo',2026,1,'form','hut','https://rifugioauronzo.it/prenota/','https://rifugioauronzo.it/en/booking/','unknown',NULL,'公式サイトの予約フォーム。電話 +39 0435 39002（夏）・メールも案内あり','Booking form on the official site. Phone +39 0435 39002 (summer) and email are also listed.','https://rifugioauronzo.it/en/','2026-10-20','reported'),
+('rifugio_lavaredo',2026,1,'web','hut','https://rifugiolavaredo.bukly.com/',NULL,'unknown',NULL,'公式サイトの「PRENOTA QUI」から','Linked from "PRENOTA QUI" on the official site.','https://www.rifugiolavaredo.com/','2026-10-20','reported'),
+('rifugio_locatelli',2026,1,'web','hut','https://www.dreizinnenhuette.com/booking/index_en.php','https://www.dreizinnenhuette.com/booking/index_en.php','yes',NULL,'泊まりはここからだけ申し込める（メール・WhatsApp は不可）','Beds can only be requested here (not by email or WhatsApp).','https://www.dreizinnenhuette.com/antonio-locatelli-hut.php','2026-10-20','reported');
+INSERT INTO hut_facilities (hut_id,shower,credit_card,cash_only,source_url,last_verified_at,confidence) VALUES
+('rifugio_lavaredo',1,1,0,'https://www.rifugiolavaredo.com/','2026-10-20','reported'),
+('rifugio_locatelli',NULL,0,1,'https://www.dreizinnenhuette.com/antonio-locatelli-hut.php','2026-10-20','reported');
+INSERT INTO trailheads (id,name_ja,name_en,lat,lon,elevation_m,parking_spaces,parking_note,parking_note_en) VALUES
+('tre_cime_auronzo','トレ・チーメ（アウロンツォ小屋前のバス停・駐車場）','Tre Cime (Rifugio Auronzo bus stop and car park)',46.6122655,12.2938814,2330,NULL,
+ 'マイカーはミズリーナからの有料道路（予約制・ナンバー登録）。2026年は乗用車40ユーロ・12時間（アウロンツォ・ディ・カドーレ町）',
+ 'Private cars use the toll road from Misurina, by online reservation with number plate only. 2026: €40 per car for 12 hours (Municipality of Auronzo di Cadore).');
+INSERT INTO hut_trailheads (hut_id,trailhead_id,walk_time_up_min,walk_time_down_min) VALUES ('rifugio_auronzo','tre_cime_auronzo',NULL,NULL);
+INSERT INTO access_routes (id,trailhead_id,mode,operator_name,operator_name_en,from_place,from_place_en,seasonal_only,requires_hut_stay,reservation_required,private_car_restricted,info_url,source_url,last_verified_at,confidence) VALUES
+('tre_cime_dolomitibus','tre_cime_auronzo','bus','ドロミティ・バス','Dolomiti Bus','ミズリーナ（2026年は6月8日〜9月9日。9月10日〜10月4日はアウロンツォ・ディ・カドーレからミズリーナ経由）','Misurina (8 Jun – 9 Sep 2026; 10 Sep – 4 Oct from Auronzo di Cadore via Misurina)',1,0,0,0,'https://auronzo.info/en/how-to-get-to-the-tre-cime-di-lavaredo/','https://auronzo.info/en/how-to-get-to-the-tre-cime-di-lavaredo/','2026-10-20','reported'),
+('tre_cime_444','tre_cime_auronzo','bus','南チロルの路線（444番）','SüdtirolMobil line 444','ドッビアーコ（トーブラッハ）駅（6月中旬〜9月末。予約が要る）','Dobbiaco/Toblach station (mid-June – end of September; reservation required)',1,0,1,0,'https://auronzo.info/en/how-to-get-to-the-tre-cime-di-lavaredo/','https://auronzo.info/en/how-to-get-to-the-tre-cime-di-lavaredo/','2026-10-20','reported'),
+('tre_cime_toll','tre_cime_auronzo','car',NULL,NULL,'ミズリーナからの有料道路（予約制）','Toll road from Misurina (reservation only)',1,0,1,0,'https://auronzo.info/en/parking-tre-cime-di-lavaredo/','https://auronzo.info/en/parking-tre-cime-di-lavaredo/','2026-10-20','reported');
+INSERT INTO trails (id,name_ja,name_en,nights_typical,difficulty,summary,summary_en,range_id) VALUES
+('tre_cime_loop','トレ・チーメ一周（アウロンツォ小屋から）','Tre Cime loop from Rifugio Auronzo',0,NULL,
+ 'トレ・チーメ（3つの岩峰）の南のアウロンツォ小屋から、101番の道でラヴァレード小屋とパテルノ鞍部（2,454m）を越えてロカテッリ小屋へ。105番でランガルムを通り、岩峰の西側を回って戻る。',
+ 'From Rifugio Auronzo below the south walls of the Tre Cime, trail 101 passes Rifugio Lavaredo and Forcella Lavaredo (2,454 m) to Rifugio Locatelli; trail 105 returns past Malga Langalm along the west side of the peaks.',
+ 'dolomites');
+INSERT INTO trail_stops (trail_id,seq,hut_id,trailhead_id,cumulative_time_min,is_overnight_candidate,label,label_en,elevation_m,lat,lon) VALUES
+('tre_cime_loop',1,NULL,'tre_cime_auronzo',NULL,0,NULL,NULL,NULL,NULL,NULL),
+('tre_cime_loop',2,'rifugio_auronzo',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tre_cime_loop',3,'rifugio_lavaredo',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tre_cime_loop',4,NULL,NULL,NULL,0,'パテルノ鞍部（フォルチェッラ・ラヴァレード）','Forcella Lavaredo (Paternsattel)',2454,46.622499,12.311453),
+('tre_cime_loop',5,'rifugio_locatelli',NULL,NULL,1,NULL,NULL,NULL,NULL,NULL),
+('tre_cime_loop',6,NULL,NULL,NULL,0,'ランガルム','Malga Langalm',2283,46.6256608,12.2897944),
+('tre_cime_loop',7,NULL,'tre_cime_auronzo',NULL,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO trail_grading (trail_id,system,source_name,source_url,source_route_no,source_route_name,stamina,technical,match,note,confidence,course_time_h,length_km,ascent_km) VALUES
+('tre_cime_loop','tourism','3 Zinnen Dolomites（地元の観光局）「Summer-walk around the Drei Zinnen/Tre Cime」','https://www.dreizinnen.com/en/activity/summer-walk-around-the-drei-zinnen-tre-cime-three-peaks-_569',NULL,'Summer-walk around the Drei Zinnen/Tre Cime',NULL,'easy','near','観光局の周回は 8.8km・4時間・登り550m。ロカテッリ小屋に寄る道と寄らない道を分けて書いていて、HutsGo のルート（寄る）と同じ道のりかは確かめられていない','unverified',4.0,8.8,0.55);
+INSERT INTO trail_seasons (trail_id,kind,start_md,end_md,label_ja,label_en,source_name,source_url,checked_on,confidence) VALUES
+('tre_cime_loop','open','06-08','10-04','アウロンツォ小屋までのバスが運行（2026年は6月8日〜10月4日）','Buses to Rifugio Auronzo run (8 Jun – 4 Oct in 2026)','アウロンツォ・ディ・カドーレ町（トレ・チーメへの行き方）','https://auronzo.info/en/how-to-get-to-the-tre-cime-di-lavaredo/','2026-10-20','reported');
+INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,trail_id,range_id,sort) VALUES
+('tre_cime_loop_trecime','dolomiti-trecime','夕日に染まるトレ・チーメ・ディ・ラヴァレードの岩峰','The Tre Cime di Lavaredo lit by the evening sun','トレ・チーメ。夕方、岩壁だけが赤く残る。','Tre Cime di Lavaredo. At dusk only the walls stay lit.','撮影：HutsGo','trail','tre_cime_loop','dolomites',0),
+('tre_cime_loop_locatelli','dolomiti-locatelli','岩峰に囲まれた赤い屋根のロカテッリ小屋','Rifugio Locatelli with its red roof among the rock towers','ロカテッリ小屋（ドライツィンネン小屋）。','Rifugio Locatelli (Dreizinnenhütte).','撮影：HutsGo','trail','tre_cime_loop','dolomites',1);

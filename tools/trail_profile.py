@@ -5,6 +5,7 @@
     python tools/trail_profile.py --check         # 長野県の表と同じ行程のルートで、距離・登り・下りを表と比べる
 
 - 標高は国土地理院の標高タイル（dem_png・ズーム14＝10m メッシュ）。公開タイルの利用（A3）。
+  日本の外の線（trail_paths の source_kind='osm'）は AWS Terrain Tiles（terrarium・ズーム14。Mapzen ほかの公開標高）。
 - 線を 10m ごとに細かくして標高を取り、登り・下りは 5m 以上の上下だけを数える（DEM の細かな揺れで登りが増えないように）。
 - 結果は trail_paths/<id>.json の各区間に up_m・down_m・elev（coords と同じ並びの標高）として書き足す。
 - 時間の式（build.py の CT_COEF）は、長野県「信州 山のグレーディング」の 124 ルートの合計コースタイム・ルート長・
@@ -17,6 +18,8 @@ PATHS = ROOT / "trail_paths"
 CACHE = ROOT / "tools" / ".tilecache" / "dem"
 Z = 14
 URL = "https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png"
+URL_TERRARIUM = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+SRC = "gsi"   # profile() が線の出どころで切り替える
 STEP_M = 10        # 標高を取る間隔
 HYST_M = 5         # この高さ以上の上下だけを登り・下りに数える
 _tiles = {}
@@ -29,14 +32,15 @@ def hav(a, b):
 
 
 def tile(x, y):
-    k = (x, y)
+    k = (SRC, x, y)
     if k in _tiles:
         return _tiles[k]
-    p = CACHE / f"{Z}_{x}_{y}.png"
+    p = CACHE / f"{'tr_' if SRC == 'terrarium' else ''}{Z}_{x}_{y}.png"
     if not p.exists():
         CACHE.mkdir(parents=True, exist_ok=True)
         try:
-            p.write_bytes(urllib.request.urlopen(URL.format(z=Z, x=x, y=y), timeout=30).read())
+            u = (URL_TERRARIUM if SRC == "terrarium" else URL).format(z=Z, x=x, y=y)
+            p.write_bytes(urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "HutsGo (https://hutsgo.com)"}), timeout=30).read())
         except urllib.error.HTTPError as e:
             if e.code != 404:
                 raise
@@ -49,6 +53,8 @@ def tile(x, y):
 
 def _px(img, x, y):
     r, g, b = img.getpixel((min(max(x, 0), 255), min(max(y, 0), 255)))
+    if SRC == "terrarium":
+        return r * 256 + g + b / 256 - 32768
     if (r, g, b) == (128, 0, 0):
         return None
     v = r * 65536 + g * 256 + b
@@ -99,6 +105,8 @@ def up_down(es):
 def profile(trail_id):
     f = PATHS / f"{trail_id}.json"
     doc = json.loads(f.read_text(encoding="utf-8"))
+    global SRC
+    SRC = "terrarium" if doc.get("source_kind") == "osm" else "gsi"
     for leg in doc["legs"]:
         c = leg.get("coords")
         if not c:
@@ -109,7 +117,8 @@ def profile(trail_id):
         leg["up_m"], leg["down_m"] = (round(v) for v in up_down(es))
         leg["length_m"] = round(sum(hav(a, b) for a, b in zip(c, c[1:])))
         leg["elev"] = [round(elev(*p) or 0) for p in c]
-    doc["elev_source"] = "国土地理院 標高タイル（dem_png・z14＝10m メッシュ）。登り・下りは 10m 間隔・5m 以上の上下だけを数えた"
+    doc["elev_source"] = (("AWS Terrain Tiles（terrarium・z14）" if SRC == "terrarium" else "国土地理院 標高タイル（dem_png・z14＝10m メッシュ）")
+                          + "。登り・下りは 10m 間隔・5m 以上の上下だけを数えた")
     f.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
     tot = [sum(l.get(k, 0) for l in doc["legs"]) for k in ("length_m", "up_m", "down_m")]
     print(f"{trail_id}: {tot[0] / 1000:.1f} km, 登り {tot[1]} m, 下り {tot[2]} m（{len(doc['legs'])} 区間）")

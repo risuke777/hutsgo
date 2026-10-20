@@ -8,6 +8,9 @@
   書き換え、checked_on に日付を入れる（A1/A2: 機械の出力をそのまま確認済みにしない）。
 - 道でつながらない区間、始点・終点が道から遠い区間は線を作らない（build.py は直線の目安で描く）。
 - 出典: 国土地理院ベクトルタイル（optimal_bvmap-v1）。スクレイピングではなく公開タイルの利用（A3）。
+- 日本の外（countries.line_source='osm' の山域）は OpenStreetMap の道（Overpass API で範囲を 1 回だけ取る）。
+  OSM の線は ODbL なので JSON に license を書き、公開データ（/data/・MCP）には入れない（docs/REGIONS.md）。
+  確認用 PNG の地図も OSM の標準タイル。
 """
 import datetime, heapq, json, math, pathlib, sqlite3, sys, urllib.request
 
@@ -20,6 +23,12 @@ CACHE = ROOT / "tools" / ".tilecache"
 Z = 16
 TILE_URL = "https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf"
 SOURCE = "国土地理院ベクトルタイル（optimal_bvmap-v1・道路中心線）"
+OSM_SOURCE = "OpenStreetMap（Overpass API・highway の道）"
+OSM_LICENSE = "ODbL 1.0 © OpenStreetMap contributors"
+OVERPASS = "https://overpass-api.de/api/interpreter"
+UA = {"User-Agent": "HutsGo route check (https://hutsgo.com)"}
+# 歩ける道。車道（unclassified 等）も登山口までのつなぎに要る。motorway 等は入れない
+OSM_HW = "path|footway|track|steps|bridleway|pedestrian|service|unclassified|residential|tertiary|living_street"
 MARGIN_M = 1500      # 外接範囲の余白。尾根を大きく回り込む道を取りこぼさないため
 JOIN_M = 12          # タイル境界で切れた線の端どうしをつなぐ距離
 SNAP_MAX_M = 250     # 小屋・登山口から道までこれ以上遠ければ、その区間は作らない
@@ -71,6 +80,46 @@ def stops_of(trail_id):
         if r["lat"] is not None and r["lon"] is not None:
             out.append(dict(r))
     return out
+
+
+def line_source(trail_id):
+    db = sqlite3.connect(ROOT / "hutsgo.db")
+    r = db.execute("""SELECT c.line_source FROM trails t JOIN mountain_ranges m ON m.id = t.range_id
+                       JOIN countries c ON c.id = m.country WHERE t.id = ?""", (trail_id,)).fetchone()
+    return r[0] if r else "gsi"
+
+
+def osm_ways(bbox):
+    """範囲の中の歩ける道を Overpass で 1 回取り、キャッシュする（同じ範囲は取り直さない）"""
+    (la0, lo0), (la1, lo1) = bbox
+    key = f"osm_{la0:.4f}_{lo0:.4f}_{la1:.4f}_{lo1:.4f}.json"
+    p = CACHE / key
+    if not p.exists():
+        import urllib.parse
+        q = f'[out:json][timeout:120];way["highway"~"^({OSM_HW})$"]({la0},{lo0},{la1},{lo1});out geom;'
+        req = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": q}).encode(), headers=UA)
+        CACHE.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(urllib.request.urlopen(req, timeout=180).read())
+    return json.loads(p.read_text(encoding="utf-8"))["elements"]
+
+
+def build_graph_osm(bbox):
+    nodes, key_of, adj = [], {}, []
+
+    def node(ll):
+        k = (round(ll[0], 6), round(ll[1], 6))
+        if k not in key_of:
+            key_of[k] = len(nodes); nodes.append(ll); adj.append({})
+        return key_of[k]
+
+    ways = osm_ways(bbox)
+    for w in ways:
+        ids = [node((g["lat"], g["lon"])) for g in w.get("geometry", [])]
+        for a, b in zip(ids, ids[1:]):
+            if a != b:
+                d = hav(nodes[a], nodes[b])
+                adj[a][b] = min(adj[a].get(b, d), d); adj[b][a] = adj[a][b]
+    return nodes, adj, len(ways)
 
 
 def build_graph(bbox):
@@ -181,8 +230,9 @@ def compute(trail_id):
     m = MARGIN_M / 111320
     bbox = ((min(s["lat"] for s in stops) - m, min(s["lon"] for s in stops) - m * 1.25),
             (max(s["lat"] for s in stops) + m, max(s["lon"] for s in stops) + m * 1.25))
-    nodes, adj, ntiles = build_graph(bbox)
-    print(f"{trail_id}: タイル {ntiles} 枚 / 道の点 {len(nodes)}")
+    osm = line_source(trail_id) == "osm"
+    nodes, adj, ntiles = (build_graph_osm if osm else build_graph)(bbox)
+    print(f"{trail_id}: {'OSM の道' if osm else 'タイル'} {ntiles} {'本' if osm else '枚'} / 道の点 {len(nodes)}")
 
     prev_old = {}
     old_path = OUT / f"{trail_id}.json"
@@ -221,7 +271,8 @@ def compute(trail_id):
         legs.append(leg)
 
     OUT.mkdir(exist_ok=True)
-    doc = {"trail_id": trail_id, "source": SOURCE, "source_zoom": Z,
+    doc = {"trail_id": trail_id, "source": OSM_SOURCE if osm else SOURCE,
+           **({"source_kind": "osm", "license": OSM_LICENSE} if osm else {"source_zoom": Z}),
            "computed_on": datetime.date.today().isoformat(),
            "note": "地図データ上の道をたどった線。登山道の現況（通行止め・付け替え）は反映しない", "legs": legs}
     old_path.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -239,13 +290,15 @@ def render_png(doc, out_png, z=15):
     x0, y1 = tile_of(la0, lo0, z); x1, y0 = tile_of(la1, lo1, z)
     x0 -= 1; y0 -= 1; x1 += 1; y1 += 1
     img = Image.new("RGB", ((x1 - x0 + 1) * 256, (y1 - y0 + 1) * 256), "white")
+    osm = doc.get("source_kind") == "osm"
     for x in range(x0, x1 + 1):
         for y in range(y0, y1 + 1):
-            p = CACHE / f"std_{z}_{x}_{y}.png"
+            p = CACHE / f"{'osmstd' if osm else 'std'}_{z}_{x}_{y}.png"
             if not p.exists():
                 CACHE.mkdir(parents=True, exist_ok=True)
-                p.write_bytes(urllib.request.urlopen(
-                    f"https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", timeout=30).read())
+                u = (f"https://tile.openstreetmap.org/{z}/{x}/{y}.png" if osm
+                     else f"https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png")
+                p.write_bytes(urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=30).read())
             img.paste(Image.open(p).convert("RGB"), ((x - x0) * 256, (y - y0) * 256))
     img = Image.blend(img, Image.new("RGB", img.size, "white"), 0.35)
     d = ImageDraw.Draw(img)

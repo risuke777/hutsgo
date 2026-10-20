@@ -7,10 +7,35 @@ PRAGMA foreign_keys = ON;
 -- ---------------------------------------------------------------
 -- Master
 -- ---------------------------------------------------------------
+-- 地域の分け方は docs/REGIONS.md: 地方（zone）→ 山域（range）→ 山群（sub_area）。国（country）は決まりの切り替えに使う
+CREATE TABLE zones (
+  id            TEXT PRIMARY KEY,      -- 'japan' / 'europe_alps'
+  name_ja       TEXT NOT NULL,
+  name_en       TEXT,
+  sort          INTEGER NOT NULL DEFAULT 0
+);
+
+-- 国ごとに切り替わる決まり（通貨・時刻・緊急通報・体力と難易度の区分・道の線の出どころ）
+CREATE TABLE countries (
+  id            TEXT PRIMARY KEY,      -- ISO 3166-1 alpha-2: 'JP' / 'IT'
+  name_ja       TEXT NOT NULL,
+  name_en       TEXT,
+  currency      TEXT NOT NULL,         -- 'JPY' / 'EUR'
+  tz            TEXT NOT NULL,         -- 'Asia/Tokyo' / 'Europe/Rome'
+  emergency     TEXT,                  -- 山の緊急通報の番号（表示用の文）
+  emergency_en  TEXT,
+  grading_system TEXT NOT NULL CHECK (grading_system IN ('jp_pref','cai')),
+  line_source   TEXT NOT NULL CHECK (line_source IN ('gsi','osm'))   -- osm の線は公開データ（/data/・MCP）に入れない（ODbL）
+);
+
 CREATE TABLE mountain_ranges (
   id            TEXT PRIMARY KEY,      -- 'kita_alps'
   name_ja       TEXT NOT NULL,
-  name_en       TEXT
+  name_en       TEXT,
+  zone_id       TEXT REFERENCES zones(id),
+  country       TEXT REFERENCES countries(id),   -- 国境をまたぐ山域を入れる日に、小屋・登山口へ国を移す
+  lede          TEXT,                  -- 入口ページ /areas/<id>/ の一文（事実だけ）
+  lede_en       TEXT
 );
 
 CREATE TABLE sub_areas (
@@ -466,8 +491,12 @@ CREATE TABLE trail_grading (
   source_url        TEXT NOT NULL,
   source_route_no   INTEGER,
   source_route_name TEXT,
+  -- 区分は国で違う（docs/REGIONS.md）。混ぜて比べない。jp_pref = 県の表（体力度 1〜10・難易度 A〜E）/
+  -- cai = イタリア山岳会の区分（T 観光路・E 登山道・EE 熟練者向け・EEA 鉄梯子つき）。cai に体力度は無い /
+  -- tourism = 地元の観光局が自分のページに付けている 3 段（easy / medium / difficult）。CAI の区分の出典が無いときだけ
+  system            TEXT NOT NULL DEFAULT 'jp_pref' CHECK (system IN ('jp_pref','cai','tourism')),
   stamina           INTEGER CHECK (stamina BETWEEN 1 AND 10),
-  technical         TEXT CHECK (technical IN ('A','B','C','D','E')),
+  technical         TEXT CHECK (technical IN ('A','B','C','D','E','T','EE','EEA','easy','medium','difficult')),
   match             TEXT NOT NULL CHECK (match IN ('same','near')),
   course_time_h     REAL,      -- 県の表の「合計コースタイム」（時間）。match='same' のときだけ HutsGo の歩行時間として使う
   length_km         REAL,      -- 県の表の「ルート長」

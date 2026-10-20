@@ -37,7 +37,7 @@
 
     <section class="dcard" aria-labelledby="d1-h">
       <div class="dcard-h"><span class="dnum dnum-1" aria-hidden="true">1</span><h2 id="d1-h">{{ T.ans_hard_h }}</h2></div>
-      {% if gr %}
+      {% if gr and gr.system == 'jp_pref' %}
       {% set lv = 'easy' if gr.stamina <= 3 else ('mid' if gr.stamina <= 5 else 'hard') %}
       {% set pa = 'ab' if gr.technical in ('A', 'B') else ('c' if gr.technical == 'C' else 'de') %}
       {% set band = 'day' if gr.stamina <= 3 else ('n1' if gr.stamina <= 5 else ('n2' if gr.stamina <= 7 else 'n3')) %}
@@ -53,6 +53,15 @@
         <ol class="grade-scale" aria-hidden="true">{% for g in ('A', 'B', 'C', 'D', 'E') %}<li{% if g == gr.technical %} class="is-on"{% endif %}>{{ g }}</li>{% endfor %}</ol>
         <p class="grade-note">{{ T['tech_' ~ gr.technical] }}</p>
       </div>
+      {% elif gr %}
+      {#- 日本の外: 観光局・CAI の区分をそのまま。県の表の体力度の目盛りには載せない（物差しが違う。docs/REGIONS.md）-#}
+      {% set scale = ('easy', 'medium', 'difficult') if gr.system == 'tourism' else ('T', 'E', 'EE', 'EEA') %}
+      <p class="dcard-lead">{{ T.grade_lead_tourism.format(g=T['grade_' ~ gr.technical]) if gr.system == 'tourism' else T['grade_' ~ gr.technical] }}</p>
+      <div class="grade">
+        <p class="grade-k">{{ T.ans_tech }} {{ T['grade_' ~ gr.technical] }}</p>
+        <ol class="grade-scale" aria-hidden="true">{% for g in scale %}<li{% if g == gr.technical %} class="is-on"{% endif %}>{{ T['grade_' ~ g] if gr.system == 'tourism' else g }}</li>{% endfor %}</ol>
+        {% if gr.length_km and gr.course_time_h %}<p class="grade-note">{{ T.grade_src_vals.format(km=gr.length_km, time=(gr.course_time_h * 60) | round | int | fmt_time, up=((gr.ascent_km or 0) * 1000) | round | int | metres) }}</p>{% endif %}
+      </div>
       {% endif %}
       <dl class="dfacts">
         <div><dt>{{ T.l_estimate }}</dt><dd>{{ days_t }}</dd></div>
@@ -61,7 +70,7 @@
         <div><dt>{{ T.ans_climb }}</dt><dd>{% if gr and gr.match == 'same' and gr.ascent_km %}{{ T.approx }}{{ (gr.ascent_km * 1000) | round | int | metres }}{% elif t.est %}{{ T.approx }}{{ (((t.est.up / 10) | round | int) * 10) | metres }}{% elif sm %}{{ T.approx }}{{ sm.gain | metres }}{% else %}{{ T.unknown }}{% endif %}
           {% if sm %}<small>{{ T.ans_top.format(name=sm.top.short, elev=sm.top.elev | metres) }}</small>{% endif %}</dd></div>
       </dl>
-      {% if gr %}<p class="ans-src">{{ T.ans_grading_src.format(src=gr.src_short, no=gr.source_route_no) }}{% if gr.match == 'near' %}{{ T.ans_grading_near }}{% endif %}{% if gr.confidence != 'verified' %}{{ T.ans_grading_unv }}{% endif %}
+      {% if gr %}<p class="ans-src">{{ T.ans_grading_src.format(src=gr.src_short, no=gr.source_route_no) if gr.system == 'jp_pref' else T.ans_grading_src_other.format(src=gr.src_short) }}{% if gr.match == 'near' %}{{ T.ans_grading_near }}{% endif %}{% if gr.confidence != 'verified' %}{{ T.ans_grading_unv }}{% endif %}
         <a href="{{ gr.source_url }}" rel="noopener">{{ T.ans_src_link }}</a></p>
       {% else %}<p class="ans-src">{{ T.ans_grading_none }}</p>{% endif %}
     </section>
@@ -116,7 +125,7 @@
         <span class="gantt-today" aria-hidden="true" hidden></span>
       </div>
       <p class="gantt-legend" aria-hidden="true"><span><i class="lg-today"></i>{{ T.d_lg_today }}</span><span><i class="lg-open"></i>{{ T.d_lg_open }}</span><span><i class="lg-closed"></i>{{ T.d_lg_closed }}</span></p>
-      <p class="ans-src">{{ T.d_when_src }}</p>
+      <p class="ans-src">{{ T.d_when_src_world if t.osm else T.d_when_src }}</p>
     </section>
     {% endif %}
 
@@ -150,10 +159,10 @@
     </div>
   </div>
 
-  <div class="trail-map" id="trail-map" hidden
+  <div class="trail-map" id="trail-map" hidden data-region="{{ 'world' if t.osm else 'jp' }}"
        data-huts="{{ t.stops | selectattr('hut') | map(attribute='hut.id') | join(',') }}"
        data-line="{{ t.map_line }}"></div>
-  <div class="trail-3dmap" id="trail-3d" hidden data-points="{{ t.map_points }}" data-hint="{{ T.trail_3d_hint }}"></div>
+  <div class="trail-3dmap" id="trail-3d" hidden data-region="{{ 'world' if t.osm else 'jp' }}" data-points="{{ t.map_points }}" data-hint="{{ T.trail_3d_hint }}"></div>
   {% if t.track %}
   <div class="t3d-scrub" id="trail-scrub" hidden data-route="{{ t.track }}" data-scaled="{{ 1 if t.est.scaled else 0 }}">
     <button type="button" class="t3d-play" aria-label="{{ T.scrub_play }}" data-play="{{ T.scrub_play }}" data-pause="{{ T.scrub_pause }}"><span aria-hidden="true">▶</span></button>
@@ -167,7 +176,7 @@
   {% endif %}
   <p class="quiet trail-map-note" id="trail-map-note" hidden>
     {%- if t.legs_traced == 0 %}{{ T.trail_map_note }}
-    {%- else %}{{ T.trail_map_note_path }}{% if t.legs_traced < t.legs_total %} {{ T.trail_map_note_partial }}{% endif %}
+    {%- else %}{{ T.trail_map_note_path_osm if t.osm else T.trail_map_note_path }}{% if t.legs_traced < t.legs_total %} {{ T.trail_map_note_partial }}{% endif %}
     {%- if t.has_gpx %} <a href="{{ BASE }}/trails/{{ t.id }}/route.gpx" download="hutsgo-{{ t.id }}.gpx" data-track="gpx_download" data-trail="{{ t.id }}">{{ T.trail_gpx }}</a>{% endif %}
     {%- endif %}</p>
 
@@ -208,7 +217,7 @@
   </div>
 
   <h2 class="timeline-h" id="timeline">{{ T.ans_timeline_h }}</h2>
-  {% if t.est and not t.times_known %}<p class="quiet timeline-note">{{ T.leg_est_note_scaled if t.est.scaled else T.leg_est_note }}</p>{% endif %}
+  {% if t.est and not t.times_known %}<p class="quiet timeline-note">{{ T.leg_est_note_scaled if t.est.scaled else (T.leg_est_note_osm if t.osm else T.leg_est_note) }}</p>{% endif %}
   <ol class="timeline" data-plan-date>
   {% for r in t.rows %}
     {% if r.row == 'stop' and r.stop.again_of %}
@@ -255,7 +264,7 @@
         {% if se and se.opens %}<p class="stop-line stop-booking"><span class="k">{{ T.booking_opens }}</span>{{ se.opens }}</p>{% endif %}
         <div class="stop-actions">
           {% if h.book_url %}<a class="btn btn-primary" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.btn_book }}</a>{% endif %}
-          {% if se and se.reservation_phone %}<a class="btn" href="tel:{{ se.reservation_phone | replace('-', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ T.btn_phone.format(n=se.reservation_phone) }}</a>{% endif %}
+          {% if se and se.reservation_phone %}<a class="btn" href="tel:{{ se.reservation_phone | replace('-', '') | replace(' ', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ T.btn_phone.format(n=se.reservation_phone) }}</a>{% endif %}
           <a class="btn btn-ghost" href="{{ LB }}/huts/{{ h.id }}/">{{ T.btn_detail }}</a>
           <a class="btn btn-ghost" href="{{ LB }}/plan/#add={{ h.id }}" data-track="plan_add" data-hut="{{ h.id }}">{{ T.plan_add_btn }}</a>
         </div>

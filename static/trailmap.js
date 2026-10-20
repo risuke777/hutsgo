@@ -41,6 +41,7 @@
         huts: huts,
         lang: LANG,
         lines: line.length > 1 ? [line] : [],
+        source: box.dataset.region === "world" ? "topo" : "gsi",
         strings: T,
         nameOf: function (h) {
           var n = h.name || {};
@@ -169,14 +170,23 @@
     loadLib().then(function () {
       el.innerHTML = '<p class="t3d-hint">' + (el.dataset.hint || "") + "</p>";
       var GSI = "https://cyberjapandata.gsi.go.jp/xyz/";
-      var dem = { type: "raster-dem", tiles: [GSI + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
-                  redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' };
+      // 日本の外（docs/REGIONS.md）: 写真は EOxCloudless（非商用のみ）、標高は AWS Terrain Tiles、道の線は OpenStreetMap
+      var world = el.dataset.region === "world";
+      var dem = world
+        ? { type: "raster-dem", tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "terrarium",
+            attribution: 'Terrain Tiles (AWS Open Data) · Route © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' }
+        : { type: "raster-dem", tiles: [GSI + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
+            redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' };
+      var photo = world
+        ? { type: "raster", tiles: ["https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg"], tileSize: 256, maxzoom: 15,
+            attribution: '<a href="https://s2maps.eu" target="_blank" rel="noopener">EOxCloudless 2025</a> (Contains modified Copernicus Sentinel data 2025)' }
+        : { type: "raster", tiles: [GSI + "seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 18 };
       var m = new maplibregl.Map({
         container: el, attributionControl: false, maxPitch: 80, cooperativeGestures: true, pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         locale: LANG === "en" ? {} : { "CooperativeGesturesHandler.WindowsHelpText": "Ctrl を押しながらスクロールで拡大・縮小",
           "CooperativeGesturesHandler.MacHelpText": "⌘ を押しながらスクロールで拡大・縮小", "CooperativeGesturesHandler.MobileHelpText": "2本指で地図を動かします" },
         style: { version: 8, glyphs: "https://gsi-cyberjapan.github.io/optimal_bvmap/glyphs/{fontstack}/{range}.pbf",
-          sources: { photo: { type: "raster", tiles: [GSI + "seamlessphoto/{z}/{x}/{y}.jpg"], tileSize: 256, maxzoom: 18 }, dem: dem,
+          sources: { photo: photo, dem: dem,
                      hsdem: (function () { var d = Object.assign({}, dem); delete d.attribution; return d; })() },
           layers: [{ id: "photo", type: "raster", source: "photo", paint: { "raster-saturation": 0.15, "raster-contrast": 0.1 } },
                    { id: "hs", type: "hillshade", source: "hsdem", paint: { "hillshade-exaggeration": 0.25 } }],

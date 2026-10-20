@@ -578,9 +578,13 @@
       $("#plan-nearby").hidden = name !== "map";
       if (name === "map") {
         if (!mapApi && window.HutsGoMap) {
+          // 地図は 1 つの国ずつ（日本とイタリアを 1 枚に入れると、どちらの小屋も点にしか見えない）。
+          // 行程に入っている小屋が全部同じ外国なら、その国。ほかは日本。地図の出どころも国で変わる（docs/REGIONS.md）
+          var cs = chosenIds().map(function (id) { var h = data.filter(function (x) { return x.id === id; })[0]; return h && (h.country || "JP"); }).filter(Boolean);
+          var region = cs.length && cs.every(function (c) { return c === cs[0]; }) ? cs[0] : "JP";
           mapApi = window.HutsGoMap.create($("#plan-map"), {
-            huts: data,
-            source: "gsi",
+            huts: data.filter(function (h) { return (h.country || "JP") === region; }),
+            source: region === "JP" ? "gsi" : "topo",
             strings: T,
             nameOf: hutName,
             onPick: addHut,
