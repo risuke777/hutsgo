@@ -1860,3 +1860,24 @@ INSERT INTO search_aliases (kind, target_id, words) VALUES
   ('hut',   'rifugio_locatelli', 'ドライツィンネン小屋 Dreizinnenhütte Antonio Locatelli'),
   ('hut',   'rifugio_auronzo', 'Auronzohütte'),
   ('hut',   'rifugio_lavaredo', 'Lavaredohütte');
+
+-- ---------------------------------------------------------------
+-- 2026-10-21 ドロミテの山群（山小屋をまとめる単位。行程ボードの「稜線」の見出し）
+-- 範囲は SOIUSA の Dolomiti（セクション 31）。ブレンタ・フリウリのドロミテは別の山域にする（docs/REGIONS.md）
+-- 小屋そのものは content/huts/dolomites.json（公式サイトを人が読んで書いた記録）
+-- ---------------------------------------------------------------
+UPDATE huts SET position_source='osm' WHERE id IN ('rifugio_auronzo','rifugio_lavaredo','rifugio_locatelli');
+INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
+  ('braies_fanes',      'dolomites', 'ブライエス・ファーネス・セネス', 'Braies, Fanes and Senes'),
+  ('ampezzo',           'dolomites', 'アンペッツォ（トファーネ・クリスタッロ・チンクエ・トッリ）', 'Ampezzo (Tofane, Cristallo, Cinque Torri)'),
+  ('cadore',            'dolomites', 'ソラピス・マルマローレ・アンテラオ', 'Sorapiss, Marmarole and Antelao'),
+  ('pelmo_zoldo',       'dolomites', 'ペルモ・ボスコネーロ（ゾルド）', 'Pelmo and Bosconero (Zoldo)'),
+  ('civetta_moiazza',   'dolomites', 'チヴェッタ・モイアッツァ', 'Civetta and Moiazza'),
+  ('dolomiti_bellunesi','dolomites', 'ベッルーノのドロミテ（スキアーラ・パーレ・ディ・サン・ルカーノ）', 'Belluno Dolomites (Schiara, San Lucano)'),
+  ('puez_odle',         'dolomites', 'プエズ・オードレ（ガイスラー）', 'Puez and Odle (Geisler)'),
+  ('sella',             'dolomites', 'セッラ', 'Sella'),
+  ('sassolungo',        'dolomites', 'サッソルンゴ・シウジ', 'Sassolungo and Alpe di Siusi'),
+  ('catinaccio',        'dolomites', 'カティナッチョ（ローゼンガルテン）・シリアール', 'Catinaccio (Rosengarten) and Sciliar'),
+  ('marmolada',         'dolomites', 'マルモラーダ', 'Marmolada'),
+  ('pale',              'dolomites', 'パーレ・ディ・サン・マルティーノ', 'Pale di San Martino'),
+  ('fiemme_lagorai',    'dolomites', 'ラテマール・フィエンメ・ラゴライ', 'Latemar, Fiemme and Lagorai');

@@ -1,0 +1,5335 @@
+[
+ {
+  "id": "capanna_cervino",
+  "name_ja": "カパンナ・チェルヴィーノ",
+  "name_en": "Capanna Cervino",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/127204302",
+  "ele": 2084,
+  "ele_src": "official",
+  "url": "https://www.capannacervino.it/",
+  "src": "https://www.capannacervino.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "winter": 1,
+   "note": "夏・冬とも営業。部屋は 9（7 部屋がバス・トイレつき。公式）",
+   "note_en": "Open in summer and winter. Nine rooms (seven with bathroom; official)."
+  },
+  "phone": "+39 340 074 7643",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.capannacervino.it/richiedi-informazioni"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@capannacervino.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.3006569,
+   11.7925601
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "casera_ere",
+  "name_ja": "カゼーラ・エーレ",
+  "name_en": "Casera Ere",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/199050495",
+  "ele": 1297,
+  "ele_src": "osm",
+  "url": "https://www.caseraere.it/",
+  "src": "https://www.caseraere.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-05-30",
+   "close": "2026-09-27",
+   "required": 1,
+   "note": "2026 年のおおよその日（公式）。泊まりは予約が必須。季節の外は土日だけ",
+   "note_en": "Approximate 2026 dates (official). Overnight stays by booking only. Weekends only out of season."
+  },
+  "book": [],
+  "pos": [
+   46.124186,
+   12.0158344
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "dreischusterhuette",
+  "name_ja": "ドライシュスター小屋（トレ・スカルペリ小屋）",
+  "name_en": "Dreischusterhütte / Rifugio Tre Scarperi",
+  "aliases": "Tre Scarperi Innerfeldtal",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/83855898",
+  "ele": 1626,
+  "ele_src": "osm",
+  "url": "https://www.drei-schuster-huette.com/",
+  "src": "https://www.drei-schuster-huette.com/de/preise-online-reservieren.php",
+  "checked": "2026-10-21",
+  "beds": 56,
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.alpsonline.org/reservation/calendar?hut_id=310&lang=de_DE",
+    "avail": 1,
+    "system": "hut-reservation.org",
+    "note": "空きのカレンダーから予約",
+    "note_en": "Book from the availability calendar."
+   }
+  ],
+  "terms": {
+   "ja": "来なかったときや遅い取り消しは 1 人 €30。支払いは現金・Maestro・Mastercard・Visa",
+   "en": "No-show or late cancellation: €30 per person. Cash, Maestro, Mastercard, Visa.",
+   "src": "https://www.drei-schuster-huette.com/de/preise-online-reservieren.php"
+  },
+  "fac": {
+   "shower": 1,
+   "credit_card": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.6745743,
+   12.2972254
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "grasleitenhuette",
+  "name_ja": "グラスライテン小屋（ベルガモ小屋）",
+  "name_en": "Grasleitenhütte / Rifugio Bergamo",
+  "aliases": "Bergamo Grasleiten",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/152100331",
+  "ele": 2165,
+  "ele_src": "official",
+  "url": "https://www.grasleitenhuette.com/",
+  "owner": "private",
+  "src": "https://www.grasleitenhuette.com/it.html",
+  "checked": "2026-10-21",
+  "phone": "+39 0471 1632320",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@grasleitenhuette.com",
+    "note": "問い合わせはメールで（公式）",
+    "note_en": "Enquiries by email (official)."
+   }
+  ],
+  "pos": [
+   46.4848754,
+   11.6299146
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "heiligkreuz_hospiz",
+  "name_ja": "ハイリッヒクロイツ小屋（ラ・クルシュ）",
+  "name_en": "Heiligkreuz Hospiz / Ospizio Santa Croce (La Crusc)",
+  "aliases": "La Crusc Santa Croce Heiligkreuz",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/42321524",
+  "ele": 2045,
+  "ele_src": "osm",
+  "url": "https://www.lacrusc.com/",
+  "owner": "private",
+  "src": "https://www.lacrusc.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-22",
+   "close": "2026-09-26",
+   "required": 1,
+   "note": "営業は 6 月 12 日〜10 月 4 日。泊まりは夏だけ、6 月 22 日〜9 月 26 日、予約制（公式）",
+   "note_en": "Open 12 June – 4 October; overnight stays in summer only, 22 June – 26 September, by booking (official)."
+  },
+  "phone": "+39 0471 839632",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.lacrusc.com/"
+   }
+  ],
+  "pos": [
+   46.6144981,
+   11.9384619
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "koelner_huette",
+  "name_ja": "ケルナー小屋（フロンツァ小屋）",
+  "name_en": "Kölner Hütte / Rifugio Fronza alle Coronelle",
+  "aliases": "Fronza Coronelle Kolner",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/152250684",
+  "ele": 2337,
+  "ele_src": "official",
+  "url": "https://www.rifugiofronza.com/",
+  "src": "https://www.rifugiofronza.com/",
+  "checked": "2026-10-21",
+  "next": {
+   "open": "2027-06-05",
+   "close": "2027-10-10"
+  },
+  "phone": "+39 0471 612033",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiofronza.com/richiesta-informazioni/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiofronza.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4426795,
+   11.6120472
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "kreuzwiesenalm",
+  "name_ja": "クロイツヴィーゼン・アルム",
+  "name_en": "Kreuzwiesen Alm / Malga Prato della Croce",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "node/9123040774",
+  "url": "https://www.kreuzwiesenalm.com/",
+  "owner": "private",
+  "src": "https://www.kreuzwiesenalm.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-05-14",
+   "close": "2026-10-31",
+   "note": "9 月 26 日は休み。冬は 2026 年 12 月 26 日〜2027 年 1 月 11 日、2027 年 3 月 1 日まで（冬は金〜月も泊まれる。公式）",
+   "note_en": "Closed 26 September. Winter: 26 Dec 2026 – 11 Jan 2027 and until 1 March 2027 (overnight stays Friday–Monday too; official)."
+  },
+  "phone": "+39 333 748 4880",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.bookingsuedtirol.com/de/luesen/schutzhuette-kreuzwiesenalm",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "note": "公式サイトからのリンク",
+    "note_en": "Linked from the official site."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@kreuzwiesenalm.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.7527565,
+   11.8044126
+  ],
+  "pos_src": "osm",
+  "ele": 1925,
+  "ele_src": "osm"
+ },
+ {
+  "id": "malga_giau",
+  "name_ja": "マルガ・ジャウ",
+  "name_en": "Malga Giau",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "node/14028494002",
+  "url": "https://www.malgagiau.it/",
+  "owner": "private",
+  "src": "https://www.malgagiau.it/",
+  "checked": "2026-10-21",
+  "beds": 10,
+  "phone": "+39 320 915 2575",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@malgagiau.it"
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.4932659,
+   12.0654463
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "malga_valmaggiore",
+  "name_ja": "マルガ・ヴァルマッジョーレ",
+  "name_en": "Malga Valmaggiore",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/433028320",
+  "url": "https://www.malgavalmaggiore.it/",
+  "src": "https://www.malgavalmaggiore.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "note": "6 月 6 日から（公式。年の記載なし）。部屋は 2〜6 人",
+   "note_en": "From 6 June (official; no year given). Rooms for 2–6."
+  },
+  "phone": "+39 351 416 3601",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.malgavalmaggiore.it/booking-reservation.html"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@malgavalmaggiore.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.2797508,
+   11.6484383
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "maurerberghuette",
+  "name_ja": "マウラーベルク小屋",
+  "name_en": "Maurerberghütte / Rifugio Monte Muro",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/42560529",
+  "ele": 2157,
+  "ele_src": "official",
+  "url": "https://www.maurerberg.com/",
+  "src": "https://www.maurerberg.com/it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-05-23",
+   "note": "2026 年は 5 月 23 日から 10 月中旬まで（公式）",
+   "note_en": "2026: 23 May to mid-October (official)."
+  },
+  "usual": {
+   "from": [
+    5
+   ],
+   "to": [
+    10,
+    "mid"
+   ],
+   "note": "公式「5 月〜10 月」",
+   "note_en": "Official: May to October."
+  },
+  "phone": "+39 0474 520059",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.maurerberg.com/it/richiesta.asp"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@maurerberg.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.692475,
+   11.8267652
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "plattkofelhuette",
+  "name_ja": "プラットコーフェル小屋（サッソ・ピアット小屋）",
+  "name_en": "Plattkofelhütte / Rifugio Sasso Piatto",
+  "aliases": "Sasso Piatto Plattkofel",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/97941683",
+  "ele": 2300,
+  "ele_src": "osm",
+  "url": "https://www.plattkofel.com/",
+  "src": "https://www.plattkofel.com/it/rifugio-sasso-piatto/benvenuti.html",
+  "checked": "2026-10-21",
+  "phone": "+39 0462 601721",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.plattkofel.com/it/richiesta-e-prenota/prenota-online.html",
+    "url_en": "https://www.plattkofel.com/en/enquiry-booking/book-online.html",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "note": "相部屋（8〜10 人）のオンライン予約と前払い",
+    "note_en": "Online booking and deposit for the dormitories (8–10 beds)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@plattkofel.com",
+    "note": "個室の予約はメールだけ（公式）",
+    "note_en": "Private rooms by email only (official)."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5044282,
+   11.7008981
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "plosehuette",
+  "name_ja": "プローゼ小屋",
+  "name_en": "Plosehütte / Rifugio Plose",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "node/439594940",
+  "ele": 2447,
+  "ele_src": "official",
+  "url": "https://www.plosehuette.com/",
+  "owner": "private",
+  "src": "https://www.plosehuette.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-05-23",
+   "note": "冬は 12 月 5 日から（公式）",
+   "note_en": "Winter from 5 December (official)."
+  },
+  "phone": "+39 333 392 9241",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://booking.roomraccoon.it/plosehuette/it/",
+    "avail": 1,
+    "system": "RoomRaccoon"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@plosehuette.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.6949927,
+   11.7321657
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_antelao",
+  "name_ja": "アンテラオ小屋",
+  "name_en": "Rifugio Antelao",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/202148123",
+  "ele": 1796,
+  "ele_src": "official",
+  "url": "https://www.caitreviso.it/rifugi/rifugio-antelao/",
+  "owner": "cai",
+  "src": "https://www.caitreviso.it/rifugi/rifugio-antelao/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "CAI トレヴィーゾ支部の小屋。予約の窓口は支部のページへ",
+   "note_en": "CAI Treviso hut. See the section's page for contacts."
+  },
+  "pos": [
+   46.448041,
+   12.3247378
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_antermoia",
+  "name_ja": "アンテルモイア小屋",
+  "name_en": "Rifugio Antermoia",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/74495656",
+  "ele": 2497,
+  "ele_src": "osm",
+  "url": "https://www.rifugioantermoia.com/",
+  "owner": "sat",
+  "src": "https://www.rifugioantermoia.com/",
+  "checked": "2026-10-21",
+  "next": {
+   "open": "2027-06-11",
+   "close": "2027-10-09",
+   "note": "公式サイトに SAT のロゴ。相部屋（12 人まで）と家族部屋（3〜5 人）、トイレは共同",
+   "note_en": "SAT logo on the official site. Dormitory (up to 12) and family rooms (3–5); shared bathrooms."
+  },
+  "phone": "+39 0462 602272",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugioantermoia.com/Booking/index.php"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioantermoia.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4770453,
+   11.6639392
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_aquileia",
+  "name_ja": "アクイレイア小屋",
+  "name_en": "Rifugio Aquileia",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/200217365",
+  "ele": 1583,
+  "ele_src": "official",
+  "url": "https://www.rifugioaquileia.it/",
+  "src": "https://www.rifugioaquileia.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "year_round",
+   "note": "一年中開けるが、日は季節で変わる。9 月中旬〜6 月中旬は週ごとに公式サイトで知らせる（公式）",
+   "note_en": "Open all year with changing days; from mid-September to mid-June the opening days are posted weekly (official)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioaquileia.it"
+   }
+  ],
+  "pos": [
+   46.4362558,
+   12.1007246
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_averau",
+  "name_ja": "アヴェラウ小屋",
+  "name_en": "Rifugio Averau",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200335813",
+  "url": "https://www.rifugioaverau.it/",
+  "src": "https://www.rifugioaverau.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "open": "2026-06-06",
+   "note": "2026 年の夏は 6 月 6 日から（公式）。閉める日は未確認",
+   "note_en": "Summer 2026 from 6 June (official). Closing date not confirmed."
+  },
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    10,
+    "early"
+   ],
+   "note": "公式「おおよその日付。開く日は確認を」",
+   "note_en": "Official: approximate dates, check the exact opening."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://rifugioaverau.bukly.com/",
+    "avail": 1,
+    "system": "bukly"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugioaverau@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4995786,
+   12.040591
+  ],
+  "pos_src": "osm",
+  "ele": 2413,
+  "ele_src": "osm"
+ },
+ {
+  "id": "rifugio_baion",
+  "name_ja": "バイオン小屋",
+  "name_en": "Rifugio Baion",
+  "aliases": "Bajon Baion Marmarole",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/82629883",
+  "ele": 1828,
+  "ele_src": "official",
+  "url": "https://www.rifugiobaion.it/",
+  "src": "https://www.rifugiobaion.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 0435 76060",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiobaion@gmail.com"
+   }
+  ],
+  "pos": [
+   46.4987045,
+   12.3847398
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_berti",
+  "name_ja": "ベルティ小屋",
+  "name_en": "Rifugio Antonio Berti",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/196574943",
+  "url": "https://www.rifugioberti.it/",
+  "src": "https://www.rifugioberti.it/prenotazioni/",
+  "checked": "2026-10-21",
+  "beds": 38,
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 2027 年 2 月 1 日から（公式）",
+   "opens_en": "Bookings for 2027 open on 1 February 2027 (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugioberti.it/prenotazioni/",
+    "avail": 1,
+    "system": "wubook",
+    "note": "部屋（2・4 人）か相部屋（16 人）を選んで予約し、前払いを払う",
+    "note_en": "Choose a 2/4-bed room or the 16-bed dormitory, book and pay the deposit."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioberti.it"
+   }
+  ],
+  "terms": {
+   "ja": "1 人 €20 を前払い（オンラインか振込）。取り消すと戻らない。人数が減ったときも 1 人分ずつ戻らない",
+   "en": "€20 per person deposit (online or bank transfer). Not refunded on cancellation, including for fewer guests.",
+   "src": "https://www.rifugioberti.it/prenotazioni/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 64,
+    "note": "部屋（2・4 人）。会員 = CAI とヨーロッパの山岳会。25 歳未満の CAI 会員は €56。相部屋は €68（会員 €54）。寝袋用シーツは必ず持参。2026 年の案内のページ",
+    "note_en": "2/4-bed room. Member = CAI and other European alpine clubs. CAI under-25 €56. Dormitory €68 (members €54). Bring your own liner. Page for the 2026 season."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.6309732,
+   12.4058113
+  ],
+  "pos_src": "osm",
+  "ele": 1950,
+  "ele_src": "osm"
+ },
+ {
+  "id": "rifugio_bianchet",
+  "name_ja": "ビアンケット小屋",
+  "name_en": "Rifugio Furio Bianchet",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/183317591",
+  "ele": 1250,
+  "ele_src": "official",
+  "owner": "cai",
+  "src": "https://www.prenotarifugi.cai.it/en/detail/Rifugio%20Bianchet/?id=5993",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "CAI ベッルーノ支部の小屋（CAI の予約サイト）",
+   "note_en": "CAI Belluno hut (CAI booking site)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.prenotarifugi.cai.it/en/detail/Rifugio%20Bianchet/?id=5993",
+    "system": "PrenotaRifugi CAI"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugiobianchet@hotmail.com"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "no_meal",
+    "price": 32,
+    "member": 25.6,
+    "note": "相部屋（5 人以上）。4 人までの部屋は €37（会員 €29.60）。25 歳未満の CAI 会員は €22.40。CAI の予約サイトの料金表（年の記載なし）",
+    "note_en": "Dormitory (5+ beds). Rooms up to 4 beds €37 (members €29.60). CAI under-25 €22.40. CAI booking site price list (no year given)."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.2434585,
+   12.1613464
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_biella",
+  "name_ja": "ビエッラ小屋（ゼーコーフェル小屋）",
+  "name_en": "Rifugio Biella / Seekofelhütte",
+  "aliases": "Seekofel Croda del Becco Egererhütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/121491779",
+  "ele": 2327,
+  "ele_src": "official",
+  "url": "https://rifugiobiella.it/",
+  "src": "https://rifugiobiella.it/rifugio/",
+  "checked": "2026-10-21",
+  "beds": 42,
+  "season": {
+   "status": "undecided",
+   "note": "2027 年 6 月に開ける（公式）。閉まっている間も 100m 先の避難小屋は開いている。4・6・8 人の相部屋だけ",
+   "note_en": "Opens in June 2027 (official). The bivouac 100 m away stays open while closed. Shared 4/6/8-bed rooms only.",
+   "opens": "2027 年分は 2026 年 11 月 1 日から（公式。同じページに「11 月 15 日」の表記もある）",
+   "opens_en": "Bookings for 2027 from 1 November 2026 (official; the same page also says 15 November)."
+  },
+  "phone": "+39 349 289 0550",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.planyo.com/booking/Rifugio-Biella",
+    "avail": 1,
+    "system": "planyo",
+    "note": "公式サイトの「Prenota」",
+    "note_en": "\"Prenota\" on the official site."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiobiella.com"
+   }
+  ],
+  "terms": {
+   "ja": "1 人分の 50% を前払い（取り消しても戻らない）。残りは着いたとき。宿泊税 €1.50 は現金で",
+   "en": "50% deposit per person (not refunded on cancellation); the rest at check-in. Tourist tax €1.50 in cash.",
+   "src": "https://rifugiobiella.it/rifugio/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 90,
+    "note": "10 歳未満と山岳ガイドは €45。寝袋用シーツは必ず（小屋で €8）。年の記載なし",
+    "note_en": "Under 10 and mountain guides €45. Liner required (€8 at the hut). No year given."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 0
+  },
+  "pos": [
+   46.6656313,
+   12.0845833
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_boe",
+  "name_ja": "ボエ小屋",
+  "name_en": "Rifugio Boè",
+  "aliases": "Boe Boèhütte",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/42224521",
+  "ele": 2873,
+  "ele_src": "official",
+  "url": "https://www.rifugioboe.it/",
+  "src": "https://www.rifugioboe.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「6 月 20 日から 9 月 27 日まで」（年の記載なし）",
+   "note_en": "Official: 20 June to 27 September (no year given)."
+  },
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.514612,
+   11.8232878
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_bottari",
+  "name_ja": "ボッターリ小屋",
+  "name_en": "Rifugio Bottari",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/199052577",
+  "ele": 1573,
+  "ele_src": "osm",
+  "url": "https://www.rifugiobottari.it/",
+  "src": "https://www.rifugiobottari.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-09-22"
+  },
+  "next": {
+   "open": "2027-06-19"
+  },
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiobottari.it/contatti.asp?lng=Ita"
+   }
+  ],
+  "pos": [
+   46.34007,
+   11.8515834
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_boz",
+  "name_ja": "ボッツ小屋",
+  "name_en": "Rifugio Bruno Boz",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/180141573",
+  "ele": 1718,
+  "ele_src": "official",
+  "url": "https://www.rifugioboz.it/",
+  "owner": "cai",
+  "src": "https://www.prenotarifugi.cai.it/en/dettaglio/Rifugio%20Boz/?id=5908",
+  "checked": "2026-10-21",
+  "beds": 38,
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「6 月 20 日〜9 月 20 日」。寝床 34＋4。温水シャワー。CAI フェルトレ支部の小屋",
+   "note_en": "Official: 20 June – 20 September. 34 + 4 beds. Hot shower. CAI Feltre hut.",
+   "src": "https://www.rifugioboz.it/"
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.prenotarifugi.cai.it/dettaglio/Rifugio%20Boz/?id=5908",
+    "url_en": "https://www.prenotarifugi.cai.it/en/dettaglio/Rifugio%20Boz/?id=5908",
+    "system": "PrenotaRifugi CAI",
+    "note": "CAI の予約サイト（公式サイトからのリンク）",
+    "note_en": "CAI's booking site (linked from the official site)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioboz.it",
+    "src": "https://www.rifugioboz.it/"
+   }
+  ],
+  "terms": {
+   "ja": "着く 15 日前までに頼めば前払いは全額戻る（CAI の予約サイト）",
+   "en": "Deposit fully refunded if requested at least 15 days before arrival (CAI booking site)."
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 82,
+    "member": 68,
+    "note": "会員 = CAI と協定の外国の山岳会。寝袋用シーツ €7.50（CAI の予約サイトの料金。年の記載なし）",
+    "note_en": "Member = CAI and affiliated foreign clubs. Liner €7.50 (CAI booking site; no year given)."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.1465798,
+   11.9165208
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_capanna_bill",
+  "name_ja": "カパンナ・ビル小屋",
+  "name_en": "Rifugio Capanna Bill",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/199519406",
+  "url": "https://www.capannabill.com/",
+  "owner": "private",
+  "src": "https://www.capannabill.com/",
+  "checked": "2026-10-21",
+  "phone": "+39 0437 722100",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:capannabill@marmolada.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.4513285,
+   11.9036938
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_capanna_piz_fassa",
+  "name_ja": "カパンナ・ピッツ・ファッサ小屋",
+  "name_en": "Rifugio Capanna Piz Fassa",
+  "aliases": "Piz Boè Piz Boe",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/42223145",
+  "ele": 3152,
+  "ele_src": "official",
+  "url": "https://www.rifugiocapannapizfassa.com/",
+  "owner": "private",
+  "src": "https://www.rifugiocapannapizfassa.com/camere/",
+  "checked": "2026-10-21",
+  "beds": 31,
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "winter": 0,
+   "note": "公式「6 月 15 日から 9 月末まで、10 月 1 日から休み」",
+   "note_en": "Official: 15 June to end of September; closed from 1 October."
+  },
+  "phone": "+39 0462 601723",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocapannapizfassa.com"
+   }
+  ],
+  "terms": {
+   "ja": "予約の確定に 1 人 €30 を前払い。どんな理由でも戻らない",
+   "en": "€30 per person deposit to confirm; never refunded.",
+   "src": "https://www.rifugiocapannapizfassa.com/camere/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "note": "日〜金。土曜は €90。夕食・ベッド・朝食（飲み物は別）。民間の小屋なので CAI・AVS・SAC・DAV・ÖAV の割引なし。寝袋用シーツは必ず（€5 で借りられる）。現金を持って。年の記載なし",
+    "note_en": "Sunday–Friday; Saturdays €90. Dinner, bed, breakfast (drinks extra). Private hut: no CAI/AVS/SAC/DAV/ÖAV discounts. Liner required (€5 to rent). Bring cash. No year given."
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5089703,
+   11.8281424
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_capanna_trieste",
+  "name_ja": "カパンナ・トリエステ小屋",
+  "name_en": "Rifugio Capanna Trieste",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183203142",
+  "ele": 1135,
+  "ele_src": "official",
+  "url": "https://rifugiocapannatrieste.it/",
+  "src": "https://rifugiocapannatrieste.it/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiocapannatrieste@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.3440549,
+   12.031768
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_carducci",
+  "name_ja": "カルドゥッチ小屋",
+  "name_en": "Rifugio Carducci",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/196574944",
+  "ele": 2295,
+  "ele_src": "osm",
+  "url": "https://rifugiocarducci.eu/",
+  "owner": "cai",
+  "src": "https://rifugiocarducci.eu/index.php?id=tariffe",
+  "checked": "2026-10-21",
+  "beds": 51,
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    10,
+    "early"
+   ],
+   "note": "公式「夏の間、6 月 20 日から 10 月初めまで」。CAI アウロンツォ支部の小屋。寝床 51（3 つの相部屋、非常用も含む）",
+   "note_en": "Official: summer, 20 June to early October. Owned by CAI Auronzo. 51 places (three dormitories, emergency places included)."
+  },
+  "phone": "+39 0435 400485",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugiocarducci.eu/",
+    "note": "公式サイトの「Richiedi pernottamento」から申し込む",
+    "note_en": "Use \"Richiedi pernottamento\" on the official site."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugiocarducci@gmail.com"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 65,
+    "note": "夕食はメニューから選ぶ。25 歳未満の CAI 会員は €58。寝袋用シーツは必ず（無ければ €7 で借りる）。年の記載なし",
+    "note_en": "Dinner à la carte. CAI members under 25 €58. Liner required (€7 to rent). No year given."
+   },
+   {
+    "plan": "no_meal",
+    "price": 34.5,
+    "member": 27.5,
+    "note": "朝食は €15。温水シャワー €10",
+    "note_en": "Breakfast €15. Hot shower €10."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 0
+  },
+  "pos": [
+   46.6151418,
+   12.373581
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_carestiato",
+  "name_ja": "カレスティアート小屋",
+  "name_en": "Rifugio Bruto Carestiato",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183203075",
+  "ele": 1834,
+  "ele_src": "osm",
+  "url": "https://www.rifugiocarestiato.com/",
+  "src": "https://www.rifugiocarestiato.com/wordpress/prenotazioni/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 11 月 2 日から、オンラインだけ（公式）",
+   "opens_en": "Bookings for 2027 open on 2 November, online only (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiocarestiato.com/Booking/index.php",
+    "url_en": "https://www.rifugiocarestiato.com/Booking/index_en.php",
+    "avail": 1,
+    "note": "空きが出るとシステムに戻る（キャンセル待ちはしない）。カードは保証で、その場では引き落とさない",
+    "note_en": "No waiting list: cancelled beds return to the system. The card is only a guarantee, not charged."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocarestiato.com",
+    "note": "予約の変更・取り消しはメールで",
+    "note_en": "Changes and cancellations by email."
+   }
+  ],
+  "pos": [
+   46.3214217,
+   12.0704816
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_carlo_valentini",
+  "name_ja": "カルロ・ヴァレンティーニ小屋",
+  "name_en": "Rifugio Carlo Valentini",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/68827782",
+  "ele": 2218,
+  "ele_src": "official",
+  "url": "https://www.rifugiocarlovalentini.com/",
+  "src": "https://www.rifugiocarlovalentini.com/",
+  "checked": "2026-10-21",
+  "phone": "+39 0462 601183",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiocarlovalentini.com/le-camere-rifugio-carlo-valentini-val-di-fassa-canazei#prenota-camere"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocarlovalentini.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.505959,
+   11.7573656
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_chiggiato",
+  "name_ja": "キッジャート小屋",
+  "name_en": "Rifugio Chiggiato",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/383877717",
+  "ele": 1911,
+  "ele_src": "osm",
+  "url": "https://www.rifugiochiggiato.it/",
+  "src": "https://www.rifugiochiggiato.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 0435 366290",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiochiggiato.it"
+   }
+  ],
+  "pos": [
+   46.4828415,
+   12.3474338
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_cima_d_asta",
+  "name_ja": "チーマ・ダスタ小屋（ブレンターリ）",
+  "name_en": "Rifugio Cima d'Asta \"Ottone Brentari\"",
+  "aliases": "Brentari Cima d'Asta",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/66387405",
+  "ele": 2476,
+  "ele_src": "osm",
+  "url": "https://www.rifugio-cimadasta.it/",
+  "owner": "sat",
+  "src": "https://www.rifugio-cimadasta.it/",
+  "checked": "2026-10-21",
+  "beds": 56,
+  "season": {
+   "open": "2026-06-13",
+   "close": "2026-09-27",
+   "note": "SAT（CAI のトレンティーノ支部）の小屋（公式）",
+   "note_en": "SAT (CAI Trentino) hut (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.hut-reservation.org/reservation/book-hut/626/wizard",
+    "avail": 1,
+    "system": "hut-reservation.org"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugio-cimadasta.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.1703065,
+   11.6043945
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_cinque_torri",
+  "name_ja": "チンクエ・トッリ小屋",
+  "name_en": "Rifugio 5 Torri",
+  "aliases": "Cinque Torri 5 Torri",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200335125",
+  "ele": 2137,
+  "ele_src": "osm",
+  "url": "https://www.rifugio5torri.it/",
+  "src": "https://www.rifugio5torri.it/home.html",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "winter": 0,
+   "note": "公式「おおよその日付。開く日は確認を」。冬は休み",
+   "note_en": "Official: approximate dates, check the exact opening. Closed in winter."
+  },
+  "phone": "+39 0436 2902",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugio5torri.it"
+   }
+  ],
+  "pos": [
+   46.5082169,
+   12.0547338
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_citta_di_fiume",
+  "name_ja": "チッタ・ディ・フィウメ小屋",
+  "name_en": "Rifugio Città di Fiume",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/200217396",
+  "ele": 1917,
+  "ele_src": "osm",
+  "url": "https://rifugiocittadifiume.it/",
+  "owner": "cai",
+  "src": "https://rifugiocittadifiume.it/",
+  "checked": "2026-10-21",
+  "beds": 20,
+  "season": {
+   "status": "undecided",
+   "note": "秋は週末だけ開ける（次は 10 月 24・25 日の予定。公式）",
+   "note_en": "Weekends only in autumn (next planned: 24–25 October; official)."
+  },
+  "phone": "+39 320 037 7432",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugiocittadifiume.it/prenota/",
+    "url_en": "https://rifugiocittadifiume.it/en/book-online/",
+    "avail": 1,
+    "system": "WP Booking Calendar",
+    "note": "空いている日のカレンダーから申し込む。割引（会員など）は出るときに証明を見せて",
+    "note_en": "Request from an availability calendar. Discounts (members etc.) applied at check-out with proof."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocittadifiume.it"
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.4369039,
+   12.122577
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_col_de_varda",
+  "name_ja": "コル・デ・ヴァルダ小屋",
+  "name_en": "Rifugio Col de Varda",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/200785546",
+  "ele": 2106,
+  "ele_src": "official",
+  "url": "https://www.rifugiocoldevarda.it/",
+  "src": "https://www.rifugiocoldevarda.it/prezzic47d.html?language=",
+  "checked": "2026-10-21",
+  "beds": 24,
+  "usual": {
+   "winter": 1,
+   "note": "冬も営業（スキー場。公式）",
+   "note_en": "Also open in winter (ski area; official)."
+  },
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiocoldevarda.it/prenotac47d.html?language="
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocoldevarda.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5711133,
+   12.2667549
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_col_gallina",
+  "name_ja": "コル・ガッリーナ小屋",
+  "name_en": "Rifugio Col Gallina",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200335814",
+  "url": "https://www.rifugiocolgallina.com/",
+  "src": "https://www.rifugiocolgallina.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "10 月 1 日〜11 月 8 日は閉める（年の記載なし。公式）",
+   "note_en": "Closed 1 October – 8 November (no year given; official)."
+  },
+  "phone": "+39 379 174 7576",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://rifugiocolgallina.bukly.com/",
+    "avail": 1,
+    "system": "bukly"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocolgallina.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5196446,
+   12.017221
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_coldai",
+  "name_ja": "コルダイ小屋",
+  "name_en": "Rifugio Adolfo Sonino al Coldai",
+  "aliases": "Coldai Sonino",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/200218638",
+  "ele": 2135,
+  "ele_src": "official",
+  "url": "https://www.rifugiocoldai.com/",
+  "owner": "cai",
+  "src": "https://www.rifugiocoldai.com/",
+  "checked": "2026-10-21",
+  "beds": 93,
+  "season": {
+   "status": "open",
+   "close": "2026-09-27",
+   "note": "2026 年は 9 月 27 日から休み。次は 2027 年 6 月（公式）",
+   "note_en": "Closed from 27 September 2026; reopening June 2027 (official)."
+  },
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "winter": 0,
+   "note": "公式「夏の間、6 月中旬から 9 月末まで」。CAI ヴェネツィア支部の小屋",
+   "note_en": "Official: summer, mid-June to end of September. Owned by CAI Venezia."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://rifugiocoldai.com/Booking",
+    "note": "予約のときにカードで前払い（公式）",
+    "note_en": "Card required for the deposit (official)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:infocoldai@gmail.com"
+   }
+  ],
+  "pos": [
+   46.3993828,
+   12.0688742
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_contrin",
+  "name_ja": "コントリン小屋",
+  "name_en": "Rifugio Contrin",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/172896399",
+  "ele": 2016,
+  "ele_src": "osm",
+  "url": "http://www.rifugiocontrin.it/",
+  "src": "http://www.rifugiocontrin.it/it/prezzi-estivi/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "2027 年 5 月にまた開ける（公式）。個室（シーツ・トイレつき）と寝台。A.N.A.（イタリア山岳兵協会）の会員は 1 割引",
+   "note_en": "Reopens in May 2027 (official). Private rooms with linen and bathroom, and bunks. A.N.A. members 10% off."
+  },
+  "phone": "+39 0462 601101",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiocontrin.it"
+   }
+  ],
+  "terms": {
+   "ja": "予約の確定に前払い（戻らないが、別の日に移せることがある）。EU の外の人はカード番号",
+   "en": "Deposit to confirm (not refundable, may be moved to another date). Guests from outside the EU: card details.",
+   "src": "http://www.rifugiocontrin.it/it/prezzi-estivi/"
+  },
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4297615,
+   11.8158914
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_croda_da_lago",
+  "name_ja": "クローダ・ダ・ラーゴ小屋",
+  "name_en": "Rifugio Croda da Lago",
+  "aliases": "Gianni Palmieri",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/201021755",
+  "ele": 2046,
+  "ele_src": "official",
+  "url": "https://www.crodadalago.it/",
+  "owner": "cai",
+  "src": "https://www.crodadalago.it/pernottamento-e-prezzi/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-15",
+   "close": "2026-10-16",
+   "note": "営業は 10 月 25 日まで。泊まりは 10 月 16 日の夜まで（公式）",
+   "note_en": "Open until 25 October; overnight stays until the night of 16 October (official).",
+   "opens": "2027 年夏の予約は 12 月 1 日から（公式）",
+   "opens_en": "Bookings for summer 2027 open on 1 December (official)."
+  },
+  "usual": {
+   "from": [
+    6
+   ],
+   "to": [
+    11
+   ],
+   "note": "公式「夏と秋、6 月から 11 月」",
+   "note_en": "Official: summer and autumn, June to November."
+  },
+  "phone": "+39 0436 862085",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.crodadalago.it/Booking/IT/disponibilita.php",
+    "url_en": "https://www.crodadalago.it/en/booking/",
+    "avail": 1,
+    "src": "https://www.crodadalago.it/prenotazioni/"
+   }
+  ],
+  "terms": {
+   "ja": "予約が受け付けられたら 1 人 €15 を前払い。取り消すと戻らない",
+   "en": "€15 per person deposit once the booking is accepted; not refunded if you cancel.",
+   "src": "https://www.crodadalago.it/prenotazioni/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 73,
+    "member": 58.5,
+    "note": "相部屋だけ。会員 = CAI。宿泊税 €1.50 は別。今の料金表（2026 年の営業の案内と同じページ）",
+    "note_en": "Dormitories only. Member = CAI. Tourist tax €1.50 extra. Current price list (same page as the 2026 season notice)."
+   },
+   {
+    "plan": "no_meal",
+    "price": 32,
+    "member": 25.6,
+    "note": "朝食は €14",
+    "note_en": "Breakfast €14."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 0
+  },
+  "pos": [
+   46.4865198,
+   12.1057361
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_dal_piaz",
+  "name_ja": "ダル・ピアッツ小屋",
+  "name_en": "Rifugio Giorgio Dal Piaz",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/495498456",
+  "ele": 1993,
+  "ele_src": "official",
+  "url": "https://www.rifugiodalpiaz.com/",
+  "owner": "cai",
+  "src": "https://www.prenotarifugi.cai.it/en/dettaglio/Rifugio%20Dal%20Piaz/?id=5856",
+  "checked": "2026-10-21",
+  "beds": 22,
+  "usual": {
+   "from": [
+    6,
+    "early"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "CAI の予約サイト「6 月 1 日〜9 月 21 日は毎日」。前後の週末は電話で（+39 320 964 6335）。CAI フェルトレ支部の小屋。個室はない",
+   "note_en": "CAI booking site: daily 1 June – 21 September. Call about the weekends before and after (+39 320 964 6335). CAI Feltre hut. No private rooms."
+  },
+  "phone": "+39 320 964 6335",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.prenotarifugi.cai.it/dettaglio/Rifugio%20Dal%20Piaz/?id=5856",
+    "url_en": "https://www.prenotarifugi.cai.it/en/dettaglio/Rifugio%20Dal%20Piaz/?id=5856",
+    "system": "PrenotaRifugi CAI",
+    "note": "CAI の予約サイト（公式サイトの「PRENOTA ORA」）",
+    "note_en": "CAI's booking site (\"PRENOTA ORA\" on the official site)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiodalpiaz.com",
+    "src": "https://www.rifugiodalpiaz.com/"
+   }
+  ],
+  "terms": {
+   "ja": "着く 15 日前までに頼めば前払いの半分が戻る（CAI の予約サイト）",
+   "en": "Half the deposit refunded if requested at least 15 days before arrival (CAI booking site)."
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 82,
+    "member": 65.6,
+    "note": "相部屋。会員 = CAI と協定の外国の山岳会。25 歳未満の CAI 会員は €57.40（CAI の予約サイト。年の記載なし）",
+    "note_en": "Dormitory. Member = CAI and affiliated foreign clubs. CAI under-25 €57.40 (CAI booking site; no year given)."
+   },
+   {
+    "plan": "one_meal",
+    "price": 47,
+    "member": 40.6
+   },
+   {
+    "plan": "no_meal",
+    "price": 32,
+    "member": 25.6
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 0
+  },
+  "pos": [
+   46.08926,
+   11.842418
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_des_alpes",
+  "name_ja": "デ・アルプ小屋",
+  "name_en": "Rifugio Des Alpes",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/65400061",
+  "ele": 2387,
+  "ele_src": "osm",
+  "url": "https://www.rifugiodesalpes.it/",
+  "src": "https://www.rifugiodesalpes.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 0462 601184",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiodesalpes.it/le-camere-rifugio-des-alpes#prenotaform",
+    "avail": 1,
+    "system": "MotoPress Hotel Booking"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiodesalpes.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4966886,
+   11.7516217
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_dibona",
+  "name_ja": "ディボーナ小屋",
+  "name_en": "Rifugio Angelo Dibona",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200336783",
+  "ele": 2037,
+  "ele_src": "osm",
+  "url": "https://www.rifugiodibona.it/",
+  "src": "https://www.rifugiodibona.it/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "web",
+    "url": "http://rifugiodibona.app",
+    "note": "公式サイトの「BOOKINGS」",
+    "note_en": "\"BOOKINGS\" on the official site."
+   }
+  ],
+  "pos": [
+   46.5323971,
+   12.0699062
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_dona",
+  "name_ja": "ドナ小屋",
+  "name_en": "Rifugio Dona",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/211169010",
+  "ele": 2100,
+  "ele_src": "osm",
+  "url": "https://www.rifugiodona.com/",
+  "src": "https://www.rifugiodona.com/",
+  "checked": "2026-10-21",
+  "usual": {
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「9 月末まで営業」",
+   "note_en": "Official: open until the end of September."
+  },
+  "phone": "+39 0462 601135",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiodona.com/prenota/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugiodona@alice.it"
+   }
+  ],
+  "pos": [
+   46.4820844,
+   11.6977417
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_duca_d_aosta",
+  "name_ja": "ドゥーカ・ダオスタ小屋",
+  "name_en": "Rifugio Duca d'Aosta",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200799530",
+  "url": "https://www.rifugioducadaosta.com/",
+  "src": "https://www.rifugioducadaosta.com/prezzi/",
+  "checked": "2026-10-21",
+  "phone": "+39 0436 2780",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioducadaosta.com"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 140,
+    "from": 1,
+    "year": 2026,
+    "note": "2026 年夏・1 人 €140〜150",
+    "note_en": "Summer 2026, €140–150 per person."
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5381131,
+   12.0850268
+  ],
+  "pos_src": "osm",
+  "ele": 2098,
+  "ele_src": "osm"
+ },
+ {
+  "id": "rifugio_falier",
+  "name_ja": "ファリエル小屋",
+  "name_en": "Rifugio Onorio Falier",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/199506055",
+  "ele": 2074,
+  "ele_src": "official",
+  "url": "http://rifugiofalier.altervista.org/",
+  "owner": "cai",
+  "src": "http://rifugiofalier.altervista.org/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-10",
+   "note": "CAI ヴェネツィア支部の小屋（公式）。閉める日は未確認",
+   "note_en": "CAI Venezia hut (official). Closing date not confirmed."
+  },
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "winter": 0,
+   "note": "公式「毎年 6 月 20 日〜9 月 20 日は必ず開ける。その外は前もって確認を。冬は開けられない」",
+   "note_en": "Official: always open 20 June – 20 September; check outside those dates; never open in winter."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiofalier2074@gmail.com",
+    "note": "5〜6 人より多いグループは予約が必須、ほかも勧める（公式）",
+    "note_en": "Booking required for groups over 5–6, recommended for everyone (official)."
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 70,
+    "year": 2026,
+    "note": "大部屋。個室は €90（会員 €80）。会員 = CAI。寝袋用シーツは必ず（小屋でも買える）",
+    "note_en": "Dormitory. Room €90 (members €80). Member = CAI. Liner required (sold on site)."
+   },
+   {
+    "plan": "no_meal",
+    "price": 30,
+    "member": 20,
+    "year": 2026,
+    "note": "大部屋。個室は €40（会員 €30）",
+    "note_en": "Dormitory. Room €40 (members €30)."
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4248538,
+   11.8627064
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fanes",
+  "name_ja": "ファーネス小屋",
+  "name_en": "Rifugio Fanes",
+  "aliases": "Faneshütte Fanes Hütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/237733853",
+  "ele": 2060,
+  "ele_src": "official",
+  "url": "https://www.rifugiofanes.com/",
+  "owner": "private",
+  "src": "https://www.rifugiofanes.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬は 12 月 26 日に開ける（年の記載なし。公式のお知らせ）",
+   "note_en": "Reopens on 26 December for winter (no year given; official notice)"
+  },
+  "phone": "+39 0474 453001",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiofanes.com/prenota",
+    "url_en": "https://www.rifugiofanes.com/en/booking",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "src": "https://www.rifugiofanes.com/prenota"
+   },
+   {
+    "kind": "form",
+    "url": "https://www.rifugiofanes.com/prezzi-richiesta/richiesta-prenotazione",
+    "src": "https://www.rifugiofanes.com/prezzi-richiesta/prezzi"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiofanes.com"
+   }
+  ],
+  "terms": {
+   "ja": "予約の確定に総額の 50% を前払い。取り消すと前払いは戻らない（ほかの人で埋まれば 1 年以内なら使える）。5 日前より後の取り消し・来なかった・早く出たときは 100%",
+   "en": "50% deposit to confirm. Kept if you cancel (usable within a year if the beds are rebooked). Cancelling 5 days or less before, no-show or leaving early: 100%.",
+   "src": "https://www.rifugiofanes.com/prezzi-richiesta/condizioni-generali"
+  },
+  "fac": {
+   "credit_card": 1,
+   "private_room": 1,
+   "src": "https://www.rifugiofanes.com/prezzi-richiesta/prezzi"
+  },
+  "pos": [
+   46.6121796,
+   12.0141813
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fedaia",
+  "name_ja": "フェダイア小屋",
+  "name_en": "Rifugio Fedaia",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/199519388",
+  "ele": 2075,
+  "ele_src": "official",
+  "url": "https://www.rifugiofedaia.com/",
+  "owner": "private",
+  "src": "https://www.rifugiofedaia.com/",
+  "checked": "2026-10-21",
+  "phone": "+39 0437 722007",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiofedaia.com/prenota/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiofedaia.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4535348,
+   11.887885
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fedare",
+  "name_ja": "フェダーレ小屋",
+  "name_en": "Rifugio Fedare",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "node/627949709",
+  "ele": 2000,
+  "ele_src": "osm",
+  "url": "https://valfiorentinadolomiti.it/en/Rifugio-Fedare-Passo-Giau/Rifugio-Fedare/",
+  "src": "https://valfiorentinadolomiti.it/en/Rifugio-Fedare-Passo-Giau/Rifugio-Fedare/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiofedare.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.487493,
+   12.0340061
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_firenze",
+  "name_ja": "フィレンツェ小屋（レーゲンスブルガー小屋）",
+  "name_en": "Rifugio Firenze / Regensburger Hütte",
+  "aliases": "Regensburger Hütte Ncisles Firenze",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "way/121599291",
+  "ele": 2040,
+  "ele_src": "osm",
+  "url": "https://www.rifugiofirenze.com/",
+  "src": "https://www.rifugiofirenze.com/it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-10-18",
+   "note": "10 月 18 日まで（泊まりは無し。公式）。ハーフボードは 10 人以上のグループだけ。ほかは朝食つき＋夕食はメニューから",
+   "note_en": "Open until 18 October (no overnight stays; official). Half board only for groups of 10+; otherwise B&B and dinner à la carte.",
+   "opens": "2027 年夏の予約は 2027 年 2 月から公式サイトで（公式）",
+   "opens_en": "Bookings for summer 2027 from February 2027 on the official site (official)."
+  },
+  "phone": "+39 0471 796307",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiofirenze.com",
+    "note": "閉まっている間はメールだけ",
+    "note_en": "Email only while closed."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5875216,
+   11.7582949
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fodara_vedla",
+  "name_ja": "フォダラ・ヴェドラ小屋",
+  "name_en": "Rifugio Fodara Vedla / Fodara Vedla Hütte",
+  "aliases": "Fodara Vedla Schutzhütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/254880745",
+  "ele": 1980,
+  "ele_src": "official",
+  "url": "https://www.fodara.it/",
+  "owner": "private",
+  "src": "https://www.fodara.it/de",
+  "checked": "2026-10-21",
+  "phone": "+39 348 853 7471",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.bookingsuedtirol.com/stvigilenneberg/schutzhaus-fodara-vedla",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "note": "小屋の公式サイトの「Buchen」から",
+    "note_en": "Linked from \"Buchen\" on the official site."
+   },
+   {
+    "kind": "form",
+    "url": "https://www.fodara.it/de",
+    "note": "公式サイトの「Anfragen」（問い合わせ）",
+    "note_en": "\"Anfragen\" (enquiry) on the official site."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugio@fodara.it"
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.6356434,
+   12.0609551
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fonda_savio",
+  "name_ja": "フォンダ・サヴィオ小屋",
+  "name_en": "Rifugio Fonda Savio",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/200785535",
+  "ele": 2367,
+  "ele_src": "osm",
+  "url": "https://www.fonda-savio.it/",
+  "src": "https://www.fonda-savio.it/italiano/pernottamento-prezzi/",
+  "checked": "2026-10-21",
+  "beds": 40,
+  "book": [],
+  "terms": {
+   "ja": "予約は着く日の 18 時まで有効。10 日前までの取り消しは無料。カードは使えない",
+   "en": "Booking holds until 6 pm on arrival day. Free cancellation up to 10 days before. No cards accepted.",
+   "src": "https://www.fonda-savio.it/italiano/pernottamento-prezzi/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 81,
+    "member": 72,
+    "note": "決まった 3 皿の夕食。会員 = 山岳会。同じページに一般 €78・会員 €69 の欄もある。年の記載なし",
+    "note_en": "Fixed three-course dinner. Member = alpine club. The page also lists €78 / €69 for members. No year given."
+   }
+  ],
+  "fac": {
+   "credit_card": 0,
+   "cash_only": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5852879,
+   12.2874071
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fonteghi",
+  "name_ja": "フォンテーギ小屋",
+  "name_en": "Rifugio Fonteghi",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/303193375",
+  "ele": 1100,
+  "ele_src": "osm",
+  "url": "https://rifugiofonteghi.it/",
+  "src": "https://rifugiofonteghi.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 0439 068077",
+  "fac": {
+   "private_room": 1,
+   "shower": 1,
+   "wifi": 1
+  },
+  "pos": [
+   46.1392164,
+   11.8572842
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_forcella_pordoi",
+  "name_ja": "フォルチェッラ・ポルドイ小屋",
+  "name_en": "Rifugio Forcella Pordoi",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/42253280",
+  "ele": 2848,
+  "ele_src": "official",
+  "url": "https://www.rifugioforcellapordoi.com/",
+  "src": "https://www.rifugioforcellapordoi.com/camere-e-prezzi/",
+  "checked": "2026-10-21",
+  "beds": 28,
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「6 月 20 日から 9 月 30 日まで」（年の記載なし）",
+   "note_en": "Official: 20 June to 30 September (no year given)."
+  },
+  "phone": "+39 0462 888028",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioforcellapordoi.com"
+   }
+  ],
+  "terms": {
+   "ja": "予約の確定に 1 人 €25 を前払い。どんな理由でも戻らない",
+   "en": "€25 per person deposit to confirm; never refunded.",
+   "src": "https://www.rifugioforcellapordoi.com/camere-e-prezzi/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 85,
+    "note": "夕食 2 皿・朝食・ベッド。温水シャワー込み。寝袋か寝袋用シーツは必ず（無ければ €20 で買う）。年の記載なし",
+    "note_en": "Two-course dinner, breakfast, bed. Hot shower included. Sleeping bag or liner required (€20 to buy). No year given."
+   },
+   {
+    "plan": "one_meal",
+    "price": 70
+   },
+   {
+    "plan": "no_meal",
+    "price": 55
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.5018889,
+   11.8123954
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fredarola",
+  "name_ja": "フレダローラ小屋",
+  "name_en": "Rifugio Fredarola Harbor",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/199516790",
+  "ele": 2370,
+  "ele_src": "official",
+  "url": "https://www.fredarola.it/",
+  "src": "https://www.fredarola.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 335 565 4072",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://fredarola.beddy.io?lang=it",
+    "avail": 1,
+    "system": "beddy"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@fredarola.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "wifi": 1
+  },
+  "pos": [
+   46.4774012,
+   11.8147502
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_friedrich_august",
+  "name_ja": "フリードリッヒ・アウグスト小屋",
+  "name_en": "Rifugio Friedrich August",
+  "aliases": "Federico Augusto",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/363936658",
+  "ele": 2300,
+  "ele_src": "osm",
+  "url": "https://www.friedrichaugust.it/",
+  "src": "https://www.friedrichaugust.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 353 360 5674",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.friedrichaugust.it/prenotazione"
+   },
+   {
+    "kind": "form",
+    "url": "https://www.friedrichaugust.it/richiesta"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@friedrichaugust.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5004073,
+   11.7451847
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_fuciade",
+  "name_ja": "フチャーデ小屋",
+  "name_en": "Rifugio Fuciade",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/199553709",
+  "ele": 1982,
+  "ele_src": "osm",
+  "url": "https://www.fuciade.it/",
+  "src": "https://www.fuciade.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬は 12 月 4 日から（公式。年の記載なし）",
+   "note_en": "Reopens on 4 December (official; no year given)."
+  },
+  "phone": "+39 0462 574281",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiofuciade@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.3926987,
+   11.8280579
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_galassi",
+  "name_ja": "ガラッシ小屋",
+  "name_en": "Rifugio Pietro Galassi",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "relation/19526395",
+  "ele": 2018,
+  "ele_src": "official",
+  "url": "https://www.rifugiogalassi.it/",
+  "owner": "cai",
+  "src": "https://www.rifugiogalassi.it/it_IT/prezzi/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "閉まっている間も冬の避難室（6 人）は開いている。CAI メストレ支部の小屋（公式）",
+   "note_en": "Winter room (6 places) stays open while closed. CAI Mestre hut (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiogalassi.it/it_IT/verifica-disponibilita",
+    "avail": 1,
+    "note": "空いている寝床を見てから申し込む。部屋は選べない（寝床を売る）",
+    "note_en": "See free beds, then request. You book beds, not rooms."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiogalassi.it"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 70,
+    "member": 55,
+    "note": "夕食（飲み物は別）・ベッド・朝食。会員 = CAI。25 歳未満の CAI 会員は €45。寝袋用シーツは必ず。ページの題は 2027 年、メニューは 2026 年",
+    "note_en": "Dinner (drinks extra), bed, breakfast. Member = CAI. CAI under-25 €45. Liner required. Page titled 2027, menu says 2026."
+   },
+   {
+    "plan": "no_meal",
+    "price": 35,
+    "member": 27.5,
+    "note": "25 歳未満の CAI 会員は €20",
+    "note_en": "CAI under-25 €20."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "credit_card": 1
+  },
+  "pos": [
+   46.4706906,
+   12.2619269
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_gardeccia",
+  "name_ja": "ガルデッチャ小屋",
+  "name_en": "Rifugio Gardeccia",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/122023472",
+  "ele": 1949,
+  "ele_src": "official",
+  "url": "http://www.gardeccia.it/",
+  "owner": "private",
+  "src": "http://www.gardeccia.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬のバー・食堂は 2026 年 12 月 17 日〜2027 年 3 月 29 日（公式）。家族の小屋",
+   "note_en": "Winter bar and restaurant 17 Dec 2026 – 29 Mar 2027 (official). Family-run."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://booking.gardeccia.it/"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4471951,
+   11.6401112
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_giussani",
+  "name_ja": "ジュッサーニ小屋",
+  "name_en": "Rifugio Camillo Giussani",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200336782",
+  "ele": 2580,
+  "ele_src": "osm",
+  "url": "https://www.rifugiogiussani.com/",
+  "src": "https://www.rifugiogiussani.com/pernottamento-prezzi/",
+  "checked": "2026-10-21",
+  "beds": 48,
+  "phone": "+39 0436 5740",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiogiussani.com/prenotazioni/",
+    "url_en": "https://www.rifugiogiussani.com/en/reservations-booking/"
+   }
+  ],
+  "terms": {
+   "ja": "1 人 €20 の前払い。払って初めて予約が確定",
+   "en": "€20 per person deposit; the booking is confirmed only once paid.",
+   "src": "https://www.rifugiogiussani.com/prenotazioni/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 73,
+    "member": 58.5,
+    "note": "会員 = CAI。寝袋用シーツは必ず（小屋でも買える）。シャワー €7（水があれば）。年の記載なし",
+    "note_en": "Member = CAI. Liner required (sold at the hut). Shower €7 when water allows. No year given."
+   },
+   {
+    "plan": "no_meal",
+    "price": 37,
+    "member": 30
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5446625,
+   12.0608051
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_juac",
+  "name_ja": "ユアック小屋",
+  "name_en": "Rifugio Juac / Juac Hütte",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "way/121497039",
+  "ele": 1905,
+  "ele_src": "osm",
+  "url": "https://www.juac.it/",
+  "src": "https://www.juac.it/it/camere-prezzi.asp.html",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    10,
+    "mid"
+   ],
+   "winter": 1,
+   "note": "公式「6 月中旬〜10 月中旬、クリスマスから 3 月末まで」",
+   "note_en": "Official: mid-June to mid-October and Christmas to end of March."
+  },
+  "phone": "+39 335 808 2321",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.juac.it/it/richiesta.asp.html"
+   }
+  ],
+  "terms": {
+   "ja": "1 人 1 日 €40 の前払いで予約が確定。取り消し・遅く着いた・来なかったときは戻らない",
+   "en": "Booking binding once a €40 per person per day deposit is received. Kept on cancellation, late arrival or no-show.",
+   "src": "https://www.juac.it/it/camere-prezzi.asp.html"
+  },
+  "rates": [
+   {
+    "plan": "one_meal",
+    "price": 60,
+    "note": "夏・相部屋・朝食つき（夕食はメニューから）。4 人部屋は €75。寝袋は要らない。冬はハーフボード €85（4 人部屋 €95）。年の記載なし",
+    "note_en": "Summer, dormitory with breakfast (dinner à la carte). 4-bed room €75. No sleeping bag needed. Winter half board €85 (4-bed room €95). No year given."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "credit_card": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5731871,
+   11.7499218
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_kostner",
+  "name_ja": "コストナー小屋",
+  "name_en": "Rifugio Franz Kostner al Vallon",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/199514207",
+  "ele": 2550,
+  "ele_src": "official",
+  "url": "https://rifugiokostner.it/",
+  "owner": "cai",
+  "src": "https://rifugiokostner.it/it",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-13",
+   "close": "2026-10-04",
+   "note": "CAI ボルツァーノ支部の小屋（公式）",
+   "note_en": "CAI Bolzano hut (official)."
+  },
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugiokostner.it/it/richiesta"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiokostner.it"
+   }
+  ],
+  "pos": [
+   46.5186117,
+   11.8484885
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_la_rezila",
+  "name_ja": "ラ・レジーラ小屋",
+  "name_en": "Rifugio La Rezila",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/116380592",
+  "url": "http://www.rifugiolarezila.it/",
+  "src": "http://www.rifugiolarezila.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「6 月 20 日から 9 月 20 日まで」（年の記載なし）",
+   "note_en": "Official: 20 June to 20 September (no year given)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiolarezila.it"
+   }
+  ],
+  "pos": [
+   46.356253,
+   11.6937262
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_lagazuoi",
+  "name_ja": "ラガツォイ小屋",
+  "name_en": "Rifugio Lagazuoi",
+  "aliases": "Lagazuoi Hütte",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200336118",
+  "ele": 2752,
+  "ele_src": "official",
+  "url": "https://rifugiolagazuoi.com/",
+  "src": "https://rifugiolagazuoi.com/IT/p2-Pernottare-al-rifugio",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬は 12 月に開ける（公式「Ci vediamo a dicembre」）",
+   "note_en": "Reopens in December (official)."
+  },
+  "phone": "+39 340 719 5306",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiolagazuoi.com/IT/disponibilita.php",
+    "url_en": "https://rifugiolagazuoi.com/EN/disponibilita.php",
+    "avail": 1,
+    "note": "空いているベッドをその場で見て予約（カードで前払い）",
+    "note_en": "Shows free beds in real time; book with a card for the deposit."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiolagazuoi.com"
+   }
+  ],
+  "terms": {
+   "ja": "予約のときに総額の 50% を前払い（戻らない）。着く 3 日前より後の取り消し・来なかったときは総額",
+   "en": "50% of the total as a non-refundable deposit. Cancelling within 3 days of arrival or no-show: the full amount.",
+   "src": "https://rifugiolagazuoi.com/IT/p2-Pernottare-al-rifugio"
+  },
+  "rates": [
+   {
+    "plan": "one_meal",
+    "price": 85,
+    "year": 2026,
+    "note": "相部屋・2026 年夏。夕食（ハーフボード）は 1 人 €35 を足す。宿泊税 €1.50 は別",
+    "note_en": "Dormitory, summer 2026. Half-board dinner is €35 extra per person. Tourist tax €1.50 not included."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5277342,
+   12.0081329
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_lago_d_ajal",
+  "name_ja": "ラーゴ・ダヤール小屋",
+  "name_en": "Rifugio Lago d'Ajal",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/201017369",
+  "ele": 1405,
+  "ele_src": "official",
+  "url": "https://cortinadelicious.it/IT/s20-tipo-3-Rifugio-Lago-d-Ajal",
+  "src": "https://cortinadelicious.it/IT/s20-tipo-3-Rifugio-Lago-d-Ajal",
+  "checked": "2026-10-21",
+  "beds": 4,
+  "usual": {
+   "from": [
+    6
+   ],
+   "to": [
+    9
+   ],
+   "winter": 1,
+   "note": "コルティナの山小屋の会のページ「12 月〜イースター、6 月〜9 月。日は必ず確かめて」。2 部屋 4 床",
+   "note_en": "Cortina hut association page: December–Easter and June–September; always check the dates. Two rooms, four beds."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiolagodajal@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5172842,
+   12.1140959
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_lavarella",
+  "name_ja": "ラヴァレッラ小屋",
+  "name_en": "Rifugio Lavarella / Lavarellahütte",
+  "aliases": "Lavarellahütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/368645471",
+  "ele": 2050,
+  "ele_src": "official",
+  "url": "https://lavarella.it/",
+  "src": "https://lavarella.it/en/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-06",
+   "close": "2026-10-11",
+   "note": "冬は 2026 年 12 月 26 日〜2027 年 1 月 10 日、2027 年 1 月 29 日〜4 月 11 日（公式）",
+   "note_en": "Winter: 26 Dec 2026 – 10 Jan 2027 and 29 Jan – 11 Apr 2027 (official)",
+   "src": "https://lavarella.it/en/prices/summer"
+  },
+  "phone": "+39 0474 501094",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://lavarella.it/it/prenota-online",
+    "url_en": "https://lavarella.it/en/book-online",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "note": "相部屋は 1 人ずつベッドを選ぶ（add room）",
+    "note_en": "For the dormitory, add one bed per person (\"add room\").",
+    "src": "https://lavarella.it/en/book-online"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugio@lavarella.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "src": "https://lavarella.it/en/"
+  },
+  "pos": [
+   46.611228,
+   12.0069906
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_lunelli",
+  "name_ja": "ルネッリ小屋",
+  "name_en": "Rifugio Italo Lunelli",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/196591592",
+  "ele": 1568,
+  "ele_src": "official",
+  "url": "https://rifugiolunelli.it/",
+  "src": "https://rifugiolunelli.it/contatti",
+  "checked": "2026-10-21",
+  "phone": "+39 327 976 7898",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiolunelli.it"
+   }
+  ],
+  "pos": [
+   46.6336536,
+   12.4187088
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_malga_cavallera",
+  "name_ja": "マルガ・カヴァッレーラ小屋",
+  "name_en": "Rifugio Malga Cavallera",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/199053221",
+  "url": "https://www.rifugiocavallera.it/",
+  "src": "https://www.rifugiocavallera.it/it_it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "winter": 1,
+   "note": "冬も毎日営業。夕食と泊まりは予約を（公式）",
+   "note_en": "Open daily in winter too. Book for dinner and overnight (official)."
+  },
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiocavallera.it/it_it/contatti/"
+   }
+  ],
+  "pos": [
+   46.2262016,
+   11.9291606
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_malga_conseria",
+  "name_ja": "マルガ・コンセリア小屋",
+  "name_en": "Rifugio Malga Consèria",
+  "aliases": "Conseria",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/103589635",
+  "ele": 1848,
+  "ele_src": "osm",
+  "url": "http://www.rifugioconseria.it/",
+  "src": "http://www.rifugioconseria.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-10-11",
+   "note": "秋は土日だけ、10 月 11 日まで。12 月にまた開ける（公式）",
+   "note_en": "Autumn: weekends only, until 11 October; reopening in December (official)."
+  },
+  "phone": "+39 335 706 1669",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioconseria.it"
+   }
+  ],
+  "pos": [
+   46.1704086,
+   11.5400074
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_marmolada_castiglioni",
+  "name_ja": "マルモラーダ小屋（カスティリオーニ）",
+  "name_en": "Rifugio Marmolada E. Castiglioni",
+  "aliases": "Castiglioni Fedaia",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/107176085",
+  "ele": 2057,
+  "ele_src": "official",
+  "url": "https://www.rifugiomarmolada.it/",
+  "src": "https://www.rifugiomarmolada.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-05",
+   "note": "2026 年の夏は 5 月 27 日から、泊まりは 6 月 5 日から（公式）",
+   "note_en": "Summer 2026 from 27 May; overnight stays from 5 June (official)."
+  },
+  "phone": "+39 0462 601117",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://direct.bookingandmore.com/accommodation/ef25b5b2-85b3-4972-a20d-b8a75f52de35?lang=it",
+    "avail": 1,
+    "system": "bookingandmore"
+   }
+  ],
+  "pos": [
+   46.463453,
+   11.8619958
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_micheluzzi",
+  "name_ja": "ミケルッツィ小屋",
+  "name_en": "Rifugio Micheluzzi",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "node/9951593620",
+  "ele": 1860,
+  "ele_src": "official",
+  "url": "https://www.rifugiomicheluzzi.it/",
+  "src": "https://www.rifugiomicheluzzi.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6,
+    "early"
+   ],
+   "to": [
+    10,
+    "mid"
+   ],
+   "winter": 1,
+   "note": "公式「おおよそ 6 月初め〜10 月中旬、冬は 12 月初め〜4 月末」。部屋はどれもバス・トイレつき",
+   "note_en": "Official: roughly early June – mid-October; winter early December – end of April. All rooms with bathroom."
+  },
+  "phone": "+39 334 502 3878",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugiomicheluzzi.it/prenota/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiomicheluzzi.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.4906985,
+   11.7072689
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_monte_pelmo",
+  "name_ja": "モンテ・ペルモ小屋",
+  "name_en": "Rifugio Monte Pelmo",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/200217393",
+  "url": "https://rifugiopelmo.it/",
+  "src": "https://rifugiopelmo.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "winter": 1,
+   "note": "夏も冬も営業（公式）",
+   "note_en": "Open in summer and winter (official)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiopelmo.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4026223,
+   12.1022595
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_monti_pallidi",
+  "name_ja": "モンティ・パッリディ小屋",
+  "name_en": "Rifugio Monti Pallidi",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/68826696",
+  "url": "https://montipallidi.it/",
+  "src": "https://montipallidi.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 0462 602288",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://secure.iperbooking.net/be/it/rifugio-monti-pallidi/",
+    "avail": 1,
+    "system": "iperbooking"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugio@montipallidi.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "wifi": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.4983051,
+   11.7912887
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_mulaz",
+  "name_ja": "ムラッツ小屋（ヴォルピ）",
+  "name_en": "Rifugio Giuseppe Volpi al Mulaz",
+  "aliases": "Mulaz Volpi",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/199052486",
+  "ele": 2571,
+  "ele_src": "official",
+  "url": "https://caivenezia.it/s/rifugi-e-bivacchi/rifugio-giuseppe-volpi-al-mulaz/",
+  "owner": "cai",
+  "src": "https://caivenezia.it/s/rifugi-e-bivacchi/rifugio-giuseppe-volpi-al-mulaz/",
+  "checked": "2026-10-21",
+  "beds": 51,
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "CAI ヴェネツィア支部の案内「おおよそ 6 月 20 日〜9 月 20 日」。冬の避難室 12 人",
+   "note_en": "CAI Venezia: roughly 20 June – 20 September. Winter room for 12."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiomulaz@gmail.com",
+    "note": "空きの問い合わせと予約は小屋の管理人へ（CAI ヴェネツィア支部）",
+    "note_en": "Ask the hut manager directly for availability and bookings (CAI Venezia)."
+   }
+  ],
+  "pos": [
+   46.3114242,
+   11.8382075
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_munt_de_sennes",
+  "name_ja": "ムント・デ・セネス小屋",
+  "name_en": "Rifugio Munt de Sennes",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/206158140",
+  "url": "https://www.rifugiomuntdesennes.com/",
+  "src": "https://www.rifugiomuntdesennes.com/",
+  "checked": "2026-10-21",
+  "phone": "+39 0474 869000",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:muntdesennes@gmail.com",
+    "note": "公式サイトの「Booking」のメール",
+    "note_en": "The \"Booking\" address on the official site."
+   }
+  ],
+  "pos": [
+   46.6588627,
+   12.0487642
+  ],
+  "pos_src": "osm",
+  "ele": 2176,
+  "ele_src": "osm"
+ },
+ {
+  "id": "rifugio_negritella",
+  "name_ja": "ネグリテッラ小屋",
+  "name_en": "Rifugio Negritella",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/664282659",
+  "ele": 2000,
+  "ele_src": "official",
+  "url": "https://www.rifugionegritella.it/",
+  "src": "https://www.rifugionegritella.it/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugionegritella.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.433734,
+   11.6617635
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_nuvolau",
+  "name_ja": "ヌヴォラウ小屋",
+  "name_en": "Rifugio Nuvolau",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200226208",
+  "ele": 2575,
+  "ele_src": "official",
+  "url": "https://rifugionuvolau.it/",
+  "src": "https://rifugionuvolau.it/dormire/",
+  "checked": "2026-10-21",
+  "beds": 24,
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 2027 年 1 月から公式サイトで受付",
+   "opens_en": "2027 bookings open on the official site from January 2027."
+  },
+  "next": {
+   "open": "2027-06-20",
+   "close": "2027-09-20",
+   "note": "夏だけ営業。2027 年の予定（公式「Apertura prevista」）",
+   "note_en": "Summer only. Planned dates for 2027 (official)."
+  },
+  "phone": "+39 0436 867938",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugionuvolau.it/modulo-di-prenotazione/",
+    "url_en": "https://rifugionuvolau.it/en/booking/",
+    "note": "相部屋だけ（3〜8 人部屋）。グループは 8 人まで。CAI 会員は 2 割引（会員証を見せる）",
+    "note_en": "Dormitories only (3–8 beds). Groups up to 8. CAI members 20% off (show your card)."
+   }
+  ],
+  "fac": {
+   "shower": 0,
+   "private_room": 0
+  },
+  "pos": [
+   46.4952418,
+   12.045729
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_ospitale",
+  "name_ja": "オスピターレ小屋",
+  "name_en": "Rifugio Albergo Ospitale",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/186516084",
+  "url": "https://www.ristoranteospitale.com/",
+  "src": "https://www.ristoranteospitale.com/",
+  "checked": "2026-10-21",
+  "phone": "+39 376 121 2444",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.ristoranteospitale.com/",
+    "system": "direct-book",
+    "note": "公式サイトの「Prenota una camera」",
+    "note_en": "\"Prenota una camera\" on the official site."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@ristoranteospitale.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.6031568,
+   12.1421456
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_palafavera",
+  "name_ja": "パラファヴェーラ小屋",
+  "name_en": "Rifugio Palafavera",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/200217404",
+  "ele": 1514,
+  "ele_src": "osm",
+  "url": "https://www.palafavera.com/",
+  "src": "https://www.palafavera.com/it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-09-20",
+   "note": "2026 年の夏は 9 月 20 日まで（公式）。開いた日は未確認",
+   "note_en": "Summer 2026 until 20 September (official). Opening date not confirmed."
+  },
+  "phone": "+39 0437 789133",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://secure.iperbooking.net/be/it/rifugio-palafavera-belluno/",
+    "avail": 1,
+    "system": "iperbooking"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@palafavera.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.4025861,
+   12.1005548
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_passo_duran",
+  "name_ja": "パッソ・ドゥラン小屋（トメー）",
+  "name_en": "Rifugio Passo Duran \"C. Tomè\"",
+  "aliases": "Tomè Tome",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183311398",
+  "url": "https://www.rifugiopassoduran.it/",
+  "src": "https://www.rifugiopassoduran.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "改装中（公式「もうすぐ」）",
+   "note_en": "Being renovated (official: reopening soon)."
+  },
+  "phone": "+39 379 250 1937",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiopassoduran.it",
+    "note": "電話かメールで寝床を予約（公式）",
+    "note_en": "Book a bed by phone or email (official)."
+   }
+  ],
+  "pos": [
+   46.3241706,
+   12.0952608
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_passo_lusia",
+  "name_ja": "パッソ・ルジア小屋",
+  "name_en": "Rifugio Passo Lusia",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/116543951",
+  "ele": 2056,
+  "ele_src": "official",
+  "url": "https://www.rifugiolusia.com/",
+  "src": "https://www.rifugiolusia.com/",
+  "checked": "2026-10-21",
+  "usual": {
+   "winter": 1,
+   "note": "冬も営業（2025/26 の冬は 2026 年 3 月 29 日まで。公式）。8 部屋、どれもバス・トイレつき",
+   "note_en": "Also open in winter (2025/26 winter until 29 March 2026; official). Eight rooms, all with bathroom."
+  },
+  "phone": "+39 333 195 1383",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiolusia.com/prenota-online/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiolusia.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.3433781,
+   11.7013184
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_passo_san_nicolo",
+  "name_ja": "パッソ・サン・ニコロ小屋",
+  "name_en": "Rifugio Passo San Nicolò",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/514999294",
+  "ele": 2340,
+  "ele_src": "osm",
+  "url": "https://www.rifugiopassosannicolo.com/",
+  "src": "https://www.rifugiopassosannicolo.com/",
+  "checked": "2026-10-21",
+  "beds": 24,
+  "usual": {
+   "from": [
+    6,
+    "late"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "電話は 6 月 20 日〜9 月末（公式）。開く日は小屋の SNS で",
+   "note_en": "Phone 20 June – end of September (official). Opening dates on the hut's social media."
+  },
+  "phone": "+39 0462 763269",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiopassosannicolo@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.4216136,
+   11.7931604
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_passo_santner",
+  "name_ja": "パッソ・サントナー小屋",
+  "name_en": "Rifugio Passo Santner / Santnerpasshütte",
+  "aliases": "Santnerpass",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/152250682",
+  "ele": 2734,
+  "ele_src": "osm",
+  "url": "https://www.santnerpass.com/",
+  "src": "https://www.santnerpass.com/",
+  "checked": "2026-10-21",
+  "next": {
+   "open": "2027-06-10",
+   "note": "2027 年は 6 月 10 日から（公式）",
+   "note_en": "2027 season from 10 June (official)."
+  },
+  "phone": "+39 337 143 5665",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.santnerpass.com/vitto-e-alloggio/#prezzi",
+    "avail": 1,
+    "system": "WP Booking System"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@santnerpass.com"
+   }
+  ],
+  "pos": [
+   46.4563154,
+   11.6184395
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_passo_staulanza",
+  "name_ja": "パッソ・スタウランツァ小屋",
+  "name_en": "Rifugio Passo Staulanza",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/200217382",
+  "url": "https://www.staulanza.it/",
+  "src": "https://www.staulanza.it/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.staulanza.it/Booking/IT/disponibilita.php",
+    "avail": 1
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@staulanza.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.4210065,
+   12.1045026
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pertini",
+  "name_ja": "ペルティーニ小屋",
+  "name_en": "Rifugio Sandro Pertini",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/291725843",
+  "ele": 2300,
+  "ele_src": "osm",
+  "url": "https://www.rifugiopertini.com/",
+  "src": "https://www.rifugiopertini.com/en/rooms-prices/",
+  "checked": "2026-10-21",
+  "beds": 14,
+  "usual": {
+   "from": [
+    6,
+    "early"
+   ],
+   "to": [
+    9,
+    "late"
+   ],
+   "note": "公式「6 月 10 日から 9 月 28 日まで」（年の記載なし）",
+   "note_en": "Official: 10 June to 28 September (no year given)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiopertini.com"
+   }
+  ],
+  "terms": {
+   "ja": "小屋の確認か前払い（1 人 €50）で予約が有効。10 日前までに知らせれば前払いは次の泊まりに使える。それより後は戻らない",
+   "en": "Valid after the hut's confirmation or a €50 per person deposit. Tell the hut at least 10 days ahead and the deposit carries over to a later stay; after that it is not refunded.",
+   "src": "https://www.rifugiopertini.com/en/rooms-prices/"
+  },
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5020842,
+   11.7246156
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pian_de_fontana",
+  "name_ja": "ピアン・デ・フォンターナ小屋",
+  "name_en": "Rifugio Pian de Fontana",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/110978043",
+  "ele": 1632,
+  "ele_src": "osm",
+  "url": "http://www.piandefontana.it/",
+  "src": "http://www.piandefontana.it/prezzi-e-servizi/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-06",
+   "close": "2026-09-30"
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:piandefontana@livecom.it",
+    "src": "http://www.piandefontana.it/contatti/"
+   }
+  ],
+  "pos": [
+   46.2619462,
+   12.1759164
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pian_di_cengia",
+  "name_ja": "ピアン・ディ・チェンジャ小屋",
+  "name_en": "Rifugio Pian di Cengia / Büllelejochhütte",
+  "aliases": "Büllelejoch Bullelejoch",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/196574945",
+  "ele": 2528,
+  "ele_src": "official",
+  "url": "https://www.rifugiopiandicengia.it/",
+  "owner": "private",
+  "src": "https://www.rifugiopiandicengia.it/en/sleep-eat/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "泊まりは予約だけ。泊まるならハーフボードだけ（公式）",
+   "note_en": "Overnight stays by reservation only, half board only (official).",
+   "opens": "2027 年分は 2026 年 11 月 15 日から（公式）",
+   "opens_en": "Bookings for 2027 from 15 November 2026 (official)."
+  },
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "note": "公式「2027 年 6 月中旬にまた」",
+   "note_en": "Official: see you again in mid-June 2027."
+  },
+  "phone": "+39 337 451517",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugiopiandicengia.it/CustomerData/764/Files/Documents/verfuegbarkeiten.pdf",
+    "avail": 1,
+    "note": "空き状況の一覧（PDF）。申し込みはメールか電話（電話は営業中だけ）",
+    "note_en": "Availability list (PDF). Book by email or phone (phone during opening times only)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@buellelejoch.it"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 83,
+    "year": 2026,
+    "note": "夕食・ベッド・朝食。民間の小屋なので山岳会の割引なし。現金だけ",
+    "note_en": "Dinner, bed, breakfast. Private hut: no alpine-club discount. Cash only."
+   }
+  ],
+  "fac": {
+   "shower": 0,
+   "cash_only": 1,
+   "credit_card": 0
+  },
+  "pos": [
+   46.6316062,
+   12.3413231
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pisciadu",
+  "name_ja": "ピシャドゥ小屋",
+  "name_en": "Rifugio Franco Cavazza al Pisciadù / Pisciadù Hütte",
+  "aliases": "Pisciadu Cavazza Utia Pisciadu",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/42227260",
+  "ele": 2587,
+  "ele_src": "osm",
+  "url": "https://www.rifugiopisciadu.it/",
+  "src": "https://www.rifugiopisciadu.it/it/prezzi-camere-rifugio-pisciadu-in-alta-badia.html",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-10-04",
+   "note": "2026 年の夏は 10 月 4 日まで（公式）",
+   "note_en": "Summer 2026 until 4 October (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://booking.rifugiopisciadu.it/"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 85,
+    "member": 68,
+    "note": "相部屋。小さな部屋（シーツつき）は €90（会員 €72）。会員 = 有効な CAI 会員証。年の記載なし",
+    "note_en": "Dormitory. Small rooms with linen €90 (members €72). Member = valid CAI card. No year given."
+   },
+   {
+    "plan": "no_meal",
+    "price": 34.5,
+    "member": 27.5,
+    "note": "相部屋。小さな部屋は €43（会員 €38）。朝食 €12〜14",
+    "note_en": "Dormitory. Small rooms €43 (members €38). Breakfast €12–14."
+   }
+  ],
+  "fac": {
+   "credit_card": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5364216,
+   11.8218047
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_plan_boe",
+  "name_ja": "プラン・ボエ小屋",
+  "name_en": "Rifugio Plan Boè",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/199514202",
+  "ele": 1810,
+  "ele_src": "osm",
+  "url": "https://rifugio-planboe.com/",
+  "owner": "private",
+  "src": "https://rifugio-planboe.com/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugio-planboe.com",
+    "note": "問い合わせと予約はメールで（公式）",
+    "note_en": "Enquiries and bookings by email (official)."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5059758,
+   11.8614438
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pomedes",
+  "name_ja": "ポメデス小屋",
+  "name_en": "Rifugio Pomedes",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200336784",
+  "ele": 2303,
+  "ele_src": "osm",
+  "url": "https://rifugiopomedescortina.com/",
+  "owner": "private",
+  "src": "https://rifugiopomedescortina.com/le-camere/",
+  "checked": "2026-10-21",
+  "phone": "+39 0436 862061",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://rifugiopomedescortina.com/richieste/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiopomedescortina.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "wifi": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.5363659,
+   12.0777489
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pradidali",
+  "name_ja": "プラディダーリ小屋",
+  "name_en": "Rifugio Pradidali",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/129947081",
+  "ele": 2278,
+  "ele_src": "osm",
+  "url": "https://www.rifugiopradidali.com/",
+  "owner": "cai",
+  "src": "https://www.caitreviso.it/rifugi/rifugio-pradidali/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "CAI トレヴィーゾ支部の小屋",
+   "note_en": "CAI Treviso hut."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:pradidali@libero.it"
+   }
+  ],
+  "pos": [
+   46.2442914,
+   11.8543039
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_pramperet",
+  "name_ja": "ソンマリーヴァ・アル・プランペレート小屋",
+  "name_en": "Rifugio Sommariva al Pramperet",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/183315385",
+  "ele": 1857,
+  "ele_src": "osm",
+  "url": "https://www.rifugiosommarivaalpramperet.it/",
+  "src": "https://www.rifugiosommarivaalpramperet.it/contatti.asp?lng=Ita",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiosommarivaalpramperet.it",
+    "note": "閉まっている間は電話がつながらない。メールで（公式）",
+    "note_en": "Phone does not work while the hut is closed; use email (official)."
+   }
+  ],
+  "pos": [
+   46.2889775,
+   12.163645
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_preuss",
+  "name_ja": "パウル・プロイス小屋",
+  "name_en": "Rifugio Paul Preuss",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/74495662",
+  "ele": 2243,
+  "ele_src": "osm",
+  "url": "http://www.rifugiopaulpreuss.com/",
+  "src": "http://www.rifugiopaulpreuss.com/",
+  "checked": "2026-10-21",
+  "beds": 10,
+  "usual": {
+   "from": [
+    6
+   ],
+   "to": [
+    10
+   ],
+   "note": "公式「夏の間、6 月から 10 月」",
+   "note_en": "Official: summer, June to October."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiopaulpreuss.com"
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.4580086,
+   11.632589
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_re_alberto",
+  "name_ja": "レ・アルベルト小屋（ガルトル小屋）",
+  "name_en": "Rifugio Re Alberto I / Gartlhütte",
+  "aliases": "Gartl Torri del Vajolet",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/123811150",
+  "ele": 2621,
+  "ele_src": "osm",
+  "url": "https://www.rifugiorealberto.com/",
+  "src": "https://www.rifugiorealberto.com/it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-17",
+   "close": "2026-10-03"
+  },
+  "phone": "+39 334 724 6698",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://booking.rifugiorealberto.com/index.php",
+    "avail": 1,
+    "note": "公式「空き状況と予約」",
+    "note_en": "Official \"availability and booking\"."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiorealberto.com"
+   }
+  ],
+  "pos": [
+   46.4592885,
+   11.6229675
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_refavaie",
+  "name_ja": "レファヴァイエ小屋",
+  "name_en": "Rifugio Refavaie",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/399458941",
+  "ele": 1100,
+  "ele_src": "osm",
+  "url": "https://www.rifugiorefavaie.com/",
+  "src": "https://www.rifugiorefavaie.com/",
+  "checked": "2026-10-21",
+  "beds": 12,
+  "usual": {
+   "from": [
+    5,
+    "early"
+   ],
+   "note": "公式「5 月 1 日から、夏の間はずっと営業」。シャワーつきの 4 部屋",
+   "note_en": "Official: from 1 May, open all summer. Four rooms with shower."
+  },
+  "phone": "+39 0439 710009",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiorefavaie.info@gmail.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.216315,
+   11.623456
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_resciesa",
+  "name_ja": "レシェーザ小屋（ラショッツ小屋）",
+  "name_en": "Rifugio Resciesa / Raschötzhütte",
+  "aliases": "Raschötz Resciesa",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "way/41875349",
+  "ele": 2170,
+  "ele_src": "osm",
+  "url": "https://www.rifugioresciesa.com/",
+  "src": "https://www.rifugioresciesa.com/it/",
+  "checked": "2026-10-21",
+  "phone": "+39 328 334 5986",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioresciesa.com"
+   }
+  ],
+  "pos": [
+   46.6004461,
+   11.662151
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_roda_di_vael",
+  "name_ja": "ローダ・ディ・ヴァエル小屋",
+  "name_en": "Rifugio Roda di Vaèl",
+  "aliases": "Roda di Vael Rotwand",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/292970157",
+  "ele": 2283,
+  "ele_src": "osm",
+  "url": "https://www.rodadivael.it/",
+  "owner": "sat",
+  "src": "https://www.rodadivael.it/listino-prezzi/",
+  "checked": "2026-10-21",
+  "beds": 49,
+  "season": {
+   "open": "2026-05-27",
+   "close": "2026-10-11",
+   "note": "雪の具合しだい（公式）。4 人部屋 6 つと相部屋（10・14 人）",
+   "note_en": "Snow permitting (official). Six 4-bed rooms and dormitories of 10 and 14."
+  },
+  "phone": "+39 0462 764450",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rodadivael.it/info/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rodadivael.it"
+   }
+  ],
+  "terms": {
+   "ja": "予約のときに前払いを求めることがある。着く 10 日前より後の取り消しは、前払いを同じシーズンの別の泊まりに使える（空きしだい）。来た人数が少ないと、その人数分の前払いは戻らない",
+   "en": "A deposit may be asked when booking. Cancelling within 10 days of arrival: the deposit can be used for another night this season (subject to availability). Fewer guests on arrival: their deposits are kept.",
+   "src": "https://www.rodadivael.it/listino-prezzi/"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 58,
+    "year": 2026,
+    "note": "2026 年夏。夕食（飲み物は別）・ベッド・朝食。会員 = CAI・DAV・ÖAV。25 歳未満の会員は €49.50。寝袋用シーツは必ず（€4 で借りる、€22 で買う）。温水シャワー €3",
+    "note_en": "Summer 2026. Dinner (drinks extra), bed, breakfast. Member = CAI, DAV, ÖAV. Members under 25 €49.50. Liner required (rent €4, buy €22). Hot shower €3."
+   },
+   {
+    "plan": "one_meal",
+    "price": 56.5,
+    "member": 34,
+    "year": 2026,
+    "note": "25 歳未満の会員は €25.50",
+    "note_en": "Members under 25 €25.50."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "credit_card": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.4201666,
+   11.630125
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_rosetta",
+  "name_ja": "ロゼッタ小屋（ペドロッティ）",
+  "name_en": "Rifugio Rosetta \"Giovanni Pedrotti\"",
+  "aliases": "Pedrotti Rosetta",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/240938276",
+  "ele": 2580,
+  "ele_src": "osm",
+  "url": "https://www.rifugiorosetta.it/",
+  "src": "https://www.rifugiorosetta.it/it/camere.asp",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-20",
+   "close": "2026-09-27",
+   "note": "秋に開くかは電話で。冬は 12 月 24 日〜1 月 7 日と週末（日中だけ）、2・3 月の週末は泊まれる（公式）",
+   "note_en": "Call about autumn opening. Winter: 24 Dec – 7 Jan and weekends (daytime); overnight stays on weekends in February and March (official)."
+  },
+  "phone": "+39 0439 68308",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiorosetta.it/it/richiesta.asp"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiorosetta.it"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 60,
+    "year": 2026,
+    "note": "2026 年夏。会員 = CAI。若い会員は €49.50。温水シャワー €7（水があれば）。電話は 10 月〜6 月 20 日 +39 349 533 1742",
+    "note_en": "Summer 2026. Member = CAI. Young members €49.50. Hot shower €7 when water allows. Phone Oct – 20 June: +39 349 533 1742."
+   },
+   {
+    "plan": "no_meal",
+    "price": 44.5,
+    "member": 22,
+    "year": 2026,
+    "note": "若い会員は €13.50。朝食 €10",
+    "note_en": "Young members €13.50. Breakfast €10."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.2674386,
+   11.8390215
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_salei",
+  "name_ja": "サレイ小屋",
+  "name_en": "Rifugio Salei / Salei Hütte",
+  "range": "dolomites",
+  "sub_area": "sella",
+  "osm": "way/95420782",
+  "ele": 2225,
+  "ele_src": "osm",
+  "url": "https://www.rifugiosalei.it/",
+  "src": "https://www.rifugiosalei.it/it/informazioni/info-condizioni.html",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬は 2026 年 12 月 4 日から（公式）。ホテルに近い山小屋（スパ・個室）",
+   "note_en": "Winter season from 4 December 2026 (official). Hotel-style hut (spa, private rooms)."
+  },
+  "phone": "+39 335 753 6315",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.bookingaltoadige.com/selvavalgardena/salei-huette",
+    "avail": 1,
+    "system": "bookingsuedtirol.com",
+    "note": "公式サイトからのリンク",
+    "note_en": "Linked from the official site."
+   },
+   {
+    "kind": "form",
+    "url": "https://www.rifugiosalei.it/it/informazioni/richiesta.html"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiosalei.it"
+   }
+  ],
+  "terms": {
+   "ja": "前払いかカード番号で確定。取り消すと予約総額の 30%、前払いは戻らない。14 日前より後の取り消しは部屋代の全額",
+   "en": "Confirmed by deposit or card number. Cancellation: 30% of the total; deposits not refunded. Within 14 days of arrival: full room price.",
+   "src": "https://www.rifugiosalei.it/it/informazioni/info-condizioni.html"
+  },
+  "fac": {
+   "private_room": 1,
+   "credit_card": 1
+  },
+  "pos": [
+   46.5036876,
+   11.752035
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_san_marco",
+  "name_ja": "サン・マルコ小屋",
+  "name_en": "Rifugio San Marco",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/202010501",
+  "ele": 1823,
+  "ele_src": "osm",
+  "url": "http://www.rifugiosanmarco.com/",
+  "src": "http://www.rifugiosanmarco.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "2027 年 6 月まで休み（公式）",
+   "note_en": "Closed until June 2027 (official)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiosanmarco.com"
+   }
+  ],
+  "pos": [
+   46.4766382,
+   12.2280217
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_san_sebastiano",
+  "name_ja": "サン・セバスティアーノ小屋",
+  "name_en": "Rifugio San Sebastiano",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183310653",
+  "url": "https://www.passoduran.it/",
+  "src": "https://www.passoduran.it/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@passoduran.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1
+  },
+  "pos": [
+   46.3252406,
+   12.0957697
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_sasso_bianco",
+  "name_ja": "サッソ・ビアンコ小屋",
+  "name_en": "Rifugio Sasso Bianco",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/200220255",
+  "ele": 1840,
+  "ele_src": "osm",
+  "url": "https://www.rifugiosassobianco.it/",
+  "src": "https://www.rifugiosassobianco.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "closed_this_year",
+   "note": "2026 年の夏は管理の終わりで開けなかった（公式）",
+   "note_en": "Not open in summer 2026 (end of management; official)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiosassobianco@gmail.com"
+   }
+  ],
+  "pos": [
+   46.4040344,
+   11.9743215
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_scarpa",
+  "name_ja": "スカルパ小屋（アグネル）",
+  "name_en": "Rifugio Scarpa-Gurekian all'Agner",
+  "aliases": "Scarpa Gurekian Agner",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/199056277",
+  "ele": 1735,
+  "ele_src": "osm",
+  "url": "https://www.rifugioscarpa.com/",
+  "src": "https://www.rifugioscarpa.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-04",
+   "close": "2026-11-01",
+   "note": "10 月は木〜月だけ。冬は 2026 年 12 月 12 日〜2027 年 3 月 7 日（12 月 24〜26 日は休み。公式）",
+   "note_en": "October: Thursday–Monday only. Winter 12 Dec 2026 – 7 Mar 2027 (closed 24–26 December; official)."
+  },
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugioscarpa.com/contact"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioscarpa.com"
+   }
+  ],
+  "pos": [
+   46.2597878,
+   11.961249
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_scoiattoli",
+  "name_ja": "スコイアットリ小屋",
+  "name_en": "Rifugio Scoiattoli",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200335135",
+  "ele": 2255,
+  "ele_src": "osm",
+  "url": "https://www.rifugioscoiattoli.it/",
+  "src": "https://www.rifugioscoiattoli.it/booking/",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.rifugioscoiattoli.it/booking/",
+    "url_en": "https://www.rifugioscoiattoli.it/booking/eng/"
+   }
+  ],
+  "pos": [
+   46.5080886,
+   12.0467715
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_scotoni",
+  "name_ja": "スコトーニ小屋",
+  "name_en": "Rifugio Scotoni / Scotoni-Hütte",
+  "aliases": "Ütia de Scotoni Scotonihütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/229003439",
+  "ele": 1985,
+  "ele_src": "official",
+  "url": "https://www.scotoni.it/",
+  "owner": "private",
+  "src": "https://www.scotoni.it/it/camere-e-prezzi-in-alta-badia",
+  "checked": "2026-10-21",
+  "beds": 21,
+  "season": {
+   "status": "undecided",
+   "note": "泊まれるのは夏だけ（公式）",
+   "note_en": "Overnight stays in summer only (official)."
+  },
+  "phone": "+39 0471 847330",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://scotoni.bukly.com/it",
+    "avail": 1,
+    "system": "bukly",
+    "src": "https://www.scotoni.it/it/"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@scotoni.it"
+   }
+  ],
+  "fac": {
+   "wifi": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.5531001,
+   11.9983952
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_scotter_palatini",
+  "name_ja": "スコッテル・パラティーニ小屋",
+  "name_en": "Rifugio Scotter-Palatini",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/202012091",
+  "ele": 1580,
+  "ele_src": "official",
+  "url": "https://www.rifugioscotter.it/",
+  "src": "https://www.rifugioscotter.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    6
+   ],
+   "to": [
+    10
+   ],
+   "winter": 1,
+   "note": "公式「夏は 6 月から 10 月」。冬も営業",
+   "note_en": "Official: summer June to October. Also open in winter."
+  },
+  "phone": "+39 329 025 5704",
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 70,
+    "note": "個室（布団・シーツつき）。自分の寝袋・寝袋用シーツなら €60。宿泊税 €1.50。年の記載なし",
+    "note_en": "Private room with duvet and linen. With your own sleeping bag or liner €60. Tourist tax €1.50. No year given."
+   },
+   {
+    "plan": "no_meal",
+    "price": 41,
+    "note": "朝食は €11。自分の寝袋なら €34",
+    "note_en": "Breakfast €11. With your own sleeping bag €34."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.4721417,
+   12.2358726
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_sennes",
+  "name_ja": "セネス小屋",
+  "name_en": "Rifugio Sennes / Sennes Hütte",
+  "aliases": "Senneshütte",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/103325526",
+  "ele": 2126,
+  "ele_src": "official",
+  "url": "https://www.sennes.com/",
+  "owner": "private",
+  "src": "https://www.sennes.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "冬は 2026 年 12 月 26 日〜2027 年 1 月 6 日、2027 年 1 月 31 日〜3 月 31 日（公式）",
+   "note_en": "Winter: 26 Dec 2026 – 6 Jan 2027 and 31 Jan – 31 Mar 2027 (official)"
+  },
+  "next": {
+   "open": "2027-06-06",
+   "close": "2027-09-30",
+   "note": "公式は「6 月 6 日〜10 月 10 日」（終わりの年の表記に誤りあり）。泊まりは 9 月 30 日まで",
+   "note_en": "Official: 6 June – 10 October (the end year is misprinted). Overnight stays until 30 September."
+  },
+  "phone": "+39 0474 646355",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.sennes.com/kontakt/index.php",
+    "note": "問い合わせフォーム。前払いは小屋が予約を確定してから",
+    "note_en": "Request form. Pay the deposit only after the hut confirms.",
+    "src": "https://www.sennes.com/kontakt/index.php"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@sennes.com",
+    "src": "https://www.sennes.com/kontakt/index.php"
+   }
+  ],
+  "terms": {
+   "ja": "前払いは、小屋が予約を確定したあとに払う（公式）",
+   "en": "Pay the deposit only after the hut has confirmed (official).",
+   "src": "https://www.sennes.com/kontakt/index.php"
+  },
+  "pos": [
+   46.65364,
+   12.0594256
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_serot",
+  "name_ja": "セロット小屋",
+  "name_en": "Rifugio Serot",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "node/417322481",
+  "ele": 1566,
+  "ele_src": "osm",
+  "url": "https://www.rifugioserot.eu/",
+  "src": "https://www.rifugioserot.eu/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "note": "2026 年は 10 月 29 日まで休み、10 月 30 日〜12 月 17 日は週末、12 月 18〜31 日は毎日（公式）。どの部屋もバス・トイレつき",
+   "note_en": "2026: closed until 29 October; weekends 30 Oct – 17 Dec; daily 18–31 Dec (official). All rooms have a bathroom."
+  },
+  "phone": "+39 349 601 1481",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://wubook.net/nneb/bk?f=first&n=2&ep=c47b06a3&o=2.0.0.0",
+    "avail": 1,
+    "system": "wubook"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugioserot.eu"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "note": "ハーフボードは部屋代に 1 人 €25 を足す（公式）",
+    "note_en": "Half board: €25 per person on top of the room (official)."
+   }
+  ],
+  "fac": {
+   "private_room": 1,
+   "shower": 1,
+   "wifi": 1
+  },
+  "pos": [
+   46.0734662,
+   11.3881872
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_sette_selle",
+  "name_ja": "セッテ・セッレ小屋",
+  "name_en": "Rifugio Sette Selle",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/289394722",
+  "ele": 1978,
+  "ele_src": "official",
+  "url": "https://www.sat.tn.it/gruppo-lagorai-rifugio-sette-selle/",
+  "owner": "sat",
+  "src": "https://www.prenotarifugi.cai.it/dettaglio/?id_cai=921800139",
+  "checked": "2026-10-21",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.prenotarifugi.cai.it/dettaglio/?id_cai=921800139",
+    "system": "PrenotaRifugi CAI"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugiosetteselle@gmail.com"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "no_meal",
+    "price": 34.5,
+    "member": 27.6,
+    "note": "相部屋（5 人以上）。4 人までの部屋は €39（会員 €31.20）。25 歳未満の CAI 会員は €24.15。CAI の予約サイトの料金表（年の記載なし）",
+    "note_en": "Dormitory (5+ beds). Rooms up to 4 beds €39 (members €31.20). CAI under-25 €24.15. CAI booking site price list (no year given)."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "credit_card": 1
+  },
+  "pos": [
+   46.1323304,
+   11.392362
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_settimo_alpini",
+  "name_ja": "セッティモ・アルピーニ小屋",
+  "name_en": "Rifugio 7° Alpini",
+  "aliases": "Settimo Alpini 7 Alpini",
+  "range": "dolomites",
+  "sub_area": "dolomiti_bellunesi",
+  "osm": "way/111825720",
+  "ele": 1502,
+  "ele_src": "official",
+  "url": "https://www.rifugiosettimoalpini.it/",
+  "owner": "cai",
+  "src": "https://www.rifugiosettimoalpini.it/",
+  "checked": "2026-10-21",
+  "beds": 50,
+  "season": {
+   "open": "2026-05-30",
+   "close": "2026-09-27",
+   "note": "10 月 3・4 日も営業、10・11 日は天気しだい（公式）。CAI ベッルーノ支部の小屋",
+   "note_en": "Also open 3–4 October; 10–11 October weather permitting (official). Owned by CAI Belluno."
+  },
+  "phone": "+39 0437 941631",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:infosettimoalpini@gmail.com"
+   }
+  ],
+  "pos": [
+   46.2219463,
+   12.1887713
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_son_forca",
+  "name_ja": "ソン・フォルカ小屋",
+  "name_en": "Rifugio Son Forca",
+  "range": "dolomites",
+  "sub_area": "ampezzo",
+  "osm": "way/200795503",
+  "ele": 2235,
+  "ele_src": "official",
+  "url": "https://www.rifugiosonforca.it/",
+  "owner": "private",
+  "src": "https://www.rifugiosonforca.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-20",
+   "close": "2026-09-20",
+   "note": "冬は 2026 年 12 月 19 日〜2027 年 3 月 31 日（雪と天気しだい。公式）",
+   "note_en": "Winter 19 Dec 2026 – 31 Mar 2027, snow and weather permitting (official)."
+  },
+  "phone": "+39 393 699 3137",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiosonforca.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.5682758,
+   12.185462
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_taramelli",
+  "name_ja": "タラメッリ小屋",
+  "name_en": "Rifugio Taramelli",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/122374780",
+  "ele": 2045,
+  "ele_src": "osm",
+  "url": "https://rifugiotaramelli.it/",
+  "owner": "sat",
+  "src": "https://rifugiotaramelli.it/",
+  "checked": "2026-10-21",
+  "beds": 12,
+  "season": {
+   "open": "2026-06-13",
+   "close": "2026-09-27",
+   "note": "天気しだいで延びることがある。SAT の小屋（公式）。家族・小さなグループ向けの 2 部屋",
+   "note_en": "May be extended depending on weather. SAT hut (official). Two rooms for families and small groups."
+  },
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    9,
+    "late"
+   ]
+  },
+  "phone": "+39 360 879719",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiotaramelli.it"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.3946206,
+   11.7403115
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_tissi",
+  "name_ja": "ティッシ小屋",
+  "name_en": "Rifugio Attilio Tissi",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183196074",
+  "ele": 2250,
+  "ele_src": "official",
+  "url": "https://www.rifugiotissi.com/",
+  "owner": "cai",
+  "src": "https://www.rifugiotissi.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 11 月 1 日から（公式）",
+   "opens_en": "Bookings for 2027 open on 1 November (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://rifugiotissi.com/IT/p40-Prezzi-e-prenotazioni",
+    "note": "インターネットが不安定でカードが使えないことがある。現金も持って（公式）",
+    "note_en": "Card terminal may fail (unstable connection); bring cash too (official)."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiotissi.com"
+   }
+  ],
+  "terms": {
+   "ja": "予約のときに 1 人 €20 を前払い（戻らない）。泊まる日の 30 日前より後の取り消し・来なかったときは全額",
+   "en": "€20 per person non-refundable deposit. Cancelling within 30 days of the stay, or no-show: the full amount.",
+   "src": "https://www.rifugiotissi.com/"
+  },
+  "pos": [
+   46.388082,
+   12.0332541
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_toni_demetz",
+  "name_ja": "トニ・デメッツ小屋",
+  "name_en": "Rifugio Toni Demetz",
+  "aliases": "Forcella Sassolungo",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/125011241",
+  "ele": 2685,
+  "ele_src": "osm",
+  "url": "https://www.tonidemetz.it/",
+  "src": "https://www.tonidemetz.it/it/index.php",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-10-04",
+   "note": "2026 年は 10 月 4 日（日）まで（公式）",
+   "note_en": "2026 season until Sunday 4 October (official)."
+  },
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    10,
+    "early"
+   ],
+   "note": "公式「6 月中旬から 10 月初めまで」",
+   "note_en": "Official: mid-June to early October."
+  },
+  "phone": "+39 335 658 6796",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.tonidemetz.it/it/contatto.php"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@tonidemetz.it"
+   }
+  ],
+  "pos": [
+   46.514639,
+   11.7395744
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_torrani",
+  "name_ja": "トッラーニ小屋",
+  "name_en": "Rifugio Maria Vittoria Torrani",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183196061",
+  "ele": 2984,
+  "ele_src": "official",
+  "url": "https://www.caiconegliano.it/informazioni/rifugi-e-opere-alpine/rifugio-torrani/",
+  "owner": "cai",
+  "src": "https://www.caiconegliano.it/informazioni/rifugi-e-opere-alpine/rifugio-torrani/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "CAI コネリアーノ支部の小屋。開くかどうかは山の様子しだいなので、予約と開く日は小屋か管理人に問い合わせる（公式）",
+   "note_en": "CAI Conegliano hut. Opening depends on conditions; ask the hut or the manager about bookings and opening (official)."
+  },
+  "pos": [
+   46.3785754,
+   12.0566559
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_torre_di_pisa",
+  "name_ja": "トッレ・ディ・ピサ小屋",
+  "name_en": "Rifugio Torre di Pisa",
+  "range": "dolomites",
+  "sub_area": "fiemme_lagorai",
+  "osm": "way/203462698",
+  "ele": 2671,
+  "ele_src": "official",
+  "url": "https://www.rifugiotorredipisa.it/",
+  "src": "https://www.rifugiotorredipisa.it/",
+  "checked": "2026-10-21",
+  "beds": 36,
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    10,
+    "mid"
+   ],
+   "winter": 0,
+   "note": "公式「夏だけ、6 月中旬から 10 月中旬」。4 つの相部屋",
+   "note_en": "Official: summer only, mid-June to mid-October. Four dormitories."
+  },
+  "phone": "+39 348 364 5379",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiotorredipisa.it/contatti.asp"
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.3609254,
+   11.5595511
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_treviso",
+  "name_ja": "トレヴィーゾ小屋",
+  "name_en": "Rifugio Treviso",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/210004305",
+  "ele": 1631,
+  "ele_src": "osm",
+  "url": "http://www.rifugiotreviso.it/",
+  "owner": "cai",
+  "src": "https://www.caitreviso.it/rifugi/rifugio-treviso/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "CAI トレヴィーゾ支部の小屋",
+   "note_en": "CAI Treviso hut."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiotreviso@gmail.com"
+   }
+  ],
+  "pos": [
+   46.2368222,
+   11.9029066
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vajolet",
+  "name_ja": "ヴァヨレット小屋",
+  "name_en": "Rifugio Vajolet / Vajolethütte",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/74495667",
+  "ele": 2243,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovajolet.com/",
+  "src": "https://www.rifugiovajolet.com/deu/prezzi.asp",
+  "checked": "2026-10-21",
+  "phone": "+39 335 707 3258",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://booking.rifugiovajolet.com/index_en.php"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 80,
+    "member": 58,
+    "year": 2026,
+    "note": "2026 年夏。会員 = CAI・DAV・ÖAV。25 歳未満の会員は €49.50。寝袋用シーツかシーツを持参（借りる・買うこともできる）。シャワーはコイン",
+    "note_en": "Summer 2026. Member = CAI, DAV, ÖAV. Members under 25 €49.50. Bring a liner or sheets (rent or buy on site). Coin shower."
+   },
+   {
+    "plan": "one_meal",
+    "price": 56.5,
+    "member": 34,
+    "year": 2026,
+    "note": "25 歳未満の会員は €25.50",
+    "note_en": "Members under 25 €25.50."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.458555,
+   11.6327282
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vallaccia",
+  "name_ja": "ヴァッラッチャ小屋",
+  "name_en": "Rifugio Vallaccia",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/534302143",
+  "ele": 2275,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovallaccia.it/",
+  "src": "https://www.rifugiovallaccia.it/",
+  "checked": "2026-10-21",
+  "beds": 20,
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    10,
+    "early"
+   ],
+   "winter": 1,
+   "note": "公式「6 月 17 日から 10 月初め（天気しだい）」。冬は火〜日、夕食と泊まりは予約制。5 人部屋 2 つと 10 人の相部屋",
+   "note_en": "Official: 17 June to early October, weather permitting. Winter Tue–Sun, dinner and overnight by booking. Two 5-bed rooms and a 10-bed dormitory."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiovallaccia.it"
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.3974976,
+   11.7207583
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vallandro",
+  "name_ja": "ヴァッランドロ小屋（デュレンシュタイン小屋）",
+  "name_en": "Dürrensteinhütte / Rifugio Vallandro",
+  "aliases": "Dürrenstein Plätzwiese Prato Piazza",
+  "range": "dolomites",
+  "sub_area": "braies_fanes",
+  "osm": "way/103700847",
+  "url": "https://www.vallandro.it/",
+  "src": "https://www.vallandro.it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    5,
+    "mid"
+   ],
+   "to": [
+    11,
+    "early"
+   ],
+   "winter": 1,
+   "note": "夏は 5 月中旬〜11 月初め、冬は 12 月中旬〜4 月初め。夏は泊まれる（9 月中旬からは前もって問い合わせ）。冬の泊まりは問い合わせ（公式）",
+   "note_en": "Summer mid-May to early November; winter mid-December to early April. Overnight stays always possible in summer (ask in advance from mid-September); winter on request (official)."
+  },
+  "phone": "+39 0474 972505",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@vallandro.it"
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 83,
+    "note": "相部屋（シャワー込み）。部屋は €98（シャワー €6 は別）。年の記載なし（2026-10-21 時点の公式の料金）",
+    "note_en": "Dormitory, shower included. Rooms €98 (+€6 shower). No year given (official price as of 2026-10-21)."
+   },
+   {
+    "plan": "one_meal",
+    "price": 71,
+    "note": "相部屋（シャワー込み）。部屋は €86（シャワー €6 は別）。年の記載なし",
+    "note_en": "Dormitory, shower included. Rooms €86 (+€6 shower). No year given."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.6419371,
+   12.1958776
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vandelli",
+  "name_ja": "ヴァンデッリ小屋",
+  "name_en": "Rifugio Alfonso Vandelli",
+  "aliases": "Sorapis Sorapiss",
+  "range": "dolomites",
+  "sub_area": "cadore",
+  "osm": "way/200789472",
+  "ele": 1926,
+  "ele_src": "osm",
+  "url": "https://rifugiovandelli.it/",
+  "owner": "cai",
+  "src": "https://rifugiovandelli.it/prenotazioni-e-prezzi/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "undecided",
+   "note": "予約は 6 月 20 日〜9 月 20 日の泊まりだけ。営業中はメールの予約を受けない、閉まっている間はメールだけ（公式）。CAI ヴェネツィア支部の小屋",
+   "note_en": "Bookings for 20 June – 20 September only. No email bookings while open; email only while closed (official). Owned by CAI Venezia."
+  },
+  "next": {
+   "open": "2027-06-20",
+   "note": "前後することがある（公式）",
+   "note_en": "May change (official)."
+  },
+  "phone": "+39 0435 39015",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugiovandelli@libero.it",
+    "note": "閉まっている間の予約と問い合わせ",
+    "note_en": "Bookings and enquiries while closed."
+   }
+  ],
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 75,
+    "member": 60,
+    "year": 2026,
+    "note": "相部屋。夕食・ベッド・朝食（飲み物は別）。会員 = CAI と協定の山岳会。寝袋か寝袋用シーツは必ず（使い捨て €10〜12）。宿泊税 €1.50",
+    "note_en": "Shared dormitory. Dinner, bed, breakfast (drinks extra). Member = CAI and affiliated clubs. Sleeping bag or liner required (disposable €10–12). Tourist tax €1.50."
+   },
+   {
+    "plan": "no_meal",
+    "price": 32,
+    "member": 25.6,
+    "year": 2026,
+    "note": "朝食 €15",
+    "note_en": "Breakfast €15."
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.5216727,
+   12.2266178
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vazzoler",
+  "name_ja": "ヴァッツォレール小屋",
+  "name_en": "Rifugio Mario Vazzoler",
+  "range": "dolomites",
+  "sub_area": "civetta_moiazza",
+  "osm": "way/183195927",
+  "ele": 1714,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovazzoler.com/",
+  "src": "https://www.rifugiovazzoler.com/",
+  "checked": "2026-10-21",
+  "beds": 52,
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 11 月 1 日 12 時から（公式。10 月 5 日から延期）",
+   "opens_en": "Bookings for 2027 open on 1 November at 12:00 (official; postponed from 5 October)."
+  },
+  "phone": "+39 0437 195 6619",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://rifugiovazzoler.com/Booking/index.php"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:rifugiovazzoler@gmail.com",
+    "src": "https://www.rifugiovazzoler.com/contatti/"
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.3541204,
+   12.0309969
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vederna",
+  "name_ja": "ヴェデルナ小屋",
+  "name_en": "Rifugio Vederna",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/59721521",
+  "ele": 1324,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovederna.com/",
+  "src": "https://www.rifugiovederna.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-05-29",
+   "close": "2026-10-10",
+   "note": "5 月は週末だけ（公式）",
+   "note_en": "Weekends only in May (official)."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiovederna.com"
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.1210008,
+   11.7951696
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_velo_della_madonna",
+  "name_ja": "ヴェーロ・デッラ・マドンナ小屋",
+  "name_en": "Rifugio Velo della Madonna",
+  "range": "dolomites",
+  "sub_area": "pale",
+  "osm": "way/355326941",
+  "ele": 2358,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovelodellamadonna.it/",
+  "src": "https://www.rifugiovelodellamadonna.it/",
+  "checked": "2026-10-21",
+  "beds": 54,
+  "usual": {
+   "from": [
+    6,
+    "mid"
+   ],
+   "to": [
+    9,
+    "mid"
+   ],
+   "note": "公式「おおむね 6 月中旬から 9 月中旬」。週末は特に予約を勧める",
+   "note_en": "Official: generally mid-June to mid-September. Booking advised, especially at weekends."
+  },
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiovelodellamadonna.it"
+   }
+  ],
+  "pos": [
+   46.231342,
+   11.8427414
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_venezia_pelmo",
+  "name_ja": "ヴェネツィア小屋（ペルモ）",
+  "name_en": "Rifugio Venezia \"Alba Maria De Luca\"",
+  "aliases": "Venezia Pelmo De Luca",
+  "range": "dolomites",
+  "sub_area": "pelmo_zoldo",
+  "osm": "way/383696227",
+  "ele": 1947,
+  "ele_src": "official",
+  "url": "https://www.rifugiovenezia.it/",
+  "owner": "cai",
+  "src": "https://www.rifugiovenezia.it/",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-13",
+   "close": "2026-09-20"
+  },
+  "phone": "+39 0436 9684",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:rifugio.veneziapelmo@gmail.com"
+   }
+  ],
+  "pos": [
+   46.4155761,
+   12.1565265
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_vicenza",
+  "name_ja": "ヴィチェンツァ小屋（ラングコーフェル小屋）",
+  "name_en": "Rifugio Vicenza / Langkofelhütte",
+  "aliases": "Langkofelhütte Utia de Dantersasc",
+  "range": "dolomites",
+  "sub_area": "sassolungo",
+  "osm": "way/152271730",
+  "ele": 2253,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovicenza.com/",
+  "src": "https://www.rifugiovicenza.com/it/",
+  "checked": "2026-10-21",
+  "beds": 69,
+  "season": {
+   "status": "undecided",
+   "opens": "2027 年分は 11 月 15 日から（公式）",
+   "opens_en": "Bookings for 2027 from 15 November (official)."
+  },
+  "phone": "+39 0471 792323",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@rifugiovicenza.com"
+   }
+  ],
+  "pos": [
+   46.5199011,
+   11.7236497
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_viel_dal_pan",
+  "name_ja": "ヴィエル・ダル・パン小屋",
+  "name_en": "Rifugio Viel dal Pan",
+  "range": "dolomites",
+  "sub_area": "marmolada",
+  "osm": "way/172769987",
+  "ele": 2432,
+  "ele_src": "osm",
+  "url": "https://www.rifugiovieldalpan.it/",
+  "src": "https://www.rifugiovieldalpan.it/",
+  "checked": "2026-10-21",
+  "phone": "+39 339 386 5241",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.rifugiovieldalpan.it/contattaci.html"
+   }
+  ],
+  "pos": [
+   46.4742837,
+   11.8341765
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "rifugio_zsigmondy_comici",
+  "name_ja": "ジグモンディ・コミーチ小屋",
+  "name_en": "Rifugio Zsigmondy-Comici / Zsigmondyhütte",
+  "aliases": "Zsigmondyhütte Comici",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/196574882",
+  "url": "https://www.zsigmondyhuette.com/",
+  "src": "https://www.zsigmondyhuette.com/it/baita-a-sesto/pernottamento-prezzi.html",
+  "checked": "2026-10-21",
+  "beds": 69,
+  "season": {
+   "status": "open",
+   "close": "2026-10-04",
+   "note": "2026 年は 10 月 4 日まで（公式）",
+   "note_en": "2026 season until 4 October (official)."
+  },
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.hut-reservation.org/reservation/book-hut/337/wizard",
+    "avail": 1,
+    "system": "hut-reservation.org",
+    "note": "空きのカレンダーから予約。変更・取り消しも自分でオンラインで",
+    "note_en": "Book from the availability calendar; change or cancel online yourself."
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@zsigmondyhuette.com"
+   }
+  ],
+  "terms": {
+   "ja": "取り消し料: 14 日前から 1 人 1 泊 €30、4 日前から €50、来なかったら €80",
+   "en": "Cancellation: from 14 days before €30 per person per night, from 4 days €50, no-show €80.",
+   "src": "https://www.zsigmondyhuette.com/it/baita-a-sesto/pernottamento-prezzi.html"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 86,
+    "note": "相部屋（寝台）。ベッド（シーツつき）は €98、2 人部屋は 1 人 €105。年の記載なし（2026-10-21 時点の公式の料金）",
+    "note_en": "Dormitory bunk. Bed with linen €98; double room €105 per person. No year given (official price as of 2026-10-21)."
+   }
+  ],
+  "fac": {
+   "private_room": 1
+  },
+  "pos": [
+   46.6284332,
+   12.3579513
+  ],
+  "pos_src": "osm",
+  "ele": 2224,
+  "ele_src": "osm"
+ },
+ {
+  "id": "schlernboedelehuette",
+  "name_ja": "シュレルンベーデレ小屋（マルゲッタ・シリアール小屋）",
+  "name_en": "Schlernbödelehütte / Rifugio Malghetta Sciliar",
+  "aliases": "Schlernbodele",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/208620122",
+  "ele": 1693,
+  "ele_src": "osm",
+  "url": "https://www.schlernboedelehuette.com/",
+  "owner": "avs",
+  "src": "https://www.schlernboedelehuette.com/",
+  "checked": "2026-10-21",
+  "beds": 20,
+  "season": {
+   "status": "open",
+   "close": "2026-09-26",
+   "note": "2026 年は 9 月 26 日まで（公式）。AVS（南チロル山岳会）が建てた小屋。10 人の相部屋が 2 つ",
+   "note_en": "2026 season until 26 September (official). Built by the AVS (South Tyrol Alpine Club). Two 10-bed dormitories."
+  },
+  "phone": "+39 0471 1885169",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.schlernboedelehuette.com/de/anfragen%26reservieren.html"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@schlernboedelehuette.it"
+   }
+  ],
+  "fac": {
+   "private_room": 0
+  },
+  "pos": [
+   46.5221241,
+   11.5836529
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "schlernhaus",
+  "name_ja": "シュレルンハウス（ボルツァーノ小屋）",
+  "name_en": "Schlernhaus / Rifugio Bolzano",
+  "aliases": "Sciliar Schlern Bolzano",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/121834831",
+  "ele": 2457,
+  "ele_src": "osm",
+  "url": "https://www.schlernhaus.it/",
+  "src": "https://www.schlernhaus.it/schutzhaus-uebernachtung/preise",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-06",
+   "close": "2026-10-11",
+   "note": "雪と天気で変わることがある（公式）",
+   "note_en": "May change with snow and weather (official)."
+  },
+  "next": {
+   "open": "2027-06-08",
+   "close": "2027-10-10"
+  },
+  "phone": "+39 0471 612024",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.schlernhaus.it/it/dormire-rifugio-dolomiti/prenotazione",
+    "url_en": "https://www.schlernhaus.it/en/accommodation/book"
+   },
+   {
+    "kind": "form",
+    "url": "https://www.schlernhaus.it/schutzhaus-uebernachtung/anfrage"
+   }
+  ],
+  "terms": {
+   "ja": "着く 3 週間前までの取り消しは無料。それより後は 1 人 €30",
+   "en": "Free cancellation up to 3 weeks before arrival; after that €30 per person.",
+   "src": "https://www.schlernhaus.it/schutzhaus-uebernachtung/preise"
+  },
+  "rates": [
+   {
+    "plan": "one_meal",
+    "price": 65,
+    "member": 55,
+    "year": 2026,
+    "note": "自分の寝袋用シーツで泊まる朝食つき。羽毛布団のベッドは €75（会員 €65）。夕食はメニューから。2027 年は €68（会員 €58）・羽毛布団 €78（€68）",
+    "note_en": "B&B with your own liner. Duvet bed €75 (members €65). Dinner à la carte. 2027: €68 (members €58), duvet €78 (€68)."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.5073218,
+   11.574626
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "schlueterhuette",
+  "name_ja": "シュリューター小屋（ジェノヴァ小屋）",
+  "name_en": "Schlüterhütte / Rifugio Genova",
+  "aliases": "Schluterhutte Genova",
+  "range": "dolomites",
+  "sub_area": "puez_odle",
+  "osm": "node/11056910068",
+  "ele": 2306,
+  "ele_src": "official",
+  "url": "https://www.schlueterhuette.com/",
+  "src": "https://www.schlueterhuette.com/uebernachtungen-in-den-dolomiten.html",
+  "checked": "2026-10-21",
+  "season": {
+   "open": "2026-06-13",
+   "close": "2026-10-11"
+  },
+  "phone": "+39 0472 670072",
+  "book": [
+   {
+    "kind": "form",
+    "url": "https://www.schlueterhuette.com/uebernachtungen-in-den-dolomiten.html",
+    "url_en": "https://www.schlueterhuette.com/en/overnight-stays-prices-schlueterhuette.html"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@schlueterhuette.com"
+   }
+  ],
+  "terms": {
+   "ja": "1 人 €30 の前払いで予約が有効。着く 10 日前までの取り消しは前払いが戻る。それより後は戻らない。来なかった・早く出たときは全額。支払いは現地で現金かカード（電波が不安定なので現金を）",
+   "en": "Booking valid once a €30 per person deposit is paid. Cancel up to 10 days before arrival for a refund; later, the deposit is kept. No-show or early departure: full amount. Pay on site by cash or card (bring cash; the connection is unreliable).",
+   "src": "https://www.schlueterhuette.com/uebernachtungen-in-den-dolomiten.html"
+  },
+  "rates": [
+   {
+    "plan": "one_meal",
+    "price": 43,
+    "note": "相部屋・朝食つき。部屋（シーツつき）は €54。夕食はメニューから。シーズン中は同じ値段（年の記載なし）",
+    "note_en": "Dormitory with breakfast. Room with bed linen €54. Dinner à la carte. Same price all season (no year given)."
+   },
+   {
+    "plan": "no_meal",
+    "price": 28,
+    "note": "相部屋・朝食なし。部屋（シーツつき）は €39",
+    "note_en": "Dormitory without breakfast. Room with linen €39."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "credit_card": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.635317,
+   11.8045837
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "schutzhaus_tschafon",
+  "name_ja": "チャフォン小屋（モンテ・カヴォーネ小屋）",
+  "name_en": "Schutzhaus Tschafon / Rifugio Monte Cavone",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/187287693",
+  "ele": 1737,
+  "ele_src": "official",
+  "url": "https://www.schutzhaus-tschafon.com/",
+  "src": "https://www.schutzhaus-tschafon.com/",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-11-08",
+   "note": "11 月 8 日まで毎日営業（公式）。部屋に電気はない",
+   "note_en": "Open daily until 8 November (official). No electricity in the rooms."
+  },
+  "phone": "+39 347 813 1152",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@schutzhaus-tschafon.com"
+   }
+  ],
+  "terms": {
+   "ja": "1 人 €30 の前払いで予約が確定。2 週間前までの取り消しは無料。それより後は前払いが戻らない",
+   "en": "Booking binding after a €30 per person deposit. Free cancellation up to 2 weeks before; later, the deposit is kept.",
+   "src": "https://www.schutzhaus-tschafon.com/"
+  },
+  "rates": [
+   {
+    "plan": "one_meal",
+    "price": 64,
+    "year": 2027,
+    "note": "2027 年の料金。自分の寝袋用シーツで朝食つき。シーツつきは €70",
+    "note_en": "2027 price. B&B with your own liner; with bed linen €70."
+   }
+  ],
+  "fac": {
+   "shower": 1
+  },
+  "pos": [
+   46.4807819,
+   11.5304722
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "talschlusshuette",
+  "name_ja": "タールシュルス小屋（フォンドヴァッレ小屋）",
+  "name_en": "Talschlusshütte / Rifugio Fondovalle",
+  "aliases": "Fondovalle Fischleintal",
+  "range": "dolomites",
+  "sub_area": "sesto_dolomites",
+  "osm": "way/96096595",
+  "ele": 1548,
+  "ele_src": "official",
+  "url": "https://www.talschlusshuette.com/",
+  "src": "https://www.talschlusshuette.com/it/",
+  "checked": "2026-10-21",
+  "usual": {
+   "from": [
+    5,
+    "mid"
+   ],
+   "to": [
+    10,
+    "late"
+   ],
+   "winter": 1,
+   "note": "公式「5 月中旬〜10 月 20 日ごろ」。10 月 20 日ごろ〜クリスマス、イースター〜5 月中旬は休み",
+   "note_en": "Official: mid-May to about 20 October. Closed from about 20 October to Christmas and from Easter to mid-May."
+  },
+  "phone": "+39 0474 710606",
+  "book": [
+   {
+    "kind": "email",
+    "url": "mailto:info@talschlusshuette.com"
+   }
+  ],
+  "pos": [
+   46.6513776,
+   12.3538667
+  ],
+  "pos_src": "osm"
+ },
+ {
+  "id": "tierser_alpl_huette",
+  "name_ja": "ティールザー・アルプル小屋（アルペ・ディ・ティーレス小屋）",
+  "name_en": "Tierser Alpl Hütte / Rifugio Alpe di Tires",
+  "aliases": "Tierseralpl Alpe di Tires",
+  "range": "dolomites",
+  "sub_area": "catinaccio",
+  "osm": "way/121839252",
+  "ele": 2440,
+  "ele_src": "osm",
+  "url": "https://www.tierseralpl.com/",
+  "src": "https://www.tierseralpl.com/it/Default.asp",
+  "checked": "2026-10-21",
+  "season": {
+   "status": "open",
+   "close": "2026-10-18",
+   "note": "2026 年は 10 月 18 日まで（公式）",
+   "note_en": "2026 season until 18 October (official)."
+  },
+  "phone": "+39 0471 727958",
+  "book": [
+   {
+    "kind": "web",
+    "url": "https://www.simplebooking.it/ibe2/hotel/10178?lang=it",
+    "avail": 1,
+    "system": "simplebooking"
+   },
+   {
+    "kind": "email",
+    "url": "mailto:info@tierseralpl.com"
+   }
+  ],
+  "terms": {
+   "ja": "取り消し・来なかった・早く出たとき、前払いは戻らない。10 日前までに取り消せば、前払いは同じシーズンの別の日に使える",
+   "en": "Deposit never refunded (cancellation, no-show, early departure). Cancel at least 10 days ahead and it can be used for another date in the same season.",
+   "src": "https://www.tierseralpl.com/it/Default.asp"
+  },
+  "rates": [
+   {
+    "plan": "two_meals",
+    "price": 97,
+    "from": 1,
+    "year": 2026,
+    "note": "6〜12 人部屋（シーツ込み）。2〜4 人部屋は €109〜、シャワーつき部屋は €125〜。2026 年の案内のページ",
+    "note_en": "6–12 bed rooms, linen included. 2–4 bed rooms from €109, with shower from €125. Page for the 2026 season."
+   },
+   {
+    "plan": "one_meal",
+    "price": 63,
+    "from": 1,
+    "year": 2026,
+    "note": "6〜12 人部屋。2〜4 人部屋は €75〜、シャワーつき €91〜。シャワーのない部屋はシャワー €5",
+    "note_en": "6–12 bed rooms. 2–4 bed rooms from €75, with shower from €91. Shower €5 for rooms without one."
+   }
+  ],
+  "fac": {
+   "shower": 1,
+   "private_room": 1
+  },
+  "pos": [
+   46.4972406,
+   11.632844
+  ],
+  "pos_src": "osm"
+ }
+]

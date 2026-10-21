@@ -1089,6 +1089,14 @@
   async function loadHuts() {
     if (huts) return huts;
     try { huts = await (await fetch(BASE + "/data/huts.json")).json(); } catch (e) { huts = []; }
+    // OpenStreetMap から引いた位置（huts-osm.json、ODbL）を足す
+    try {
+      var op = ((await (await fetch(BASE + "/data/huts-osm.json")).json()) || {}).huts || {};
+      huts.forEach(function (h) {
+        var o = op[h.id];
+        if (o && o.lat != null && (!h.location || h.location.lat == null)) { h.location = Object.assign({}, h.location, { lat: o.lat, lon: o.lon }); }
+      });
+    } catch (e) { /* 位置の足しが無くても動く */ }
     return huts;
   }
   async function nearbyHuts() {

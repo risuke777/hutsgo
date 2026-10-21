@@ -21,10 +21,28 @@
   var KEY = "hutsgo-plan-v1";
   var huts = {};                       // id -> hut (data/huts.json)
   var state = { start: "", nights: 2, people: 1, days: [] };   // days[i] = [hutId, ...] 同じ日の候補
+  // 行き先（地方）。地図・稜線・名前の一覧は 1 つの地方ずつ（docs/REGIONS.md）。[{id, name, source}]
+  var ZONES = window.HUTSGO_PLAN_ZONES || [{ id: "japan", name: "", source: "gsi" }];
+  var zone = ZONES[0].id;
+  // 予約の状況（小屋ごと）。この端末の中だけに持ち、共有のリンクには入れない（A6）
+  //   { hutId: { s: "asked" | "held" | "full" | "cancel", d: "YYYY-MM-DD" } }  未連絡は持たない
+  var contact = {};
+  var CKEY = KEY + "-contact";
 
   // ---- 保存と共有 ---------------------------------------------------
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* プライベートモード等 */ }
+  }
+  function saveContact() {
+    try { localStorage.setItem(CKEY, JSON.stringify(contact)); } catch (e) { /* 保存できなくても画面では動く */ }
+  }
+  function loadContact() {
+    try { contact = JSON.parse(localStorage.getItem(CKEY) || "{}") || {}; } catch (e) { contact = {}; }
+  }
+  function zoneOf(h) { return (h && h.zone) || "japan"; }
+  function todayIso() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
   function load() {
     var fromHash = readHash();
@@ -68,20 +86,51 @@
     return d.getFullYear() + "-" + mm + "-" + dd;
   }
   function openOn(h, date) {
-    var se = h.season_2026;
-    if (!se || !date) return null;                     // null = 未確認。閉まっているとは言わない
+    if (!date) return null;
+    // その年の営業期間（2026・2027）。泊まる日の年の行だけを使う
+    var se = h["season_" + date.slice(0, 4)];
+    if (!se) return null;                              // null = 未確認。閉まっているとは言わない
     if (se.status === "year_round") return true;
     if (se.status !== "open" || !se.open_date || !se.close_date) return null;
+    // 2026 年の日付は 2026 年の泊まりにだけ当てる（ほかの年に流用しない: A1）
+    if (date.slice(0, 4) !== se.open_date.slice(0, 4)) return null;
     return date >= se.open_date && date <= se.close_date;
+  }
+  // 年の日付が無いとき、公式の「例年の営業期間」（月の単位）で目安を出す。
+  // "in" = 例年は営業の月 / "edge" = 始まり・終わりの月（その月のどこからかは分からない）/ "out" = 例年は休みの月 / null = 分からない
+  var PART = { early: "上旬", mid: "中旬", late: "下旬" }, PART_EN = { early: "early ", mid: "mid-", late: "late " };
+  function usualLabel(u) {
+    function one(m, p) {
+      if (!m) return "?";
+      return LANG === "en" ? (PART_EN[p] || "") + MONTH_EN[m - 1] : m + "月" + (PART[p] || "");
+    }
+    return one(u.from_month, u.from_part) + (LANG === "en" ? " to " : "〜") + one(u.to_month, u.to_part);
+  }
+  function usualOn(h, date) {
+    var u = h.usual_season;
+    if (!u || !date || !u.from_month || !u.to_month) return null;
+    var m = Number(date.slice(5, 7));
+    if (m > u.from_month && m < u.to_month) return "in";
+    if (m === u.from_month || m === u.to_month) return "edge";
+    return u.winter === 1 ? null : "out";               // 冬も開ける小屋は、夏の外の月を「休み」と言わない
   }
   function hutName(h) {
     var n = h.name || {};
-    if (LANG === "en") return n.en ? n.en + " (" + (n.ja || "") + ")" : (n.ja || h.id);
+    // 英語版で日本語名を括弧で残すのは日本の小屋だけ（現地で見せるため）。外国は現地の名前だけ
+    if (LANG === "en") return n.en ? n.en + ((h.country || "JP") === "JP" && n.ja ? " (" + n.ja + ")" : "") : (n.ja || h.id);
     return n.ja || n.en || h.id;
+  }
+  function money(v, cur) {
+    if (v == null) return null;
+    if (!cur || cur === "JPY") return "¥" + Number(v).toLocaleString();
+    var sym = cur === "EUR" ? "€" : cur + " ";
+    return sym + (Number(v) % 1 ? Number(v).toFixed(2) : String(Number(v)));
   }
   function priceOf(h) {
     var r = (h.rates_2026 || []).filter(function (x) { return x.plan === "two_meals"; })[0];
-    return r && r.price ? "¥" + r.price.toLocaleString() + (r.is_from_price ? "+" : "") : null;
+    if (!r || !r.price) return null;
+    var label = (h.country || "JP") === "JP" ? "" : t("half_board") + " ";
+    return label + money(r.price, r.currency) + (r.is_from_price ? "+" : "");
   }
 
   // ---- 選択盤（稜線図）------------------------------------------------
@@ -92,6 +141,7 @@
     var byArea = {};
     Object.keys(huts).forEach(function (id) {
       var h = huts[id], a = (h.area && h.area.id) || "other";
+      if (zoneOf(h) !== zone) return;                   // 今の行き先の小屋だけ
       (byArea[a] = byArea[a] || []).push(h);
     });
     Object.keys(byArea).forEach(function (a) {
@@ -116,10 +166,13 @@
       sec.appendChild(row);
       box.appendChild(sec);
     });
-    box.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-hut]");
-      if (b) addHut(b.dataset.hut);
-    });
+    if (!box.dataset.wired) {
+      box.dataset.wired = "1";
+      box.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-hut]");
+        if (b) addHut(b.dataset.hut);
+      });
+    }
   }
 
   function hutButton(h, cls) {
@@ -137,6 +190,7 @@
     var q = (filter || "").trim().toLowerCase();
     var ul = el("ul", "plan-hutlist");
     var hits = Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) {
+      if (zoneOf(h) !== zone) return false;              // 今の行き先の小屋だけ
       if (!q) return true;
       var n = h.name || {};
       return ((n.ja || "") + " " + (n.en || "") + " " + h.id).toLowerCase().indexOf(q) >= 0;
@@ -161,15 +215,22 @@
   function setupSearch() {
     var input = $("#plan-search"), out = $("#plan-search-results");
     if (!input) return;
+    // アクセント（Hütte／Hutte）と大文字小文字をそろえて比べる
+    function fold(x) { return String(x || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
     function results() {
-      var q = input.value.trim().toLowerCase();
+      var q = fold(input.value.trim());
       out.innerHTML = "";
       if (!q) { out.hidden = true; return; }
+      // 名前で探すときは行き先をまたぐ。今の行き先の小屋を先に、ほかの行き先は名前の後ろに行き先を出す
       var hits = Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) {
         var n = h.name || {};
-        return ((n.ja || "") + " " + (n.en || "") + " " + h.id).toLowerCase().indexOf(q) >= 0;
-      }).slice(0, 8);
-      hits.forEach(function (h) { out.appendChild(hutButton(h, "plan-chip plan-search-hit")); });
+        return fold((n.ja || "") + " " + (n.en || "") + " " + h.id).indexOf(q) >= 0;
+      }).sort(function (a, b) { return (zoneOf(a) === zone ? 0 : 1) - (zoneOf(b) === zone ? 0 : 1); }).slice(0, 8);
+      hits.forEach(function (h) {
+        var b = hutButton(h, "plan-chip plan-search-hit");
+        if (zoneOf(h) !== zone) b.appendChild(el("span", "plan-chip-zone", zoneName(zoneOf(h))));
+        out.appendChild(b);
+      });
       if (!hits.length) out.appendChild(el("p", "quiet", t("search_none")));
       out.hidden = false;
       drawList($("#plan-list"), input.value);
@@ -184,6 +245,7 @@
     out.addEventListener("click", function (ev) {
       var b = ev.target.closest("[data-hut]");
       if (!b) return;
+      if (huts[b.dataset.hut] && zoneOf(huts[b.dataset.hut]) !== zone) switchZone(zoneOf(huts[b.dataset.hut]));
       addHut(b.dataset.hut);
       if (mapApi) mapApi.focus(b.dataset.hut);   // 押した小屋が地図のどこかを見せる
       input.value = "";
@@ -268,8 +330,33 @@
     render();
   }
 
+  // 予約の状況: 未連絡 → 問い合わせ中 → 確保／満室／取り消した。変えた日も残す（この端末の中だけ）
+  var STATUSES = ["none", "asked", "held", "full", "cancel"];
+  function statusControl(h) {
+    var wrap = el("label", "plan-status");
+    wrap.appendChild(el("span", "plan-status-k", t("st_h")));
+    var sel = el("select");
+    var cur = contact[h.id] || null;
+    STATUSES.forEach(function (k) {
+      var o = el("option", null, t("st_" + k));
+      o.value = k;
+      if ((cur ? cur.s : "none") === k) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", function () {
+      if (sel.value === "none") delete contact[h.id];
+      else contact[h.id] = { s: sel.value, d: todayIso() };
+      saveContact();
+      render();
+    });
+    wrap.appendChild(sel);
+    if (cur && cur.d) wrap.appendChild(el("small", "plan-status-d", t("st_on").replace("{d}", cur.d.slice(5).replace("-", "/"))));
+    return wrap;
+  }
+
   function hutCard(h, day) {
     var card = el("div", "plan-card");
+    if (contact[h.id]) card.classList.add("st-" + contact[h.id].s);
     card.draggable = true;
     card.dataset.hut = h.id;
     card.dataset.day = day;
@@ -284,30 +371,49 @@
 
     var date = dayDate(day);
     var st = openOn(h, date);
-    var badge = el("span", "plan-badge " + (st === true ? "is-open" : st === false ? "is-closed" : "is-unknown"),
-                   st === true ? t("open_on") : st === false ? t("closed_on") : t("season_unknown"));
+    var us = st === null ? usualOn(h, date) : null;
+    var badge;
+    if (st === true) badge = el("span", "plan-badge is-open", t("open_on"));
+    else if (st === false) badge = el("span", "plan-badge is-closed", t("closed_on"));
+    // 年の日付が無いときだけ、公式の「例年の営業期間」で目安を出す（日付には直さない）
+    else if (us === "in") badge = el("span", "plan-badge is-usual", t("usual_in").replace("{l}", usualLabel(h.usual_season)));
+    else if (us === "edge") badge = el("span", "plan-badge is-unknown", t("usual_edge").replace("{l}", usualLabel(h.usual_season)));
+    else if (us === "out") badge = el("span", "plan-badge is-closed", t("usual_out").replace("{l}", usualLabel(h.usual_season)));
+    else badge = el("span", "plan-badge is-unknown", t("season_unknown"));
     card.appendChild(badge);
 
     var se = h.season_2026 || {};
     var res = se.reservation || {};
     var opens = res.opens_at && (LANG === "en" ? (res.opens_at.en || res.opens_at.ja) : res.opens_at.ja);
     if (opens) card.appendChild(el("p", "plan-opens", t("booking_opens") + " " + opens));
+    card.appendChild(statusControl(h));
 
+    var chs = res.channels || [];
+    var avail = chs.filter(function (c) { return c.availability === 1; })[0];
+    var mail = chs.filter(function (c) { return c.kind === "email"; })[0];
     var acts = el("div", "plan-card-actions");
-    if (res.url) {
-      var bu = el("a", "btn btn-primary", t("book"));
+    // 申し込む前に空きが見られるページ（公式）があれば、それをいちばん先に
+    if (avail) {
+      var av = el("a", "btn btn-primary", t("avail"));
+      av.href = (LANG === "en" && avail.url_en) ? avail.url_en : avail.url; av.target = "_blank"; av.rel = "noopener";
+      av.dataset.track = "reservation"; av.dataset.hut = h.id;
+      acts.appendChild(av);
+    }
+    if (res.url && (!avail || avail.url !== res.url)) {
+      var bu = el("a", "btn" + (avail ? "" : " btn-primary"), t("book"));
       bu.href = res.url; bu.target = "_blank"; bu.rel = "noopener";
       bu.dataset.track = "official_site"; bu.dataset.hut = h.id;
       acts.appendChild(bu);
     }
     if (res.phone) {
       var ph = el("a", "btn", res.phone);
-      ph.href = "tel:" + res.phone.replace(/-/g, "");
+      ph.href = "tel:" + res.phone.replace(/[-\s]/g, "");
       ph.dataset.track = "phone"; ph.dataset.hut = h.id;
       acts.appendChild(ph);
     }
-    if ((res.phone || res.url || (res.channels || []).length) && window.HutsGoContact) {
-      var cbtn = el("button", "btn btn-ghost", t("contact_btn"));
+    if (mail && (h.country || "JP") !== "JP") card.dataset.mail = "1";
+    if ((res.phone || res.url || chs.length) && window.HutsGoContact) {
+      var cbtn = el("button", "btn btn-ghost", t(card.dataset.mail ? "contact_btn_mail" : "contact_btn"));
       cbtn.type = "button";
       var panelId = "contact-" + h.id + "-" + day;
       cbtn.setAttribute("aria-expanded", "false");
@@ -316,12 +422,12 @@
         var open = !panel.hidden;
         panel.hidden = open;
         cbtn.setAttribute("aria-expanded", String(!open));
-        if (!open && !panel.dataset.built) { panel.dataset.built = "1"; fillContactPanel(panel, h, date); }
+        if (!open && !panel.dataset.built) { panel.dataset.built = "1"; fillContactPanel(panel, h, date, day); }
       });
       acts.appendChild(cbtn);
     }
     card.appendChild(acts);
-    if ((res.phone || res.url || (res.channels || []).length) && window.HutsGoContact) {
+    if ((res.phone || res.url || chs.length) && window.HutsGoContact) {
       var contactPanel = el("div", "plan-contact");
       contactPanel.hidden = true;
       card.appendChild(contactPanel);
@@ -347,9 +453,67 @@
   var MONTH_EN = ["January", "February", "March", "April", "May", "June",
                   "July", "August", "September", "October", "November", "December"];
 
-  // 連絡の準備パネル。開いたときに一度だけ組み立てる（押すたびに毎回作り直さない）
-  function fillContactPanel(panel, h, dateIso) {
+  // 同じ小屋に続けて泊まる泊数（この日から）。メールの「何泊」に使う
+  function nightsFrom(id, day) {
+    var n = 0;
+    for (var i = day; i < state.days.length && state.days[i].indexOf(id) >= 0; i++) n++;
+    return Math.max(1, n);
+  }
+  // メールの文（伊・独・英）。送るのは見ている人のメールアプリから（mailto:）。HutsGo には何も届かない（A4・A6）
+  function mailComposer(panel, h, ch, dateIso, day) {
     var C = window.HutsGoContact;
+    panel.appendChild(el("h4", "plan-contact-h", t("mail_h")));
+    if (!dateIso) { panel.appendChild(el("p", "quiet", t("need_date"))); return; }
+    var opts = { lang: "it", plan: "hb", room: "any", members: false };
+    var form = el("div", "plan-mail-opts");
+    function select(label, key, choices) {
+      var w = el("label", "plan-field"), s = el("select");
+      w.appendChild(document.createTextNode(label));
+      choices.forEach(function (c) { var o = el("option", null, c[1]); o.value = c[0]; if (opts[key] === c[0]) o.selected = true; s.appendChild(o); });
+      s.addEventListener("change", function () { opts[key] = s.value; update(); });
+      w.appendChild(s); form.appendChild(w);
+    }
+    select(t("mail_lang"), "lang", [["it", "Italiano"], ["de", "Deutsch"], ["en", "English"]]);
+    select(t("mail_plan"), "plan", [["hb", t("half_board")], ["bb", t("bb")], ["bo", t("bed_only")]]);
+    select(t("mail_room"), "room", [["any", t("room_any")], ["dorm", t("room_dorm")], ["room", t("room_private")]]);
+    var mem = el("label", "plan-check"), cb = el("input");
+    cb.type = "checkbox";
+    cb.addEventListener("change", function () { opts.members = cb.checked; update(); });
+    mem.appendChild(cb); mem.appendChild(document.createTextNode(" " + t("mail_members")));
+    form.appendChild(mem);
+    panel.appendChild(form);
+    var pre = el("pre", "plan-mail-body");
+    panel.appendChild(pre);
+    var row = el("div", "plan-card-actions");
+    var send = el("a", "btn btn-primary", t("mail_open"));
+    send.dataset.track = "reservation"; send.dataset.hut = h.id;
+    var copy = el("button", "btn btn-ghost", t("mail_copy"));
+    copy.type = "button";
+    row.appendChild(send); row.appendChild(copy);
+    panel.appendChild(row);
+    panel.appendChild(el("p", "quiet", t("mail_note")));
+    var cur = null;
+    function update() {
+      cur = C.bookingMail({ lang: opts.lang, start: dateIso, nights: nightsFrom(h.id, day), people: state.people || 1,
+                            plan: opts.plan, room: opts.room, members: opts.members });
+      pre.textContent = "Subject: " + cur.subject + "\n\n" + cur.body;
+      send.href = ch.url + "?subject=" + encodeURIComponent(cur.subject) + "&body=" + encodeURIComponent(cur.body);
+    }
+    copy.addEventListener("click", function () {
+      var txt = cur.subject + "\n\n" + cur.body;
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast(t("mail_copied")); }, function () { toast(t("load_failed")); });
+    });
+    // メールを開いたら「問い合わせ中」にする（まだ確保ではない）
+    send.addEventListener("click", function () {
+      if (!contact[h.id] || contact[h.id].s === "cancel") { contact[h.id] = { s: "asked", d: todayIso() }; saveContact(); setTimeout(render, 400); }
+    });
+    update();
+  }
+
+  // 連絡の準備パネル。開いたときに一度だけ組み立てる（押すたびに毎回作り直さない）
+  function fillContactPanel(panel, h, dateIso, day) {
+    var C = window.HutsGoContact;
+    var world = (h.country || "JP") !== "JP";
     var se = h.season_2026 || {}, res = se.reservation || {};
     var p = dateIso ? dateIso.split("-").map(Number) : null;
 
@@ -366,14 +530,16 @@
       var ul = el("ul", "channel-list");
       chs.forEach(function (c) {
         var li = el("li");
-        var a = el("a", null, t(c.operator === "hut" && c.kind === "form" ? "ch_hut_form" : "ch_" + c.operator));
+        var a = el("a", null, c.kind === "email" ? t("ch_email") + " " + c.url.replace(/^mailto:/, "")
+                                : t(c.operator === "hut" && c.kind === "form" ? "ch_hut_form" : "ch_" + c.operator));
         a.href = (LANG === "en" && c.url_en) ? c.url_en : c.url;
         a.target = "_blank"; a.rel = "noopener";
         // 旅行会社への案内は小屋への送客ではないので、送客率の計測に混ぜない
         a.dataset.track = c.kind === "agency" ? "agency_link" : "reservation";
         a.dataset.hut = h.id;
         li.appendChild(a);
-        li.appendChild(el("span", "ch-en ch-en-" + c.english, t("ch_en_" + c.english)));
+        if (c.kind !== "email") li.appendChild(el("span", "ch-en ch-en-" + c.english, t("ch_en_" + c.english + (world && c.english === "no" ? "_world" : ""))));
+        if (c.availability === 1) li.appendChild(el("span", "ch-avail", t("avail_chip")));
         if (c.guide_en_url) {
           var g = el("a", "ch-guide", t("ch_guide"));
           g.href = c.guide_en_url; g.target = "_blank"; g.rel = "noopener";
@@ -385,6 +551,24 @@
         ul.appendChild(li);
       });
       panel.appendChild(ul);
+    }
+
+    // --- 日本の外: メールの文・前払いと取り消し・泊まり方の説明。日本語の電話の台本と予約フォームの対訳は出さない ---
+    if (world) {
+      var terms = se.booking_terms && (LANG === "en" ? (se.booking_terms.en || se.booking_terms.ja) : (se.booking_terms.ja || se.booking_terms.en));
+      if (terms) {
+        panel.appendChild(el("h4", "plan-contact-h", t("terms_h")));
+        panel.appendChild(el("p", null, terms));
+      }
+      var mail = chs.filter(function (c) { return c.kind === "email"; })[0];
+      if (mail) mailComposer(panel, h, mail, dateIso, day);
+      var gl = el("p", "quiet");
+      var ga = el("a", null, t("guide_link"));
+      ga.href = "#rifugio-guide";
+      ga.addEventListener("click", function () { var d = $("#rifugio-guide"); if (d) d.open = true; });
+      gl.appendChild(ga);
+      panel.appendChild(gl);
+      return;
     }
 
     // --- 電話の台本 ---
@@ -479,18 +663,30 @@
     ensureDays();
     var box = $("#plan-days");
     box.innerHTML = "";
+    var heldN = 0;
     state.days.forEach(function (ids, i) {
       var day = el("section", "plan-day");
       day.dataset.day = i;
       var date = dayDate(i);
       var h2 = el("h3", null, t("day_n").replace("{n}", i + 1) + (date ? "  " + date : ""));
+      // その夜に「確保」の小屋があれば見出しに出す。満室・取り消しの候補は後ろへ回す
+      var held = ids.filter(function (id) { return contact[id] && contact[id].s === "held"; })[0];
+      if (held && huts[held]) { h2.appendChild(el("span", "plan-day-held", t("st_day_held").replace("{name}", hutName(huts[held])))); heldN++; }
       day.appendChild(h2);
       var row = el("div", "plan-day-row");
       if (!ids.length) row.appendChild(el("p", "plan-empty", t("drop_here")));
-      ids.forEach(function (id) { if (huts[id]) row.appendChild(hutCard(huts[id], i)); });
+      var rank = function (id) { var c = contact[id]; return c && (c.s === "full" || c.s === "cancel") ? 1 : 0; };
+      ids.slice().sort(function (a, b) { return rank(a) - rank(b); })
+         .forEach(function (id) { if (huts[id]) row.appendChild(hutCard(huts[id], i)); });
       day.appendChild(row);
       box.appendChild(day);
     });
+    var sum = $("#plan-status-sum");
+    if (sum) {
+      var anyStatus = chosenIds().some(function (id) { return contact[id]; });
+      sum.hidden = !anyStatus;
+      sum.textContent = t("st_summary").replace("{held}", heldN).replace("{n}", state.days.length);
+    }
     save();
     writeHash();
     if (mapApi) mapApi.setChosen(chosenIds());
@@ -564,7 +760,59 @@
   // ---- 選択の見せ方（地図 / 稜線 / 一覧）--------------------------------
   // 人は「行きたい山の周り」から選ぶので、既定は地図。
   // 山域をまたぐロング縦走では縮小すれば全部入る。地図が重い端末のために他の2つも残す。
-  var mapApi = null;
+  var mapApi = null, currentView = function () { return "map"; };
+  // 地図は 1 つの行き先ずつ（日本とイタリアを 1 枚に入れると、どちらの小屋も点にしか見えない）。
+  // 地図の出どころも行き先で変わる（日本 = 地理院、日本の外 = OpenTopoMap。docs/REGIONS.md）
+  function zoneName(id) { var z = ZONES.filter(function (x) { return x.id === id; })[0]; return z ? z.name : id; }
+  function makeMap() {
+    if (!window.HutsGoMap) return;
+    if (mapApi && mapApi.destroy) mapApi.destroy();
+    // 前の地図が付けた操作の見張りを残さないよう、地図の箱を作り直す
+    var old = $("#plan-map"), box = old.cloneNode(false);
+    old.parentNode.replaceChild(box, old);
+    var z = ZONES.filter(function (x) { return x.id === zone; })[0] || ZONES[0];
+    mapApi = window.HutsGoMap.create(box, {
+      huts: Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) { return zoneOf(h) === zone; }),
+      source: z.source,
+      strings: T,
+      nameOf: hutName,
+      onPick: addHut,
+      onMove: drawNearby
+    });
+    mapApi.setChosen(chosenIds());
+    drawNearby();
+  }
+  function switchZone(id) {
+    if (id === zone || !ZONES.some(function (x) { return x.id === id; })) return;
+    zone = id;
+    try { localStorage.setItem(KEY + "-zone", zone); } catch (e) { /* 保存できなくても動く */ }
+    document.querySelectorAll("[data-plan-zone]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.planZone === zone));
+    });
+    drawRidge($("#plan-ridge"));
+    drawList($("#plan-list"), "");
+    if (currentView() === "map") makeMap();
+    else if (mapApi) { mapApi.destroy && mapApi.destroy(); mapApi = null; }
+  }
+  // 行き先の切り替え（地図の上）。最初は、行程に入っている小屋が全部同じ行き先ならそこ、次に前に見ていた行き先
+  function setupZones() {
+    var cs = chosenIds().map(function (id) { return huts[id] && zoneOf(huts[id]); }).filter(Boolean);
+    var saved = null;
+    try { saved = localStorage.getItem(KEY + "-zone"); } catch (e) { /* 読めなくても既定で動く */ }
+    if (cs.length && cs.every(function (c) { return c === cs[0]; })) zone = cs[0];
+    else if (saved && ZONES.some(function (x) { return x.id === saved; })) zone = saved;
+    var box = $("#plan-zones");
+    if (!box || ZONES.length < 2) return;
+    box.hidden = false;
+    ZONES.forEach(function (z) {
+      var b = el("button", "plan-zone", z.name);
+      b.type = "button";
+      b.dataset.planZone = z.id;
+      b.setAttribute("aria-pressed", String(z.id === zone));
+      b.addEventListener("click", function () { switchZone(z.id); });
+      box.appendChild(b);
+    });
+  }
   function setupViews(data) {
     var tabs = document.querySelectorAll(".plan-tab");
     var views = {
@@ -577,25 +825,11 @@
       try { localStorage.setItem(KEY + "-view", name); } catch (e) { /* 保存できなくても動く */ }
       $("#plan-nearby").hidden = name !== "map";
       if (name === "map") {
-        if (!mapApi && window.HutsGoMap) {
-          // 地図は 1 つの国ずつ（日本とイタリアを 1 枚に入れると、どちらの小屋も点にしか見えない）。
-          // 行程に入っている小屋が全部同じ外国なら、その国。ほかは日本。地図の出どころも国で変わる（docs/REGIONS.md）
-          var cs = chosenIds().map(function (id) { var h = data.filter(function (x) { return x.id === id; })[0]; return h && (h.country || "JP"); }).filter(Boolean);
-          var region = cs.length && cs.every(function (c) { return c === cs[0]; }) ? cs[0] : "JP";
-          mapApi = window.HutsGoMap.create($("#plan-map"), {
-            huts: data.filter(function (h) { return (h.country || "JP") === region; }),
-            source: region === "JP" ? "gsi" : "topo",
-            strings: T,
-            nameOf: hutName,
-            onPick: addHut,
-            onMove: drawNearby
-          });
-          mapApi.setChosen(chosenIds());
-        } else if (mapApi) {
-          mapApi.redraw();
-        }
+        if (!mapApi) makeMap();
+        else mapApi.redraw();
       }
     }
+    currentView = function () { return Object.keys(views).filter(function (k) { return !views[k].hidden; })[0]; };
     tabs.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.view); }); });
     var saved = null;
     try { saved = localStorage.getItem(KEY + "-view"); } catch (e) { /* 読めなくても既定で動く */ }
@@ -662,8 +896,19 @@
   }
 
   // ---- 起動 -----------------------------------------------------------
-  function start(data) {
-    data.forEach(function (h) { huts[h.id] = h; });
+  function start(data, osm) {
+    // OSM から引いた位置・標高（ODbL）は別のファイル。ここで小屋に足す（docs/REGIONS.md）
+    var op = (osm && osm.huts) || {};
+    data.forEach(function (h) {
+      var o = op[h.id];
+      if (o) {
+        h.location = h.location || {};
+        if (o.lat != null && h.location.lat == null) { h.location.lat = o.lat; h.location.lon = o.lon; }
+        if (o.elevation_m != null && h.location.elevation_m == null) h.location.elevation_m = o.elevation_m;
+      }
+      huts[h.id] = h;
+    });
+    loadContact();
     // 小屋ページ・ルートページからの #add= / #addroute= は load/render より先に読む。
     // render() が hash を #p=... に書き換えるので、後から読むと消えている
     var addId = (/[#&]add=([a-z0-9_]+)/.exec(location.hash) || [])[1];
@@ -689,6 +934,9 @@
     });
     setupIcsAll();
     setupShare();
+    setupZones();
+    if (addId && huts[addId]) zone = zoneOf(huts[addId]);   // 小屋ページから来たら、その小屋の行き先を開く
+    document.querySelectorAll("[data-plan-zone]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.planZone === zone)); });
     drawRidge($("#plan-ridge"));
     drawList($("#plan-list"), "");
     setupSearch();
@@ -734,7 +982,11 @@
 
   var url = meta("hutsgo-data");
   if (!url) return;
-  fetch(url).then(function (r) { return r.json(); }).then(start).catch(function () {
+  var osmUrl = url.replace(/huts\.json$/, "huts-osm.json");
+  Promise.all([
+    fetch(url).then(function (r) { return r.json(); }),
+    fetch(osmUrl).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+  ]).then(function (v) { start(v[0], v[1]); }).catch(function () {
     var m = $("#plan-msg");
     if (m) { m.textContent = t("load_failed"); m.hidden = false; }
   });

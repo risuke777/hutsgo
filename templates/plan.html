@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% from "_rifugio_guide.html" import rifugio_guide with context %}
 {% block title %}{{ T.plan_title }}{% endblock %}
 {% block desc %}{{ T.plan_lede }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ BASE }}/static/plan.css">
 <meta name="hutsgo-data" content="{{ BASE }}/data/huts.json">
-<script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};</script>
+<script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};
+window.HUTSGO_PLAN_ZONES = {{ plan_zones | tojson }};</script>
 {% endblock %}
 {% block body %}
 <h1 class="plan-h1">{{ T.plan_h1 }}</h1>
@@ -16,7 +18,7 @@
 <div id="plan" hidden>
   <div class="plan-bar">
     <label class="plan-field">{{ T.plan_start_date }}
-      <input type="date" id="plan-start" min="2026-01-01" max="2026-12-31">
+      <input type="date" id="plan-start" min="2026-01-01" max="2027-12-31">
     </label>
     <label class="plan-field">{{ T.plan_nights }}
       <select id="plan-nights">
@@ -56,6 +58,8 @@
 
   <section class="plan-picker" aria-labelledby="picker-h">
     <h2 id="picker-h" class="visually-hidden">{{ T.plan_picker_h }}</h2>
+    {#- 行き先（地方）の切り替え。地図・稜線・名前の一覧は 1 つの行き先ずつ。名前で探すときは行き先をまたぐ -#}
+    <div class="plan-zones" id="plan-zones" role="group" aria-label="{{ T.zone_switch }}" hidden></div>
     <div class="plan-toolbar">
       <div class="plan-tabs" role="tablist" aria-label="{{ T.plan_picker_h }}">
         <button type="button" class="plan-tab" role="tab" data-view="map" aria-selected="true">{{ T.plan_view_map }}</button>
@@ -96,7 +100,13 @@
 
   <section class="plan-board" aria-labelledby="board-h">
     <h2 id="board-h">{{ T.plan_board_h }}</h2>
+    <p class="plan-status-sum" id="plan-status-sum" hidden></p>
     <div id="plan-days"></div>
+    <p class="quiet">{{ T.plan_status_note }}</p>
+  </section>
+
+  <section class="plan-guide" aria-label="{{ T.rg_summary }}">
+    {{ rifugio_guide() }}
   </section>
 
   <output id="plan-msg" class="plan-toast" aria-live="polite" hidden></output>

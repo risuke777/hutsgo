@@ -194,3 +194,30 @@
 /* 連絡の準備パネルの予約窓口（.channel-list の基本は site.css） */
 .plan-contact .channel-list{margin:.25rem 0 .75rem}
 .plan-contact .channel-list li{padding:.45rem .65rem}
+
+/* ---- 行き先（地方）の切り替え・予約の状況・メールの文（docs/PLAN_BOARD.md 2026-10-21）---- */
+.plan-zones{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 .6rem}
+.plan-zones[hidden]{display:none}
+.plan-zone{font:inherit;font-size:.88rem;font-weight:700;cursor:pointer;min-height:38px;padding:.35rem .9rem;
+  border:1px solid var(--line-strong);border-radius:999px;background:#fff;color:var(--ink)}
+.plan-zone[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.plan-zone:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.plan-chip-zone{font-size:.7rem;color:var(--granite)}
+.plan-badge.is-usual{background:#EAF2E4;color:#3D5A2A}
+.plan-status{display:flex;align-items:center;flex-wrap:wrap;gap:.3rem .5rem;margin:.45rem 0 0;font-size:.8rem;color:var(--ink-soft)}
+.plan-status-k{font-weight:700}
+.plan-status select{font:inherit;font-size:.82rem;padding:.2rem .35rem;border:1px solid var(--line-strong);border-radius:4px;background:#fff;color:var(--ink)}
+.plan-status-d{display:inline;margin:0;font-size:.72rem}
+.plan-card.st-held{border-color:var(--open);box-shadow:inset 3px 0 0 var(--open)}
+.plan-card.st-asked{box-shadow:inset 3px 0 0 var(--ochre)}
+.plan-card.st-full,.plan-card.st-cancel{opacity:.6}
+.plan-day-held{display:inline-block;margin-left:.6rem;padding:.05rem .5rem;border-radius:999px;background:var(--open-tint);color:var(--open);font-size:.75rem;font-weight:700}
+.plan-status-sum{margin:0 0 .4rem;font-size:.88rem;font-weight:700;color:var(--open)}
+.plan-status-sum[hidden]{display:none}
+.plan-mail-opts{display:grid;gap:.4rem;margin:.3rem 0 .5rem}
+.plan-mail-opts select{width:100%}
+.plan-check{font-size:.85rem;display:flex;align-items:center;gap:.3rem}
+.plan-mail-body{white-space:pre-wrap;word-break:break-word;font:inherit;font-size:.8rem;line-height:1.55;margin:.4rem 0;padding:.6rem .7rem;
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;max-height:16rem;overflow:auto}
+.ch-avail{display:inline-block;margin-left:.4rem;padding:0 .4rem;border-radius:3px;background:var(--open-tint);color:var(--open);font-size:.72rem;font-weight:700}
+.plan-guide{margin-top:1.5rem}

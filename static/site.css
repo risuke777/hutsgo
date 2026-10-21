@@ -765,3 +765,15 @@ h2,h3{font-weight:700}
 .finder-else-k{justify-self:start;white-space:nowrap;font-size:.7rem;font-weight:700;padding:.05rem .45rem;border-radius:999px;background:var(--card);color:var(--granite)}
 .finder-else small{grid-column:2;margin:0;font-size:.78rem}
 .zone-search{margin:0 0 1.6rem}
+
+/* ---- ドロミテの小屋の泊まり方（_rifugio_guide.html）---- */
+.rguide{margin:1.2rem 0;padding:.2rem 1rem .4rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.rguide summary{cursor:pointer;padding:.6rem 0;font-weight:700}
+.rguide h3{margin:.8rem 0 .4rem;font-size:1rem}
+.rguide-terms{display:block;overflow-x:auto;max-width:100%;font-size:.82rem}
+.rguide-terms th,.rguide-terms td{padding:.45rem .55rem}
+.rguide-terms td,.rguide-terms th{vertical-align:top}
+.rguide-list{padding-left:1.1rem;font-size:.9rem}
+.rguide-list li{margin:.35rem 0}
+.rguide-list a{font-size:.78rem;white-space:nowrap}
+.ch-avail{display:inline-block;margin-left:.4rem;padding:0 .4rem;border-radius:3px;background:var(--open-tint);color:var(--open);font-size:.72rem;font-weight:700}

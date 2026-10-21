@@ -78,12 +78,18 @@ CREATE TABLE huts (
   lon            REAL,
   elevation_m    INTEGER,
   -- 'official' = 小屋の公式サイト記載値 / 'gsi' = 国土地理院 標高API（平地の宿のみ。稜線の小屋は位置誤差が大きいので使わない）
-  elevation_source TEXT CHECK (elevation_source IN ('official','gsi')),
+  elevation_source TEXT CHECK (elevation_source IN ('official','gsi','osm')),
   official_url   TEXT,
   source_url     TEXT,
   last_verified_at TEXT,
   confidence     TEXT NOT NULL DEFAULT 'unknown'
-                   CHECK (confidence IN ('verified','reported','unknown'))
+                   CHECK (confidence IN ('verified','reported','unknown')),
+  -- 位置の出どころ。'osm' の位置と標高は ODbL なので公開データ（/data/huts.json, CC BY-NC）に入れず、
+  -- /data/huts-osm.json（ODbL）に分けて出す（docs/REGIONS.md）。NULL = 日本の小屋のこれまでの値（公式・地理院）
+  position_source TEXT CHECK (position_source IN ('official','gsi','osm')),
+  osm_ref        TEXT,                 -- 'node/123' など。位置を引いた OSM の要素
+  -- 持ち主の種類。CAI（SAT は CAI のトレンティーノ支部）の小屋だけ、CAI の料金表と決まり（会員割引・寝袋用シーツ）が当てはまる
+  owner_kind     TEXT CHECK (owner_kind IN ('cai','sat','avs','province','private','other'))
 );
 -- PG: add  geog geography(Point,4326)  + GIST index for radius search.
 
@@ -117,6 +123,9 @@ CREATE TABLE hut_seasons (
   booking_opens_time  TEXT,            -- 'HH:MM'（JST）。両ルールで使う。時刻が不明なら rule も unknown にする
   capacity_beds  INTEGER,
   capacity_tents INTEGER,
+  -- 前払い（caparra・Anzahlung）と取り消しの決まり。小屋の公式の文言を短く（自由文）
+  booking_terms    TEXT,
+  booking_terms_en TEXT,
   source_url     TEXT,
   last_verified_at TEXT,
   confidence     TEXT NOT NULL DEFAULT 'unknown'
@@ -134,18 +143,36 @@ CREATE TABLE hut_booking_channels (
   hut_id           TEXT NOT NULL REFERENCES huts(id),
   year             INTEGER NOT NULL,
   seq              INTEGER NOT NULL,
-  kind             TEXT NOT NULL CHECK (kind IN ('web','form','agency')),  -- web=予約システム / form=申込フォーム（返信で確定）
+  kind             TEXT NOT NULL CHECK (kind IN ('web','form','agency','email')),  -- web=予約システム / form=申込フォーム（返信で確定）/ email=小屋が公式に案内しているメール（url は mailto:）
   operator         TEXT NOT NULL CHECK (operator IN ('hut','yamatan','montbell','minamialps_reserve','hitou','jalan','japan_alps_adventures')),
   url              TEXT NOT NULL,
   url_en           TEXT,                                  -- 同じ窓口の英語版の URL（あれば）
   english          TEXT NOT NULL DEFAULT 'unknown' CHECK (english IN ('yes','partial','no','unknown')),
   guide_en_url     TEXT,                                  -- 小屋側の英語の案内ページ（予約画面とは別）
+  availability     INTEGER,                               -- 1 = 申し込む前に空き（空いているベッド・日）が見られるページ
+  system           TEXT,                                  -- 予約の仕組みの名前（'hut-reservation.org' など）。小屋の自前なら NULL
   note_ja          TEXT,
   note_en          TEXT,
   source_url       TEXT NOT NULL,
   last_verified_at TEXT NOT NULL,
   confidence       TEXT NOT NULL CHECK (confidence IN ('verified','reported')),
   PRIMARY KEY (hut_id, year, seq)
+);
+
+-- 例年の営業期間（年が書かれていない公式の案内:「6月中旬〜9月下旬」など）。
+-- 年ごとの日付（hut_seasons）が無い年の行程に「例年は営業」と出すためだけに使う。日付には直さない（A1）
+CREATE TABLE hut_usual_seasons (
+  hut_id         TEXT PRIMARY KEY REFERENCES huts(id),
+  from_month     INTEGER,              -- 夏の営業の始まりの月
+  from_part      TEXT CHECK (from_part IN ('early','mid','late')),   -- 上旬・中旬・下旬（書いていなければ NULL）
+  to_month       INTEGER,
+  to_part        TEXT CHECK (to_part IN ('early','mid','late')),
+  winter         INTEGER,              -- 1 = 冬も営業（スキーの季節など）/ 0 = 冬は閉める / NULL = 不明
+  note           TEXT,
+  note_en        TEXT,
+  source_url     TEXT NOT NULL,
+  last_verified_at TEXT NOT NULL,
+  confidence     TEXT NOT NULL CHECK (confidence IN ('verified','reported'))
 );
 
 CREATE TABLE hut_rates (
@@ -155,6 +182,10 @@ CREATE TABLE hut_rates (
                    ('two_meals','one_meal','no_meal','tent','private_room','day_use')),
   price_jpy      INTEGER,               -- 名前は歴史的経緯。currency が 'EUR' なら EUR の額（ドロミティ用）
   currency       TEXT NOT NULL DEFAULT 'JPY' CHECK (currency IN ('JPY','EUR','CHF')),
+  -- 山岳会の会員の値段（CAI・相互協定の会、AVS・DAV など）。どの会が当てはまるかは note に書く
+  price_member   REAL,
+  note_ja        TEXT,
+  note_en        TEXT,
   is_from_price  INTEGER DEFAULT 0,    -- 「〜」表記かどうか。UIで誤解を生む要因
   source_url     TEXT,
   last_verified_at TEXT,

@@ -285,6 +285,8 @@
     return {
       fit: fit,
       redraw: draw,
+      // 行き先を切り替えて地図を作り直すとき、前の地図の窓の大きさの見張りを外す
+      destroy: function () { window.removeEventListener("resize", draw); },
       // 小屋を中心に寄せる。小屋ページから「行程に追加」で来たとき、その山がどこかを見せる
       focus: function (id, zoom) {
         var hut = huts.filter(function (x) { return x.id === id; })[0];

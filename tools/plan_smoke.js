@@ -25,6 +25,8 @@ const thHtmlEn = fs.readFileSync(path.join(DIST, "en/trailheads/kamikochi/index.
 const thHtmlJa = fs.readFileSync(path.join(DIST, "trailheads/kamikochi/index.html"), "utf8");
 
 const HUT_COUNT = JSON.parse(hutsJson).length;   // データが増えても落ちないよう実数から取る
+// 稜線・名前の一覧は 1 つの行き先（地方）ずつ。最初は日本（docs/REGIONS.md）
+const JP_COUNT = JSON.parse(hutsJson).filter((h) => (h.zone || "japan") === "japan").length;
 
 const results = [];
 const ok = (label, cond, extra) => {
@@ -108,8 +110,8 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   // ---- 1. 素の状態で組み立てる -------------------------------------
   const a = boot("https://hutsgo.com/plan/");
   await wait(200);
-  ok("選択盤が出る", a.d.querySelectorAll(".ridge-hut").length === HUT_COUNT,
-     `${a.d.querySelectorAll(".ridge-hut").length}/${HUT_COUNT}軒`);
+  ok("選択盤が出る（日本の小屋）", a.d.querySelectorAll(".ridge-hut").length === JP_COUNT,
+     `${a.d.querySelectorAll(".ridge-hut").length}/${JP_COUNT}軒`);
 
   const start = a.d.getElementById("plan-start");
   start.value = "2026-07-20";

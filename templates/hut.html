@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% from "_photo.html" import img %}
 {% from "_article_link.html" import article_link %}
+{% from "_rifugio_guide.html" import rifugio_guide with context %}
+{% set world = h.country != 'JP' %}
 {% set s = h.season %}
 {% set f = h.fac %}
 {% block title %}{{ T.hut_title.format(name=h.name) }}{% endblock %}
-{% block desc %}{{ h.name }}{% if h.area %} ({{ h.area.name }}){% endif %}{% if h.elevation_m %}, {{ h.elevation_m }}m{% endif %}. {{ T.h_season }}{% if s and s.open_date %}: {{ s.open_date | fmt_date }}{{ T.range }}{{ s.close_date | fmt_date }}{% endif %}.{% if h.price_two %} {{ T.plan_two_meals }} {{ h.price_two.price_jpy | yen }}.{% endif %}{% endblock %}
+{% block desc %}{{ h.name }}{% if h.area %} ({{ h.area.name }}){% endif %}{% if h.elevation_m %}, {{ h.elevation_m }}m{% endif %}. {{ T.h_season }}{% if s and s.open_date %}: {{ s.open_date | fmt_date }}{{ T.range }}{{ s.close_date | fmt_date }}{% endif %}.{% if h.price_two %} {{ h.price_two.label }} {{ h.price_two.price_jpy | money(h.price_two.currency) }}.{% endif %}{% endblock %}
 {% block head %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"LodgingBusiness","name":"{{ h.name }}",
  "url":"{{ SITE_URL }}{{ PREFIX }}/huts/{{ h.id }}/"{% if h.official_url %},"sameAs":"{{ h.official_url }}"{% endif %}
  {% if h.lat %},"geo":{"@type":"GeoCoordinates","latitude":{{ h.lat }},"longitude":{{ h.lon }}{% if h.elevation_m %},"elevation":{{ h.elevation_m }}{% endif %}}{% endif %}
  {% if s and s.reservation_phone %},"telephone":"{{ s.reservation_phone }}"{% endif %}
- {% if h.price_two %},"priceRange":"{{ h.price_two.price_jpy | yen }}〜"{% endif %},
- "address":{"@type":"PostalAddress","addressRegion":"{{ h.area.name if h.area }}","addressCountry":"JP"}}
+ {% if h.price_two %},"priceRange":"{{ h.price_two.price_jpy | money(h.price_two.currency) }}〜"{% endif %},
+ "address":{"@type":"PostalAddress","addressRegion":"{{ h.area.name if h.area }}","addressCountry":"{{ h.country }}"}}
 </script>
 {% endblock %}
 {% block body %}
@@ -21,10 +23,11 @@
     <p class="crumb"><a href="{{ LB }}{{ h.zone.path }}">{{ h.zone.name }}</a>{% if h.range %} › <a href="{{ LB }}/areas/{{ h.range.slug }}/">{{ h.range.name }}</a>{% endif %}{% if h.area %} › {{ h.area.name }}{% endif %}</p>
     <h1>{{ h.name }}</h1>
     <p class="lede">{{ h.type_label }}{% if h.operator and h.operator.id != 'indep' %}{{ T.sep }}{{ T.operated_by.format(op=h.operator.name) }}{% endif %}</p>
+    {% if h.owner_kind %}<p class="quiet">{{ T.l_owner }}{{ T.colon }}{{ T['owner_' ~ h.owner_kind] }}</p>{% endif %}
     <dl class="facts-inline">
-      <div><dt>{{ T.l_elevation }}</dt><dd>{{ h.elevation_m | metres }}{% if h.elevation_source == 'gsi' %}<small>{{ T.src_gsi }}</small>{% elif h.elevation_source == 'official' %}<small>{{ T.src_official }}</small>{% endif %}</dd></div>
+      <div><dt>{{ T.l_elevation }}</dt><dd>{{ h.elevation_m | metres }}{% if h.elevation_source == 'gsi' %}<small>{{ T.src_gsi }}</small>{% elif h.elevation_source == 'official' %}<small>{{ T.src_official }}</small>{% elif h.elevation_source == 'osm' %}<small>{{ T.src_osm }}</small>{% endif %}</dd></div>
       {% if s and s.capacity_beds %}<div><dt>{{ T.l_capacity }}</dt><dd>{{ T.l_beds.format(n=s.capacity_beds) }}</dd></div>{% endif %}
-      <div><dt>{{ T.l_tentsite }}</dt><dd>{% if s and s.capacity_tents %}{{ T.l_tents_about.format(n=s.capacity_tents) }}{% elif s and s.capacity_tents == 0 %}{{ T.none_ }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
+      {% if not world %}<div><dt>{{ T.l_tentsite }}</dt><dd>{% if s and s.capacity_tents %}{{ T.l_tents_about.format(n=s.capacity_tents) }}{% elif s and s.capacity_tents == 0 %}{{ T.none_ }}{% else %}{{ T.unknown }}{% endif %}</dd></div>{% endif %}
     </dl>
     <div class="cta-row">
       {% if h.book_url %}<a class="btn btn-primary btn-lg" href="{{ h.book_url }}" target="_blank" rel="noopener" data-track="official_site" data-hut="{{ h.id }}">{{ T.btn_book_lg }}</a>{% endif %}
@@ -34,6 +37,7 @@
     {% if s and s.opens %}<p class="booking-open"><span class="k">{{ T.booking_opens }}</span>{{ s.opens }}</p>{% endif %}
     <p class="quiet">{{ T.book_direct }}</p>
   </header>
+  {% if world %}{{ rifugio_guide() }}{% endif %}
   {% for p in h.photos[:1] %}
   <figure class="photo">{{ img(p) }}<figcaption>{{ p.caption_t }} <span class="credit">{{ p.credit_t }}</span></figcaption></figure>
   {% endfor %}
@@ -53,8 +57,21 @@
           <small class="conf"><span class="dot dot-{{ s.confidence if s else 'unknown' }}" aria-hidden="true"></span>{{ s | conf_text }}</small>
         </dd>
       </div>
+      {% set sn = h.season_next %}
+      {% if sn %}
+      <div><dt>{{ T.l_period_next.format(y=sn.year) }}</dt>
+        <dd>{% if sn.open_date or sn.close_date %}{{ sn.open_date | fmt_date if sn.open_date else '?' }}{{ T.range }}{{ sn.close_date | fmt_date if sn.close_date else '?' }}{% else %}{{ T.unknown }}{% endif %}
+          {% if sn.note %}<small>{{ sn.note }}</small>{% endif %}
+          <small class="conf"><span class="dot dot-{{ sn.confidence }}" aria-hidden="true"></span>{{ sn | conf_text }}</small></dd></div>
+      {% endif %}
+      {% if h.usual %}
+      <div><dt>{{ T.l_usual }}</dt><dd>{{ h.usual.label or T.unknown }}{% if h.usual.winter is not none %}{{ T.mid }}{{ T['usual_winter_' ~ h.usual.winter] }}{% endif %}
+        {% if h.usual.note_t %}<small>{{ h.usual.note_t }}</small>{% endif %}
+        <small class="conf"><span class="dot dot-{{ h.usual.confidence }}" aria-hidden="true"></span>{{ h.usual | conf_text }}</small></dd></div>
+      {% endif %}
       <div><dt>{{ T.l_reservation }}</dt><dd>{% if s and s.reservation_required == 1 %}{{ T.l_required }}{% elif s and s.reservation_required == 0 %}{{ T.l_not_required }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
       <div><dt>{{ T.l_booking_opens }}</dt><dd>{% if s and s.opens %}{{ s.opens }}{% else %}{{ T.unknown }}{% endif %}</dd></div>
+      {% if world %}<div><dt>{{ T.l_terms }}</dt><dd>{% if s and s.terms %}{{ s.terms }}{% else %}{{ T.unknown }}{% endif %}</dd></div>{% endif %}
       <div><dt>{{ T.l_booking_where }}</dt><dd>{% if s and s.reservation_url %}<a href="{{ s.reservation_url }}" target="_blank" rel="noopener" data-track="reservation" data-hut="{{ h.id }}">{{ T.l_booking_page }}</a>{% endif %}{% if s and s.reservation_phone %}{% if s.reservation_url %}{{ T.mid }}{% endif %}<a href="tel:{{ s.reservation_phone | replace('-', '') | replace(' ', '') }}" data-track="phone" data-hut="{{ h.id }}">{{ s.reservation_phone }}</a>{% endif %}{% if not (s and (s.reservation_url or s.reservation_phone)) %}{{ T.unknown }}{% endif %}</dd></div>
     </dl>
     {% if h.channels %}
@@ -63,8 +80,9 @@
       <ul class="channel-list">
         {% for c in h.channels %}
         <li>
-          <a href="{{ c.href }}" target="_blank" rel="noopener" data-track="{{ c.track }}" data-hut="{{ h.id }}">{{ c.label }}</a>
-          <span class="ch-en ch-en-{{ c.english }}">{{ c.english_label }}</span>
+          <a href="{{ c.href }}"{% if c.kind != 'email' %} target="_blank" rel="noopener"{% endif %} data-track="{{ c.track }}" data-hut="{{ h.id }}">{{ c.label }}</a>
+          {% if c.kind != 'email' %}<span class="ch-en ch-en-{{ c.english }}">{{ c.english_label }}</span>{% endif %}
+          {% if c.availability %}<span class="ch-avail">{{ T.plan_js_avail_chip }}</span>{% endif %}
           {% if c.guide_en_url %}<a class="ch-guide" href="{{ c.guide_en_url }}" target="_blank" rel="noopener">{{ T.plan_js_ch_guide }}</a>{% endif %}
           {% if c.note_t %}<small>{{ c.note_t }}</small>{% endif %}
           {% if c.kind == 'agency' %}<small>{{ T.plan_js_ch_agency }}</small>{% endif %}
@@ -83,7 +101,7 @@
     <table class="rates">
       <tbody>
       {% for r in h.rates %}
-        <tr><th scope="row">{{ r.label }}</th><td>{{ r.price_jpy | yen }}{{ '+' if r.is_from_price }}<small class="conf"><span class="dot dot-{{ r.confidence }}" aria-hidden="true"></span>{{ r | conf_text }}</small></td></tr>
+        <tr><th scope="row">{{ r.label }}</th><td>{{ r.price_jpy | money(r.currency) }}{{ '+' if r.is_from_price }}{% if r.price_member %}<span class="quiet">{{ T.mid }}{{ T.l_member_price.format(p=r.price_member | money(r.currency)) }}</span>{% endif %}{% if r.note_t %}<small>{{ r.note_t }}</small>{% endif %}<small class="conf"><span class="dot dot-{{ r.confidence }}" aria-hidden="true"></span>{{ r | conf_text }}</small></td></tr>
       {% endfor %}
       </tbody>
     </table>

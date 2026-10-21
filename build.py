@@ -53,6 +53,86 @@ con.row_factory = sqlite3.Row
 for f in ("schema.sql", "seed.sql"):
     con.executescript((ROOT / f).read_text(encoding="utf-8"))
 
+# ---- 小屋ごとの記録 content/huts/*.json（日本の外の小屋。docs/REGIONS.md「小屋の記録」）
+# 1 軒 = 1 つの JSON。小屋の公式サイトを人が読んで書いた値だけを入れる（A1〜A3）。
+# どの値にも出典（src）と確かめた日（checked）が要る。書いていなければ小屋の src / checked を使う
+HUT_PARTS = {"early", "mid", "late"}
+
+
+def load_hut_records(path):
+    recs = json.loads(path.read_text(encoding="utf-8"))
+    for r in recs:
+        hid = r["id"]
+        where = f"{path.name}: {hid}"
+        assert re.fullmatch(r"[a-z0-9_]+", hid), f"{where}: id は英小文字・数字・_ だけ"
+        # 小屋の公式サイトで人が読んだ値なので verified（確度の決まりは /data/index.json の confidence_levels）
+        src, chk, conf = r["src"], r["checked"], r.get("conf", "verified")
+        lat, lon = (r.get("pos") or [None, None])
+        con.execute("""INSERT INTO huts (id,name_ja,name_en,hut_type,range_id,sub_area_id,lat,lon,elevation_m,elevation_source,
+                       official_url,source_url,last_verified_at,confidence,position_source,osm_ref,owner_kind)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (hid, r["name_ja"], r.get("name_en"), r.get("type", "mountain_hut"), r["range"], r.get("sub_area"),
+                     lat, lon, r.get("ele"), r.get("ele_src") if r.get("ele") else None,
+                     r.get("url"), src, chk, conf, r.get("pos_src"), r.get("osm"), r.get("owner")))
+        if r.get("aliases"):
+            con.execute("INSERT INTO search_aliases (kind,target_id,words) VALUES ('hut',?,?)", (hid, r["aliases"]))
+        se = r.get("season") or {}
+        book = r.get("book") or []
+        phone = r.get("phone")
+        # 年ごとの行（2026）: 営業期間・電話・予約の決まり。営業期間が分からなくても予約の窓口があれば行を作る（status は undecided）
+        if se or book or phone or r.get("beds") or r.get("terms"):
+            st = se.get("status") or ("open" if se.get("open") or se.get("close") else "undecided")
+            web = next((b["url"] for b in book if b["kind"] in ("web", "form")), None)
+            con.execute("""INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,
+                           reservation_required,reservation_url,reservation_phone,booking_opens_at,booking_opens_at_en,
+                           capacity_beds,booking_terms,booking_terms_en,source_url,last_verified_at,confidence)
+                           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (hid, se.get("year", 2026), st, se.get("open"), se.get("close"), se.get("note"), se.get("note_en"),
+                         se.get("required"), web, phone, se.get("opens"), se.get("opens_en"), r.get("beds"),
+                         (r.get("terms") or {}).get("ja"), (r.get("terms") or {}).get("en"),
+                         se.get("src", src), se.get("checked", chk), se.get("conf", conf if se else "unknown")))
+        # 次の年（2027）の営業期間。秋には小屋が次の夏の日付を出し始める。予約の窓口は 2026 の行に持つ
+        nx = r.get("next")
+        if nx:
+            con.execute("""INSERT INTO hut_seasons (hut_id,year,status,open_date,close_date,season_note,season_note_en,
+                           source_url,last_verified_at,confidence) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                        (hid, nx.get("year", 2027), nx.get("status") or ("open" if nx.get("open") or nx.get("close") else "undecided"),
+                         nx.get("open"), nx.get("close"), nx.get("note"), nx.get("note_en"),
+                         nx.get("src", src), nx.get("checked", chk), nx.get("conf", conf)))
+        u = r.get("usual")
+        if u:
+            fm, fp = (list(u.get("from") or []) + [None, None])[:2]
+            tm, tp = (list(u.get("to") or []) + [None, None])[:2]
+            assert fp in HUT_PARTS | {None} and tp in HUT_PARTS | {None}, where
+            con.execute("""INSERT INTO hut_usual_seasons (hut_id,from_month,from_part,to_month,to_part,winter,note,note_en,
+                           source_url,last_verified_at,confidence) VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                        (hid, fm, fp, tm, tp, u.get("winter"), u.get("note"), u.get("note_en"),
+                         u.get("src", src), u.get("checked", chk), u.get("conf", conf)))
+        for i, b in enumerate(book, 1):
+            assert b["kind"] in ("web", "form", "email"), where
+            assert b["kind"] != "email" or b["url"].startswith("mailto:"), f"{where}: メールは mailto:"
+            con.execute("""INSERT INTO hut_booking_channels (hut_id,year,seq,kind,operator,url,url_en,english,note_ja,note_en,
+                           availability,system,source_url,last_verified_at,confidence) VALUES (?,?,?,?,'hut',?,?,?,?,?,?,?,?,?,?)""",
+                        (hid, 2026, i, b["kind"], b["url"], b.get("url_en"), b.get("english", "unknown"), b.get("note"),
+                         b.get("note_en"), b.get("avail"), b.get("system"), b.get("src", src), b.get("checked", chk),
+                         b.get("conf", conf)))
+        for x in r.get("rates") or []:
+            con.execute("""INSERT INTO hut_rates (hut_id,year,plan_type,price_jpy,currency,is_from_price,price_member,note_ja,note_en,
+                           source_url,last_verified_at,confidence) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (hid, x.get("year", 2026), x["plan"], x.get("price"), x.get("currency", "EUR"), x.get("from", 0),
+                         x.get("member"), x.get("note"), x.get("note_en"), x.get("src", src), x.get("checked", chk),
+                         x.get("conf", conf)))
+        fac = r.get("fac")
+        if fac:
+            cols = [k for k in fac if k not in ("src", "checked", "conf")]
+            con.execute(f"INSERT INTO hut_facilities (hut_id,{','.join(cols)},source_url,last_verified_at,confidence) "
+                        f"VALUES (?,{','.join('?' * len(cols))},?,?,?)",
+                        (hid, *[fac[k] for k in cols], fac.get("src", src), fac.get("checked", chk), fac.get("conf", conf)))
+
+
+for _f in sorted((ROOT / "content" / "huts").glob("*.json")):
+    load_hut_records(_f)
+
 
 def rows(sql, *a):
     return [dict(r) for r in con.execute(sql, a)]
@@ -104,8 +184,37 @@ def yen(v):
     return f"¥{v:,}"
 
 
+def money(v, cur="JPY"):
+    """料金。円は ¥12,000、ユーロは €72 / €72.50（小数があるときだけ小数を出す）"""
+    if v is None:
+        return None
+    if cur == "JPY":
+        return f"¥{int(v):,}"
+    sym = {"EUR": "€", "CHF": "CHF "}[cur]
+    return f"{sym}{v:,.0f}" if float(v).is_integer() else f"{sym}{v:,.2f}"
+
+
 def metres(v):
     return f"{v:,}m" if v is not None else None
+
+
+PART_JA = {"early": "上旬", "mid": "中旬", "late": "下旬"}
+PART_EN = {"early": "early ", "mid": "mid-", "late": "late "}
+MONTH_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+
+def usual_label(u, lang):
+    """例年の営業期間の文。「6月中旬〜9月下旬」/ "mid-June to late September" """
+    def one(m, part):
+        if not m:
+            return None
+        if lang == "ja":
+            return f"{m}月" + PART_JA.get(part, "")
+        return PART_EN.get(part, "") + MONTH_EN[m - 1]
+    a, b = one(u["from_month"], u["from_part"]), one(u["to_month"], u["to_part"])
+    if not (a or b):
+        return None
+    return (a or "?") + ("〜" if lang == "ja" else " to ") + (b or "?")
 
 
 # ---------------------------------------------------------------- per-locale model
@@ -341,22 +450,39 @@ def build_model(lang):
         if s:
             s["note"] = pick(s, "season_note", lang)
             s["opens"] = pick(s, "booking_opens_at", lang)
+            s["terms"] = pick(s, "booking_terms", lang)
         h["season"] = s
+        # 次の年（2027）の営業期間（あれば）
+        sn = next(iter(rows("SELECT * FROM hut_seasons WHERE hut_id=? AND year=2027", hid)), None)
+        if sn:
+            sn["note"] = pick(sn, "season_note", lang)
+        h["season_next"] = sn
+        # 例年の営業期間（年の書いていない公式の案内）。「6月中旬〜9月下旬」の形で出す
+        u = next(iter(rows("SELECT * FROM hut_usual_seasons WHERE hut_id=?", hid)), None)
+        if u:
+            u["note_t"] = pick(u, "note", lang)
+            u["label"] = usual_label(u, lang)
+        h["usual"] = u
         # 予約の窓口。小屋が自分で案内している窓口だけ（hut_booking_channels の注記を参照）
         h["channels"] = rows("SELECT * FROM hut_booking_channels WHERE hut_id=? AND year=2026 ORDER BY seq", hid)
         for c in h["channels"]:
-            c["label"] = T["plan_js_ch_hut_form" if c["operator"] == "hut" and c["kind"] == "form"
+            c["label"] = T["plan_js_ch_email" if c["kind"] == "email" else
+                           "plan_js_ch_hut_form" if c["operator"] == "hut" and c["kind"] == "form"
                            else "plan_js_ch_" + c["operator"]]
+            if c["kind"] == "email":
+                c["label"] += " " + c["url"][len("mailto:"):]
             c["href"] = c["url_en"] if lang == "en" and c["url_en"] else c["url"]
             c["note_t"] = pick(c, "note", lang)
-            c["english_label"] = T["plan_js_ch_en_" + c["english"]]
+            c["english_label"] = T["plan_js_ch_en_" + c["english"] + ("_world" if h["country"] != "JP" and c["english"] == "no" else "")]
             # 旅行会社への案内は小屋への送客ではない。送客率（outbound_）に混ぜない
             c["track"] = "agency_link" if c["kind"] == "agency" else "reservation"
         h["rates"] = rows("SELECT * FROM hut_rates WHERE hut_id=? AND year=2026 "
                           "ORDER BY CASE plan_type WHEN 'two_meals' THEN 0 WHEN 'one_meal' THEN 1 "
                           "WHEN 'no_meal' THEN 2 WHEN 'private_room' THEN 3 WHEN 'tent' THEN 4 ELSE 5 END", hid)
         for r in h["rates"]:
-            r["label"] = T["plan_" + r["plan_type"]]
+            # 日本の「1泊2食」は、日本の外ではハーフボード（夕食・朝食つき）と呼ぶ
+            r["label"] = T["plan_" + r["plan_type"] + ("_world" if h["country"] != "JP" and T.get("plan_" + r["plan_type"] + "_world") else "")]
+            r["note_t"] = r.get("note_en") if lang == "en" and r.get("note_en") else r.get("note_ja")
         h["price_two"] = next((r for r in h["rates"] if r["plan_type"] == "two_meals"), None)
         h["price_none"] = next((r for r in h["rates"] if r["plan_type"] == "no_meal"), None)
         h["price_tent"] = next((r for r in h["rates"] if r["plan_type"] == "tent"), None)
@@ -1034,7 +1160,7 @@ for lang, prefix in LOCALES:
     m = build_model(lang)
     # 記事の日付は年をまたぐので年まで出す（小屋の営業期間は年が自明なので fmt_date は月日だけ）
     fmt_ymd = (lambda d: f"{d[:4]}年{m['fmt_date'](d)}") if lang == "ja" else (lambda d: f"{m['fmt_date'](d)} {d[:4]}")
-    env.filters.update(fmt_time=m["fmt_time"], fmt_date=m["fmt_date"], yen=yen, fmt_ymd=fmt_ymd,
+    env.filters.update(fmt_time=m["fmt_time"], fmt_date=m["fmt_date"], yen=yen, money=money, fmt_ymd=fmt_ymd,
                        metres=m["metres"], conf_text=m["conf_text"])
     photos = m["photos"]
     g = dict(T=m["T"], LANG=lang, LB=BASE + prefix,
@@ -1158,7 +1284,14 @@ for lang, prefix in LOCALES:
     write(f"{d}about/index.html", "about.html", huts=huts_l, page="/about/", **g)
     # 行程ボードは JS 側にも文言が要る。i18n を唯一の出どころにするため、ここで渡す
     plan_strings = {k[len("plan_js_"):]: v for k, v in m["T"].items() if k.startswith("plan_js_")}
-    write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings,
+    # 行程ボードの行き先（地方）: 小屋のある地方だけ。地図の出どころは国の決まり（日本 = 地理院、日本の外 = OpenTopoMap）
+    _pz = []
+    for z in m["zones"].values():
+        _rs = [r for r in m["ranges"].values() if (r["zone"] or {}).get("id") == z["id"]]
+        if any(h["zone"]["id"] == z["id"] for h in huts_l):
+            _src = "topo" if any(r["country"]["line_source"] == "osm" for r in _rs) else "gsi"
+            _pz.append(dict(id=z["id"], name=z["name"], source=_src))
+    write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings, plan_zones=_pz,
           trails=m["trails"], **g)
 
     tr = transit_model(lang)
@@ -1280,9 +1413,15 @@ def export_dataset():
     ops = {o["id"]: o for o in rows("SELECT * FROM operators")}
     ths = {t["id"]: t for t in rows("SELECT * FROM trailheads")}
 
-    huts_out = []
+    huts_out, osm_out = [], {}
     for h in rows("SELECT * FROM huts ORDER BY id"):
         hid = h["id"]
+        # OSM から引いた位置・標高は ODbL。CC BY-NC の huts.json には入れず、huts-osm.json に分ける（docs/REGIONS.md）
+        _osm_pos = h["position_source"] == "osm"
+        _osm_ele = h["elevation_source"] == "osm"
+        if _osm_pos or _osm_ele:
+            osm_out[hid] = {"lat": h["lat"] if _osm_pos else None, "lon": h["lon"] if _osm_pos else None,
+                            "elevation_m": h["elevation_m"] if _osm_ele else None, "osm": h["osm_ref"]}
         se = next(iter(rows("SELECT * FROM hut_seasons WHERE hut_id=? AND year=2026", hid)), None)
         fac = next(iter(rows("SELECT * FROM hut_facilities WHERE hut_id=?", hid)), None)
         a, o = areas.get(h["sub_area_id"]), ops.get(h["operator_id"])
@@ -1293,11 +1432,17 @@ def export_dataset():
             "range_id": h["range_id"],
             # 国（docs/REGIONS.md）。地図の出どころと通貨はこれで決まる
             "country": (rows("SELECT country FROM mountain_ranges WHERE id=?", h["range_id"]) or [{}])[0].get("country") or "JP",
+            # 行き先（地方）。行程ボードの地図はこれで切り替える
+            "zone": (rows("SELECT zone_id FROM mountain_ranges WHERE id=?", h["range_id"]) or [{}])[0].get("zone_id") or "japan",
+            # 持ち主の種類（cai / sat / avs / province / private / other）。CAI・SAT の小屋だけ CAI の料金表と決まりが当てはまる
+            "owner_kind": h["owner_kind"],
             "area": {"id": a["id"], "name": _bi(a, "name")} if a else None,
             "operator": {"id": o["id"], "name": _bi(o, "name"), "website": o["website"]} if o else None,
-            "location": {"lat": h["lat"], "lon": h["lon"],
-                         "elevation_m": h["elevation_m"],
-                         "elevation_source": h["elevation_source"]},
+            "location": {"lat": None if _osm_pos else h["lat"], "lon": None if _osm_pos else h["lon"],
+                         "elevation_m": None if _osm_ele else h["elevation_m"],
+                         "elevation_source": None if _osm_ele else h["elevation_source"],
+                         # 'osm' なら位置は /data/huts-osm.json（ODbL）にある
+                         "position_source": h["position_source"]},
             "official_url": h["official_url"],
             "provenance": _prov(h),
         }
@@ -1314,6 +1459,8 @@ def export_dataset():
                     "channels": [{
                         "kind": c["kind"], "operator": c["operator"], "url": c["url"], "url_en": c["url_en"],
                         "english": c["english"], "guide_en_url": c["guide_en_url"],
+                        # 申し込む前に空きが見られるページか（1）。system は予約の仕組みの名前
+                        "availability": c["availability"], "system": c["system"],
                         "note": _bi(c, "note"), "provenance": _prov(c),
                     } for c in rows("SELECT * FROM hut_booking_channels WHERE hut_id=? AND year=2026 ORDER BY seq", h["id"])],
                     # 訪日ハイカーに最も価値のある項目。英語圏のどこにも構造化されていない
@@ -1328,13 +1475,27 @@ def export_dataset():
                     } if se["booking_opens_rule"] and se["booking_opens_rule"] != "unknown" else None,
                 },
                 "capacity": {"beds": se["capacity_beds"], "tents": se["capacity_tents"]},
+                # 前払い・取り消しの決まり（小屋の公式の文言を短く）
+                "booking_terms": _bi(se, "booking_terms"),
                 "provenance": _prov(se),
             }
         rec["rates_2026"] = [{
             "plan": r["plan_type"], "price": r["price_jpy"],
             "currency": r.get("currency", "JPY"),
+            "price_member": r["price_member"], "note": _bi(r, "note"),
             "is_from_price": bool(r["is_from_price"]), "provenance": _prov(r),
         } for r in rows("SELECT * FROM hut_rates WHERE hut_id=? AND year=2026 ORDER BY plan_type", hid)]
+        s7 = next(iter(rows("SELECT * FROM hut_seasons WHERE hut_id=? AND year=2027", hid)), None)
+        if s7:
+            # 次の夏の営業期間（予約の窓口は season_2026.reservation にある）
+            rec["season_2027"] = {"status": s7["status"], "open_date": s7["open_date"], "close_date": s7["close_date"],
+                                  "note": _bi(s7, "season_note"), "provenance": _prov(s7)}
+        us = next(iter(rows("SELECT * FROM hut_usual_seasons WHERE hut_id=?", hid)), None)
+        if us:
+            # 例年の営業期間（年の書いていない公式の案内）。part は early / mid / late（上旬・中旬・下旬）
+            rec["usual_season"] = {"from_month": us["from_month"], "from_part": us["from_part"],
+                                   "to_month": us["to_month"], "to_part": us["to_part"], "winter": us["winter"],
+                                   "note": _bi(us, "note"), "provenance": _prov(us)}
         if fac:
             rec["facilities"] = {k: fac[k] for k in (
                 "toilet_type", "toilet_fee_jpy", "water_available", "power_outlet", "charging_service",
@@ -1377,7 +1538,7 @@ def export_dataset():
                    if ((h.get("season_2026") or {}).get("provenance") or {}).get("confidence") == "verified")
     index = {
         "name": "HutsGo open dataset",
-        "description": ("Mountain huts of the Northern Japan Alps. Every fact carries its source URL, "
+        "description": ("Mountain huts in Japan and the Italian Dolomites. Every fact carries its source URL, "
                         "the date it was checked and a confidence level, so a machine can tell a confirmed "
                         "fact from a second-hand one and never has to guess."),
         "version": DATA_VERSION,
@@ -1399,12 +1560,19 @@ def export_dataset():
         },
         "note": ("Null means not confirmed. It is never zero and never a guess. Mountain information "
                  "is safety-relevant, so do not infer a missing value."),
-        "files": {"huts": "/data/huts.json", "trails": "/data/trails.json"},
+        "files": {"huts": "/data/huts.json", "trails": "/data/trails.json", "huts_osm": "/data/huts-osm.json"},
+    }
+    osm_file = {
+        "license": "ODbL 1.0", "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "attribution": "© OpenStreetMap contributors",
+        "note": ("Positions and elevations of huts outside Japan, taken from OpenStreetMap. Kept apart from huts.json "
+                 "because OpenStreetMap data is ODbL and huts.json is CC BY-NC."),
+        "huts": osm_out,
     }
 
     d = DIST / "data"
     d.mkdir(exist_ok=True)
-    for name, payload in (("index", index), ("huts", huts_out), ("trails", trails_out)):
+    for name, payload in (("index", index), ("huts", huts_out), ("trails", trails_out), ("huts-osm", osm_file)):
         (d / (name + ".json")).write_text(
             json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     return index

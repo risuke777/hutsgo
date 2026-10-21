@@ -1,0 +1,63 @@
+{#- ドロミテ（イタリア）の山小屋の泊まり方。ルート・小屋・山域の入口・行程ボードで同じものを出す。
+    決まりは CAI の「山小屋の決まり」（Regolamento strutture ricettive、2021 年から）と「料金表 2026」（通達 15/2025）から。
+    CAI・SAT の小屋だけに当てはまる。民間・州・AVS の小屋は小屋ごとの決まり -#}
+{% macro rifugio_guide(open=false, id="rifugio-guide") %}
+{% set REG = "https://www.cai.it/wp-content/uploads/2024/04/Regolamento-strutture-ricettive-del-Club-Alpino-Italiano-20201.pdf" %}
+{% set TAR = "https://www.cai.it/wp-content/uploads/2025/10/15-2025-Circolare-Tariffario-rifugi-2026_signed.pdf" %}
+<details class="rguide" id="{{ id }}"{% if open %} open{% endif %}>
+  <summary>{{ T.rg_summary }}</summary>
+  {% if LANG == 'ja' %}
+  <h3>泊まり方の言葉</h3>
+  <table class="rates rguide-terms">
+    <thead><tr><th scope="col">日本語</th><th scope="col">イタリア語</th><th scope="col">ドイツ語</th><th scope="col">中身</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">ハーフボード</th><td>mezza pensione</td><td>Halbpension (HP)</td><td>夕食・ベッド・朝食。日本の「1泊2食」にあたる。飲み物が入るかは小屋ごと</td></tr>
+      <tr><th scope="row">朝食つき</th><td>pernottamento e colazione</td><td>Übernachtung mit Frühstück</td><td>ベッドと朝食</td></tr>
+      <tr><th scope="row">素泊まり</th><td>solo pernottamento</td><td>nur Übernachtung</td><td>ベッドだけ</td></tr>
+      <tr><th scope="row">相部屋</th><td>camerata</td><td>Lager / Matratzenlager</td><td>大部屋の寝床</td></tr>
+      <tr><th scope="row">個室</th><td>camera</td><td>Zimmer</td><td>2〜4 人ほどの部屋。数が少ない</td></tr>
+      <tr><th scope="row">寝袋用シーツ</th><td>sacco lenzuolo</td><td>Hüttenschlafsack</td><td>毛布の内側に入る薄い袋。CAI の小屋では必ず使う</td></tr>
+      <tr><th scope="row">前払い</th><td>caparra</td><td>Anzahlung</td><td>予約のときに払うお金</td></tr>
+      <tr><th scope="row">会員</th><td>socio CAI</td><td>Mitglied</td><td>山岳会の会員。CAI の小屋では安くなる</td></tr>
+    </tbody>
+  </table>
+  <h3>CAI（イタリア山岳会）の小屋の決まり</h3>
+  <ul class="rguide-list">
+    <li><b>予約はメールを送っただけでは取れていません。</b>小屋から「確定」の返事が来て初めて有効です。予約はだれにも勧められていて、11 人以上のグループは必須です。<a href="{{ REG }}" target="_blank" rel="noopener">決まり 4 条</a></li>
+    <li><b>予約は着く日の 18 時まで有効です。</b>遅れるときは小屋に連絡します。<a href="{{ REG }}" target="_blank" rel="noopener">4 条</a></li>
+    <li><b>前払いを求められることがあります。</b>上限は素泊まり 1 泊分で、取り消すと戻りません。着く日の 3 日前の 18 時までに取り消せば戻ります（小屋と別の取り決めがなければ）。<a href="{{ REG }}" target="_blank" rel="noopener">4 条</a></li>
+    <li><b>寝袋用シーツは必ず使います。</b>持っていなければ小屋で頼みます。着いたら身分証と（あれば）会員証を見せて記帳します。山靴のまま中に入らず、毛布はたたんで返します。<a href="{{ REG }}" target="_blank" rel="noopener">5・10 条</a></li>
+    <li><b>会員はハーフボードが 2 割以上安くなります</b>（CAI と相互協定の山岳会の会員。25 歳未満の CAI 会員は 3 割以上）。ハーフボードの値段は小屋ごとに決まり、小屋に貼り出されています。<a href="{{ TAR }}" target="_blank" rel="noopener">料金表 2026</a></li>
+    <li><b>素泊まりの上限</b>は小屋の格（A〜E、行きやすさと荷上げの方法で決まる）ごとで、2026 年は相部屋・非会員で 30〜39 ユーロ、会員で 24〜31.20 ユーロです。素泊まりで続けて泊まれるのは 3 泊までです。10 月 1 日〜4 月 30 日は非会員だけ暖房代として 3 割増しになります。<a href="{{ TAR }}" target="_blank" rel="noopener">料金表 2026</a></li>
+    <li>注文しなければいけない決まりはありません。自分の食べ物を食べるときは、非会員は 3 ユーロ、会員は無料です。<a href="{{ REG }}" target="_blank" rel="noopener">8 条</a>・<a href="{{ TAR }}" target="_blank" rel="noopener">料金表 2026</a></li>
+  </ul>
+  <p class="quiet">民間の小屋・州（自治県）の小屋・AVS（南チロル山岳会）の小屋は CAI の決まりの外で、料金・前払い・取り消しは小屋ごとです。各小屋のページに、その小屋の公式サイトの決まりを載せています。</p>
+  {% else %}
+  <h3>Words you will see</h3>
+  <table class="rates rguide-terms">
+    <thead><tr><th scope="col">English</th><th scope="col">Italian</th><th scope="col">German</th><th scope="col">What it is</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Half board</th><td>mezza pensione</td><td>Halbpension (HP)</td><td>Dinner, bed and breakfast. Whether drinks are included depends on the hut</td></tr>
+      <tr><th scope="row">Bed and breakfast</th><td>pernottamento e colazione</td><td>Übernachtung mit Frühstück</td><td>Bed and breakfast</td></tr>
+      <tr><th scope="row">Bed only</th><td>solo pernottamento</td><td>nur Übernachtung</td><td>Just the bed</td></tr>
+      <tr><th scope="row">Dormitory</th><td>camerata</td><td>Lager / Matratzenlager</td><td>Shared sleeping room</td></tr>
+      <tr><th scope="row">Room</th><td>camera</td><td>Zimmer</td><td>Room for about 2–4. Few of them</td></tr>
+      <tr><th scope="row">Sleeping-bag liner</th><td>sacco lenzuolo</td><td>Hüttenschlafsack</td><td>Thin sheet bag used inside the blankets. Required in CAI huts</td></tr>
+      <tr><th scope="row">Deposit</th><td>caparra</td><td>Anzahlung</td><td>Money paid when you book</td></tr>
+      <tr><th scope="row">Member</th><td>socio CAI</td><td>Mitglied</td><td>Alpine-club member. Pays less in CAI huts</td></tr>
+    </tbody>
+  </table>
+  <h3>Rules in CAI (Italian Alpine Club) huts</h3>
+  <ul class="rguide-list">
+    <li><b>Sending an email does not book a bed.</b> A booking counts only once the hut has explicitly confirmed it. Booking is recommended for everyone and required for groups of more than ten. <a href="{{ REG }}" target="_blank" rel="noopener">Regulation art. 4</a></li>
+    <li><b>A booking holds until 6 pm on the arrival day.</b> Tell the hut if you will be late. <a href="{{ REG }}" target="_blank" rel="noopener">art. 4</a></li>
+    <li><b>The hut may ask for a deposit</b> of up to one night's bed-only price, kept if you cancel, unless you cancel by 6 pm three days before arrival (absent other agreement). <a href="{{ REG }}" target="_blank" rel="noopener">art. 4</a></li>
+    <li><b>A sleeping-bag liner is required</b>; ask the hut if you have none. Show ID (and a club card if you have one) when you check in. No boots indoors; fold your blankets. <a href="{{ REG }}" target="_blank" rel="noopener">art. 5, 10</a></li>
+    <li><b>Members get at least 20% off half board</b> (CAI and reciprocal clubs; CAI members under 25 at least 30%). Each hut sets its own half-board price and posts it. <a href="{{ TAR }}" target="_blank" rel="noopener">2026 tariff</a></li>
+    <li><b>Bed-only prices are capped</b> by hut category (A–E, by how hard the hut is to reach and supply): in 2026 a dormitory bed costs €30–39 for non-members and €24–31.20 for members. Bed-only stays are limited to three nights in a row. From 1 October to 30 April non-members pay 30% more for heating. <a href="{{ TAR }}" target="_blank" rel="noopener">2026 tariff</a></li>
+    <li>You never have to order. Eating your own food costs non-members €3 and is free for members. <a href="{{ REG }}" target="_blank" rel="noopener">art. 8</a> · <a href="{{ TAR }}" target="_blank" rel="noopener">2026 tariff</a></li>
+  </ul>
+  <p class="quiet">Private huts, huts owned by the province and AVS (South Tyrol Alpine Club) huts are outside the CAI rules; prices, deposits and cancellation are set by each hut. Each hut page carries that hut's own terms from its official site.</p>
+  {% endif %}
+</details>
+{% endmacro %}

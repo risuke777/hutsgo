@@ -18,7 +18,23 @@
     return { lat: Number(a[0]), lon: Number(a[1]) };
   });
   var api = null, hutsP = null;
-  function hutsJson() { return hutsP || (hutsP = fetch(BASE + "/data/huts.json").then(function (r) { return r.json(); })); }
+  // 小屋の位置: 公開データ（huts.json）に、OpenStreetMap から引いた位置（huts-osm.json、ODbL）を足す（docs/REGIONS.md）
+  function hutsJson() {
+    return hutsP || (hutsP = Promise.all([
+      fetch(BASE + "/data/huts.json").then(function (r) { return r.json(); }),
+      fetch(BASE + "/data/huts-osm.json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    ]).then(function (v) {
+      var op = (v[1] && v[1].huts) || {};
+      v[0].forEach(function (h) {
+        var o = op[h.id];
+        if (!o) return;
+        h.location = h.location || {};
+        if (o.lat != null && h.location.lat == null) { h.location.lat = o.lat; h.location.lon = o.lon; }
+        if (o.elevation_m != null && h.location.elevation_m == null) h.location.elevation_m = o.elevation_m;
+      });
+      return v[0];
+    }));
+  }
 
   function show(view) {
     var isMap = view === "map", is3d = view === "3d", box3 = document.getElementById("trail-3d");

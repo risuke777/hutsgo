@@ -227,7 +227,73 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  // ---- 日本の外の小屋へのメール（伊・独・英）---------------------------------
+  // 予約の申し込みではなく「空いていますか」の問い合わせ。CAI の決まりでは、小屋が確定と返事して初めて予約になる。
+  // 名前は書かない（見ている人が自分のメールアプリで足す）。HutsGo には何も送らない
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function addDays(iso, n) {
+    var p = iso.split("-").map(Number), d = new Date(p[0], p[1] - 1, p[2] + n);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  var MAIL = {
+    it: {
+      date: function (iso) { var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; },
+      people: function (n) { return n + (n === 1 ? " persona" : " persone"); },
+      stay: function (a, b, n) { return n === 1 ? "per la notte del " + a : "dal " + a + " al " + b + " (" + n + " notti)"; },
+      plan: { hb: "in mezza pensione", bb: "con pernottamento e prima colazione", bo: "solo pernottamento" },
+      room: { any: "in camerata o in camera (indifferente)", dorm: "in camerata", room: "in camera" },
+      subject: function (a, n) { return "Richiesta di disponibilità – " + a + ", " + n; },
+      body: function (o) {
+        return "Buongiorno,\n\nvorremmo sapere se avete posto " + o.stay + " per " + o.people + ", " + o.plan + ", " + o.room + ".\n" +
+          (o.members ? "Siamo soci di un club alpino (porteremo la tessera).\n" : "") +
+          "\nSe c'è posto, potete confermarci la prenotazione? Se è richiesta una caparra, come possiamo pagarla?\n\nGrazie mille e cordiali saluti,\n";
+      }
+    },
+    de: {
+      date: function (iso) { var p = iso.split("-"); return p[2] + "." + p[1] + "." + p[0]; },
+      people: function (n) { return n + (n === 1 ? " Person" : " Personen"); },
+      stay: function (a, b, n) { return n === 1 ? "für die Nacht vom " + a + " auf den " + b : "vom " + a + " bis " + b + " (" + n + " Nächte)"; },
+      plan: { hb: "mit Halbpension", bb: "mit Übernachtung und Frühstück", bo: "nur Übernachtung" },
+      room: { any: "im Lager oder im Zimmer (egal)", dorm: "im Lager", room: "im Zimmer" },
+      subject: function (a, n) { return "Anfrage – " + a + ", " + n; },
+      body: function (o) {
+        return "Guten Tag,\n\nhaben Sie noch Platz " + o.stay + " für " + o.people + ", " + o.plan + ", " + o.room + "?\n" +
+          (o.members ? "Wir sind Mitglieder eines Alpenvereins (Ausweis bringen wir mit).\n" : "") +
+          "\nWenn ja, können Sie uns die Reservierung bestätigen? Falls eine Anzahlung nötig ist: wie können wir sie bezahlen?\n\nVielen Dank und freundliche Grüße\n";
+      }
+    },
+    en: {
+      date: function (iso) {
+        var p = iso.split("-").map(Number);
+        return p[2] + " " + ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][p[1] - 1] + " " + p[0];
+      },
+      people: function (n) { return n + (n === 1 ? " person" : " people"); },
+      stay: function (a, b, n) { return n === 1 ? "for the night of " + a : "from " + a + " to " + b + " (" + n + " nights)"; },
+      plan: { hb: "half board", bb: "bed and breakfast", bo: "bed only" },
+      room: { any: "dormitory or room (either is fine)", dorm: "in the dormitory", room: "in a room" },
+      subject: function (a, n) { return "Availability request – " + a + ", " + n; },
+      body: function (o) {
+        return "Hello,\n\ndo you have space " + o.stay + " for " + o.people + ", " + o.plan + ", " + o.room + "?\n" +
+          (o.members ? "We are members of an alpine club (we will bring our cards).\n" : "") +
+          "\nIf so, could you confirm the booking? If a deposit is needed, how can we pay it?\n\nMany thanks and best regards,\n";
+      }
+    }
+  };
+  // opts: { lang: "it"|"de"|"en", start: "YYYY-MM-DD"（最初の夜）, nights, people, plan: "hb"|"bb"|"bo", room: "any"|"dorm"|"room", members }
+  function bookingMail(opts) {
+    var L = MAIL[opts.lang] || MAIL.en;
+    var n = Math.max(1, opts.nights || 1);
+    var a = L.date(opts.start), b = L.date(addDays(opts.start, n === 1 ? 1 : n));
+    var people = L.people(opts.people || 1);
+    return {
+      subject: L.subject(a, people),
+      body: L.body({ stay: L.stay(a, b, n), people: people, plan: L.plan[opts.plan] || L.plan.hb,
+                     room: L.room[opts.room] || L.room.any, members: !!opts.members })
+    };
+  }
+
   window.HutsGoContact = {
+    bookingMail: bookingMail,
     dateReading: dateReading,
     peopleReading: peopleReading,
     phoneScript: phoneScript,
