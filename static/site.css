@@ -770,9 +770,21 @@ h2,h3{font-weight:700}
 .rguide{margin:1.2rem 0;padding:.2rem 1rem .4rem;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .rguide summary{cursor:pointer;padding:.6rem 0;font-weight:700}
 .rguide h3{margin:.8rem 0 .4rem;font-size:1rem}
-.rguide-terms{display:block;overflow-x:auto;max-width:100%;font-size:.82rem}
-.rguide-terms th,.rguide-terms td{padding:.45rem .55rem}
-.rguide-terms td,.rguide-terms th{vertical-align:top}
+.rguide-terms{max-width:none;font-size:.82rem}
+.rguide-terms th,.rguide-terms td{padding:.45rem .55rem;vertical-align:top}
+.rguide-terms td:last-child{width:42%}
+/* 狭い画面では 1 語 = 1 枚（言葉 → 伊・独 → 中身）に組み替える。4 列のままだと中身の列が潰れる */
+@media (max-width:640px){
+  .rguide-terms,.rguide-terms tbody,.rguide-terms tr,.rguide-terms th,.rguide-terms td{display:block}
+  .rguide-terms thead{display:none}
+  .rguide-terms tr{padding:.6rem .75rem;border-bottom:1px solid var(--line)}
+  .rguide-terms tr:last-child{border-bottom:0}
+  .rguide-terms th,.rguide-terms td{padding:0;border:0}
+  .rguide-terms th{color:var(--ink);font-weight:700;font-size:.9rem;white-space:normal}
+  .rguide-terms td[data-l]{display:inline-block;max-width:100%;margin-right:.7rem;color:var(--ink-soft);font-weight:400}
+  .rguide-terms td[data-l]::before{content:attr(data-l);display:inline-block;margin-right:.3rem;padding:0 .3rem;border:1px solid var(--line);border-radius:4px;font-size:.7rem;line-height:1.4}
+  .rguide-terms td:last-child{width:auto;margin-top:.25rem}
+}
 .rguide-list{padding-left:1.1rem;font-size:.9rem}
 .rguide-list li{margin:.35rem 0}
 .rguide-list a{font-size:.78rem;white-space:nowrap}
