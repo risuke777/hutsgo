@@ -184,15 +184,21 @@ const cardsOn = (d, day) => d.querySelectorAll(`.plan-day[data-day="${day}"] .pl
   ok("出典が出ている", /地理院タイル/.test(e.d.querySelector(".hgmap-attr").textContent));
   ok("拡大縮小と全体表示のボタン", e.d.querySelectorAll(".hgmap-btn").length === 3);
   e.d.querySelector(".hgmap-pin").click();
+  // 押した小屋は、まずカード（絵・概要）。行程にはカードの「行程に追加」で入れる
+  const sheet = e.d.getElementById("plan-sheet");
+  ok("押すと小屋のカード", !sheet.hidden && !!sheet.querySelector("h3") && e.d.querySelectorAll(".plan-card").length === 0,
+     sheet.querySelector("h3") && sheet.querySelector("h3").textContent);
+  sheet.querySelector(".btn-primary").click();
+  ok("カードのボタンが「予約の準備へ」に変わる", /予約の準備/.test(sheet.querySelector(".btn-primary").textContent));
   ok("地図から行程に入る", e.d.querySelectorAll(".plan-card").length === 1,
      `${e.d.querySelectorAll(".plan-card").length}`);
-  const toastBox = e.d.getElementById("plan-msg");
-  ok("入れたことを知らせる", !toastBox.hidden && /入れました|added/.test(toastBox.textContent),
-     toastBox.textContent);
+  // カードから入れたときは、下のお知らせではなくカードに「行程の n 泊目」（お知らせはカードのボタンに重なるため出さない）
+  const inLine = sheet.querySelector(".plan-sheet-in");
+  ok("入れたことをカードに出す", !!inLine && /1 泊目/.test(inLine.textContent), inLine && inLine.textContent);
   ok("選んだ小屋のピンが変わる", !!e.d.querySelector(".hgmap-pin.is-chosen"));
   ok("この範囲の小屋が出る", e.d.querySelectorAll("#plan-nearby-row .plan-chip").length > 0,
      `${e.d.querySelectorAll("#plan-nearby-row .plan-chip").length}`);
-  [...toastBox.querySelectorAll("button")].forEach((b) => b.click());
+  inLine.querySelector("button").click();
   ok("取り消せる", e.d.querySelectorAll(".plan-card").length === 0,
      `${e.d.querySelectorAll(".plan-card").length}`);
 

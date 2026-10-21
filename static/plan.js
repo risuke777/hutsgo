@@ -247,7 +247,7 @@
       if (!b) return;
       if (huts[b.dataset.hut] && zoneOf(huts[b.dataset.hut]) !== zone) switchZone(zoneOf(huts[b.dataset.hut]));
       addHut(b.dataset.hut);
-      if (mapApi) mapApi.focus(b.dataset.hut);   // 押した小屋が地図のどこかを見せる
+      focusHut(b.dataset.hut);   // 押した小屋が地図のどこかを見せる
       input.value = "";
       out.hidden = true;
       drawList($("#plan-list"), "");
@@ -297,7 +297,8 @@
     toastTimer = setTimeout(function () { box.hidden = true; }, 6000);
   }
 
-  function addHut(id) {
+  // quiet: 地図のカードから入れたとき。カードに「行程の n 泊目」と出るので、下のお知らせは出さない（カードのボタンに重なる）
+  function addHut(id, quiet) {
     if (!huts[id]) return;
     ensureDays();
     // 空いている最初の日に入れる。全部埋まっていれば最終日の候補として足す
@@ -305,7 +306,7 @@
     if (target < 0) target = state.days.length - 1;
     if (state.days[target].indexOf(id) < 0) {
       state.days[target].push(id);
-      toast(t("added").replace("{name}", hutName(huts[id])).replace("{n}", target + 1),
+      if (!quiet) toast(t("added").replace("{name}", hutName(huts[id])).replace("{n}", target + 1),
             function () { removeHut(target, id); });
     } else {
       toast(t("already_in").replace("{name}", hutName(huts[id])));
@@ -354,6 +355,18 @@
     return wrap;
   }
 
+  // その日に開いているか。年の日付が無いときだけ、公式の「例年の営業期間」で目安を出す（日付には直さない）
+  function seasonBadge(h, date) {
+    var st = openOn(h, date);
+    var us = st === null ? usualOn(h, date) : null;
+    if (st === true) return el("span", "plan-badge is-open", t("open_on"));
+    if (st === false) return el("span", "plan-badge is-closed", t("closed_on"));
+    if (us === "in") return el("span", "plan-badge is-usual", t("usual_in").replace("{l}", usualLabel(h.usual_season)));
+    if (us === "edge") return el("span", "plan-badge is-unknown", t("usual_edge").replace("{l}", usualLabel(h.usual_season)));
+    if (us === "out") return el("span", "plan-badge is-closed", t("usual_out").replace("{l}", usualLabel(h.usual_season)));
+    return el("span", "plan-badge is-unknown", t("season_unknown"));
+  }
+
   function hutCard(h, day) {
     var card = el("div", "plan-card");
     if (contact[h.id]) card.classList.add("st-" + contact[h.id].s);
@@ -370,17 +383,7 @@
     card.appendChild(head);
 
     var date = dayDate(day);
-    var st = openOn(h, date);
-    var us = st === null ? usualOn(h, date) : null;
-    var badge;
-    if (st === true) badge = el("span", "plan-badge is-open", t("open_on"));
-    else if (st === false) badge = el("span", "plan-badge is-closed", t("closed_on"));
-    // 年の日付が無いときだけ、公式の「例年の営業期間」で目安を出す（日付には直さない）
-    else if (us === "in") badge = el("span", "plan-badge is-usual", t("usual_in").replace("{l}", usualLabel(h.usual_season)));
-    else if (us === "edge") badge = el("span", "plan-badge is-unknown", t("usual_edge").replace("{l}", usualLabel(h.usual_season)));
-    else if (us === "out") badge = el("span", "plan-badge is-closed", t("usual_out").replace("{l}", usualLabel(h.usual_season)));
-    else badge = el("span", "plan-badge is-unknown", t("season_unknown"));
-    card.appendChild(badge);
+    card.appendChild(seasonBadge(h, date));
 
     var se = h.season_2026 || {};
     var res = se.reservation || {};
@@ -413,7 +416,7 @@
     }
     if (mail && (h.country || "JP") !== "JP") card.dataset.mail = "1";
     if ((res.phone || res.url || chs.length) && window.HutsGoContact) {
-      var cbtn = el("button", "btn btn-ghost", t(card.dataset.mail ? "contact_btn_mail" : "contact_btn"));
+      var cbtn = el("button", "btn btn-ghost plan-contact-btn", t(card.dataset.mail ? "contact_btn_mail" : "contact_btn"));
       cbtn.type = "button";
       var panelId = "contact-" + h.id + "-" + day;
       cbtn.setAttribute("aria-expanded", "false");
@@ -691,6 +694,7 @@
     writeHash();
     if (mapApi) mapApi.setChosen(chosenIds());
     refreshIcsAllButton();
+    if (sheetId) fillSheet(sheetId);
   }
 
   function refreshIcsAllButton() {
@@ -723,7 +727,7 @@
       b.appendChild(el("span", null, hutName(hut)));
       var e = hut.location.elevation_m;
       if (e) b.appendChild(el("span", "plan-chip-elev", e.toLocaleString() + "m"));
-      b.addEventListener("click", function () { addHut(hut.id); });
+      b.addEventListener("click", function () { openSheet(hut.id); });
       box.appendChild(b);
     });
   }
@@ -764,23 +768,201 @@
   // 地図は 1 つの行き先ずつ（日本とイタリアを 1 枚に入れると、どちらの小屋も点にしか見えない）。
   // 地図の出どころも行き先で変わる（日本 = 地理院、日本の外 = OpenTopoMap。docs/REGIONS.md）
   function zoneName(id) { var z = ZONES.filter(function (x) { return x.id === id; })[0]; return z ? z.name : id; }
+  // 地図は 3D（MapLibre）を先に使う。WebGL が無い端末・部品が読めないときは平面の地図（map.js）。?map=2d でも平面
+  var mapToken = 0, pendingFocus = null;
   function makeMap() {
-    if (!window.HutsGoMap) return;
+    if (!window.HutsGoMap && !window.HutsGoMap3D) return;
     if (mapApi && mapApi.destroy) mapApi.destroy();
+    mapApi = null;
+    closeSheet(true);
     // 前の地図が付けた操作の見張りを残さないよう、地図の箱を作り直す
     var old = $("#plan-map"), box = old.cloneNode(false);
     old.parentNode.replaceChild(box, old);
     var z = ZONES.filter(function (x) { return x.id === zone; })[0] || ZONES[0];
-    mapApi = window.HutsGoMap.create(box, {
+    var opts = {
       huts: Object.keys(huts).map(function (id) { return huts[id]; }).filter(function (h) { return zoneOf(h) === zone; }),
       source: z.source,
       strings: T,
+      lang: LANG,
       nameOf: hutName,
-      onPick: addHut,
+      onPick: openSheet,                                  // 押した小屋は、まずカード（絵・概要）を出す。行程にはカードから入れる
+      onBlank: function () { closeSheet(); },
       onMove: drawNearby
+    };
+    var my = ++mapToken;
+    function ready(api) {
+      if (my !== mapToken) { if (api.destroy) api.destroy(); return; }   // 読み込み中に行き先が変わった
+      mapApi = api;
+      mapApi.setChosen(chosenIds());
+      drawNearby();
+      if (pendingFocus) { mapApi.focus(pendingFocus[0], pendingFocus[1]); pendingFocus = null; }
+    }
+    function flat() { if (window.HutsGoMap) ready(window.HutsGoMap.create(box, opts)); }
+    if (window.HutsGoMap3D && window.HutsGoMap3D.supported() && !/[?&]map=2d\b/.test(location.search)) {
+      box.classList.add("is-loading");
+      box.setAttribute("data-loading", t("map3d_loading"));
+      window.HutsGoMap3D.create(box, opts).then(function (api) {
+        box.classList.remove("is-loading"); ready(api);
+      }, function () {
+        box.classList.remove("is-loading");
+        if (my === mapToken) flat();
+      });
+    } else flat();
+  }
+  // 地図ができる前に「この小屋を見せて」と頼まれたら、できてから寄る
+  function focusHut(id, zoom) {
+    if (mapApi) mapApi.focus(id, zoom); else pendingFocus = [id, zoom];
+  }
+
+  // ---- 地図で押した小屋のカード（絵・概要 → 行程に追加 → 予約の準備）-------------
+  // 絵: 小屋の写真があればそれ、無ければ小屋のまわりの 3D の静止画（tools/hut_posters.mjs）。写真と取り違えないよう札を付ける
+  var PICS = window.HUTSGO_PLAN_PICS || {};
+  var sheetId = null;
+  function sheetOffset() {
+    var v = $("#plan-map-view"), w = v.clientWidth, hh = v.clientHeight;
+    // 広い画面ではカードが左にかぶるので小屋を右へ、狭い画面では下にかぶるので上へ
+    return window.matchMedia && window.matchMedia("(min-width: 900px)").matches
+      ? [Math.round(Math.min(360, w * 0.4) / 2), 0] : [0, -Math.round(hh * 0.24)];
+  }
+  function openSheet(id) {
+    var box = $("#plan-sheet");
+    if (!huts[id]) return;
+    if (!box) { addHut(id); return; }
+    sheetId = id;
+    fillSheet(id);
+    box.hidden = false;
+    // 狭い画面では地図が画面の下にはみ出していることがある。カードが見える所まで送る
+    var r = box.getBoundingClientRect();
+    if (r.bottom > window.innerHeight && box.scrollIntoView) box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (mapApi && mapApi.select) mapApi.select(id, sheetOffset());
+    else if (mapApi) mapApi.focus(id);
+  }
+  function closeSheet(quiet) {
+    var box = $("#plan-sheet");
+    if (box) box.hidden = true;
+    if (sheetId && !quiet && mapApi && mapApi.select) mapApi.select(null);
+    sheetId = null;
+  }
+  function dayOf(id) {
+    for (var i = 0; i < state.days.length; i++) if (state.days[i].indexOf(id) >= 0) return i;
+    return -1;
+  }
+  function credit3d(h) {
+    return (h.country || "JP") === "JP"
+      ? (LANG === "en" ? "GSI Japan" : "国土地理院")
+      : "EOxCloudless 2025 · Terrain Tiles (AWS) · © OpenStreetMap";
+  }
+  function fact(dl, k, v) {
+    if (v == null || v === "") return;
+    dl.appendChild(el("dt", null, k));
+    var dd = el("dd");
+    if (typeof v === "string") dd.textContent = v; else dd.appendChild(v);
+    dl.appendChild(dd);
+  }
+  function fillSheet(id) {
+    var box = $("#plan-sheet"), h = huts[id];
+    if (!box || !h) return;
+    box.innerHTML = "";
+    var world = (h.country || "JP") !== "JP";
+    var x = el("button", "plan-sheet-x", "×");
+    x.type = "button"; x.setAttribute("aria-label", t("sh_close"));
+    x.addEventListener("click", function () { closeSheet(); });
+    box.appendChild(x);
+    var pic = PICS[h.id];
+    if (pic) {
+      var fig = el("figure", "plan-sheet-pic");
+      var img = el("img");
+      img.src = BASE + pic.src; img.alt = pic.alt || ""; img.width = 640; img.height = 400; img.decoding = "async";
+      fig.appendChild(img);
+      fig.appendChild(el("figcaption", null, pic.kind === "3d" ? t("sh_pic_3d") + " · " + credit3d(h) : (pic.credit || "")));
+      box.appendChild(fig);
+    }
+    var body = el("div", "plan-sheet-body");
+    var area = h.area && h.area.name ? (LANG === "en" ? (h.area.name.en || h.area.name.ja) : (h.area.name.ja || h.area.name.en)) : "";
+    var ele = h.location && h.location.elevation_m;
+    body.appendChild(el("p", "plan-sheet-k", [area, ele ? Number(ele).toLocaleString() + "m" : ""].filter(Boolean).join(" · ")));
+    body.appendChild(el("h3", "plan-sheet-n", hutName(h)));
+
+    // 入れる（入っている）夜に開いているか。入れる夜は addHut と同じ決め方（空いている最初の夜、無ければ最後の夜）
+    ensureDays();
+    var inDay = dayOf(h.id);
+    var night = inDay >= 0 ? inDay : state.days.findIndex(function (d) { return d.length === 0; });
+    if (night < 0) night = state.days.length - 1;
+    var date = dayDate(night);
+    if (date) body.appendChild(seasonBadge(h, date));
+
+    var dl = el("dl", "plan-sheet-facts");
+    var yr = date ? date.slice(0, 4) : "2026";
+    var se = h["season_" + yr];
+    var season = null;
+    if (se && se.status === "year_round") season = t("sh_year_round");
+    else if (se && (se.open_date || se.close_date) && (se.open_date || se.close_date).slice(0, 4) === yr) {
+      // 片方だけ分かっているときは、分かっている方だけ（「〜9/27」）
+      var md = function (d) { if (!d) return ""; var a = d.split("-"); return Number(a[1]) + "/" + Number(a[2]); };
+      season = md(se.open_date) + (LANG === "en" ? " – " : "〜") + md(se.close_date);
+    } else if (h.usual_season && h.usual_season.from_month) season = t("sh_usual").replace("{l}", usualLabel(h.usual_season));
+    fact(dl, t("sh_season").replace("{y}", yr), season || t("sh_none"));
+    var r2 = (h.rates_2026 || []).filter(function (r) { return r.plan === "two_meals"; })[0];
+    fact(dl, world ? t("half_board") : t("sh_two"), r2 && r2.price ? money(r2.price, r2.currency) + (r2.is_from_price ? "+" : "") : t("sh_none"));
+    var res = (h.season_2026 || {}).reservation || {}, chs = res.channels || [];
+    var ways = [];
+    chs.forEach(function (c) {
+      var k = c.kind === "email" ? "sh_email" : c.kind === "form" ? "sh_form" : c.kind === "web" ? "sh_web" : null;
+      if (k && ways.indexOf(t(k)) < 0) ways.push(t(k));
     });
-    mapApi.setChosen(chosenIds());
-    drawNearby();
+    if (res.url && !chs.length) ways.push(t("sh_web"));
+    if (res.phone) ways.push(t("sh_phone"));
+    var wv = el("span", null, ways.length ? ways.join(LANG === "en" ? " · " : "・") : t("sh_none"));
+    if (chs.some(function (c) { return c.availability === 1; })) wv.appendChild(el("span", "ch-avail", t("sh_avail")));
+    fact(dl, t("sh_ways"), wv);
+    var f = h.facilities || {}, fac = [];
+    [["shower", "sh_shower"], ["private_room", "sh_private"], ["credit_card", "sh_card"], ["wifi", "sh_wifi"]].forEach(function (p) { if (f[p[0]] === 1) fac.push(t(p[1])); });
+    if (fac.length) fact(dl, t("sh_fac"), fac.join(LANG === "en" ? " · " : "・"));
+    if (h.owner_kind) fact(dl, t("sh_owner"), t("owner_" + h.owner_kind));
+    body.appendChild(dl);
+
+    if (inDay >= 0) {
+      var c = contact[h.id];
+      var inP = el("p", "plan-sheet-in", t("sh_in").replace("{n}", inDay + 1) + (LANG === "en" ? " · " : "・")
+        + t("st_h") + (LANG === "en" ? ": " : "：") + t("st_" + (c ? c.s : "none")) + " ");
+      var rm = el("button", "linklike", t("remove"));
+      rm.type = "button";
+      rm.addEventListener("click", function () { removeHut(inDay, h.id); });
+      inP.appendChild(rm);
+      body.appendChild(inP);
+    }
+    var acts = el("div", "plan-sheet-acts");
+    if (inDay < 0) {
+      var add = el("button", "btn btn-primary", t("sh_add"));
+      add.type = "button";
+      add.addEventListener("click", function () { addHut(h.id, true); });
+      acts.appendChild(add);
+    } else {
+      var go = el("button", "btn btn-primary", t("sh_book"));
+      go.type = "button";
+      go.addEventListener("click", function () { openBooking(h.id); });
+      acts.appendChild(go);
+    }
+    var pg = el("a", "btn btn-ghost", t("sh_page"));
+    pg.href = LB + "/huts/" + h.id + "/";
+    acts.appendChild(pg);
+    body.appendChild(acts);
+    var pv = h.provenance || {};
+    if (pv.last_verified_at) body.appendChild(el("p", "plan-sheet-src", t("sh_checked").replace("{d}", pv.last_verified_at)));
+    box.appendChild(body);
+  }
+  // 行程のその小屋のカードへ移り、連絡の準備（窓口・メールの文・前払いの決まり）を開く
+  function openBooking(id) {
+    var card = document.querySelector('#plan-days .plan-card[data-hut="' + id + '"]');
+    if (!card) return;
+    var btn = card.querySelector(".plan-contact-btn"), panel = card.querySelector(".plan-contact");
+    if (btn && panel && panel.hidden) btn.click();
+    card.classList.add("is-flash");
+    setTimeout(function () { card.classList.remove("is-flash"); }, 1800);
+    // 上に貼り付いている日付の帯にカードの頭が隠れないよう、帯の高さだけあけて止める
+    var bar = $(".plan-bar");
+    card.style.scrollMarginTop = ((bar ? bar.offsetHeight : 0) + 12) + "px";
+    if (card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function switchZone(id) {
     if (id === zone || !ZONES.some(function (x) { return x.id === id; })) return;
@@ -943,10 +1125,11 @@
     setupProfile();
     setupViews(data);
     wireDrag($("#plan-days"));
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && sheetId) closeSheet(); });
     render();
     if (addId) {
       addHut(addId);
-      if (mapApi) mapApi.focus(addId);   // どこの山かを地図で見せる
+      focusHut(addId);   // どこの山かを地図で見せる
     }
     if (addRoute) addTrail(addRoute);
   }
@@ -975,7 +1158,7 @@
         render();
         var name = LANG === "en" ? (tr.name.en || tr.name.ja) : (tr.name.ja || tr.name.en);
         toast(t("route_added").replace("{name}", name).replace("{n}", ids.length));
-        if (mapApi) mapApi.focus(ids[0], 12);
+        focusHut(ids[0], 12);
       })
       .catch(function () { toast(t("load_failed")); });
   }

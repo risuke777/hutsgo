@@ -6,7 +6,8 @@
 <link rel="stylesheet" href="{{ BASE }}/static/plan.css">
 <meta name="hutsgo-data" content="{{ BASE }}/data/huts.json">
 <script>window.HUTSGO_PLAN_STRINGS = {{ plan_strings | tojson }};
-window.HUTSGO_PLAN_ZONES = {{ plan_zones | tojson }};</script>
+window.HUTSGO_PLAN_ZONES = {{ plan_zones | tojson }};
+window.HUTSGO_PLAN_PICS = {{ plan_pics | tojson }};</script>
 {% endblock %}
 {% block body %}
 <h1 class="plan-h1">{{ T.plan_h1 }}</h1>
@@ -74,7 +75,10 @@ window.HUTSGO_PLAN_ZONES = {{ plan_zones | tojson }};</script>
       </div>
     </div>
     <div class="plan-mapwrap">
-      <div class="plan-view" id="plan-map-view"><div id="plan-map"></div></div>
+      <div class="plan-view" id="plan-map-view"><div id="plan-map"></div>
+        {#- 地図で押した小屋のカード（絵・概要・行程に追加 → 予約の準備）。plan.js が中身を作る -#}
+        <div class="plan-sheet" id="plan-sheet" role="region" aria-label="{{ T.plan_sheet_aria }}" aria-live="polite" hidden></div>
+      </div>
       <div class="plan-view" id="plan-profile-view" hidden>
         <label class="plan-field plan-routepick">{{ T.plan_route }}
           <select id="plan-route">
@@ -114,5 +118,6 @@ window.HUTSGO_PLAN_ZONES = {{ plan_zones | tojson }};</script>
 {% endblock %}
 {% block scripts %}<script src="{{ BASE }}/static/qrcode.js" defer></script>
 <script src="{{ BASE }}/static/map.js" defer></script>
+<script src="{{ BASE }}/static/plan3d.js" defer></script>
 <script src="{{ BASE }}/static/contact.js" defer></script>
 <script src="{{ BASE }}/static/plan.js" defer></script>{% endblock %}
