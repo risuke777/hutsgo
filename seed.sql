@@ -1881,3 +1881,20 @@ INSERT INTO sub_areas (id, range_id, name_ja, name_en) VALUES
   ('marmolada',         'dolomites', 'マルモラーダ', 'Marmolada'),
   ('pale',              'dolomites', 'パーレ・ディ・サン・マルティーノ', 'Pale di San Martino'),
   ('fiemme_lagorai',    'dolomites', 'ラテマール・フィエンメ・ラゴライ', 'Latemar, Fiemme and Lagorai');
+
+-- ---------------------------------------------------------------
+-- 2026-10-21 トレ・チーメの 3 軒に、予約の管理に要るもの（メール・前払いと取り消し・料金）を足す（各小屋の公式サイト）
+-- ---------------------------------------------------------------
+INSERT INTO hut_booking_channels (hut_id,year,seq,kind,operator,url,english,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('rifugio_auronzo',2026,2,'email','hut','mailto:info@rifugioauronzo.it','unknown',NULL,NULL,'https://rifugioauronzo.it/','2026-10-21','verified');
+UPDATE hut_seasons SET booking_terms='予約のときに 50% を前払い（戻らない）。残りは夕食のあと、現金かカード（天気が悪いとカードが使えないことがある）',
+  booking_terms_en='50% non-refundable deposit when booking. Pay the rest after dinner, cash or card (cards may fail in bad weather).'
+  WHERE hut_id='rifugio_lavaredo' AND year=2026;
+UPDATE hut_seasons SET booking_terms='土曜の泊まりはハーフボードだけ。支払いは現金か銀行小切手だけ（電話線が無くカードが使えない）。営業中の連絡は WhatsApp の文字だけ（急ぎ・取り消し）',
+  booking_terms_en='Saturday nights: half board only. Payment by cash or bank cheque only (no phone line, so no cards). While open, contact by WhatsApp text only (urgent matters, cancellations).'
+  WHERE hut_id='rifugio_locatelli' AND year=2026;
+INSERT INTO hut_rates (hut_id,year,plan_type,price_jpy,currency,is_from_price,note_ja,note_en,source_url,last_verified_at,confidence) VALUES
+('rifugio_lavaredo',2026,'private_room',260,'EUR',0,'2 人部屋 1 部屋・ハーフボード・2 人分の値段。10 歳未満は 1 人 €100。シャワーはコイン €8、タオル €7。年の記載なし（2026-10-21 時点の公式の料金）',
+ 'Two-bed room with half board, price for two. Children under 10 €100. Shower token €8, towels €7. No year given (official price as of 2026-10-21).',
+ 'https://rifugiolavaredo.com/home.html','2026-10-21','verified');
+UPDATE hut_facilities SET wifi=1 WHERE hut_id='rifugio_lavaredo';
