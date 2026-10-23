@@ -26,44 +26,8 @@
     }));
   }
 
-  // 地理院の標高 PNG の「データ無し」（湖・海など。RGB = 128,0,0）は、そのまま読むと +83,886m の突起になって空に縦の縞が立つ。
-  // 同じ行のいちばん近い左右の値のうち低い方（だいたい岸の高さ）で埋めてから渡す。gsidem://〜 で使う
-  function gsiDemProtocol() {
-    if (!window.maplibregl || maplibregl.__hgGsiDem) return;
-    maplibregl.__hgGsiDem = true;
-    maplibregl.addProtocol("gsidem", function (params, abort) {
-      var url = params.url.replace(/^gsidem:\/\//, "https://");
-      return fetch(url, { signal: abort && abort.signal }).then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.arrayBuffer();
-      }).then(function (buf) {
-        if (!window.OffscreenCanvas || !window.createImageBitmap) return { data: buf };
-        return createImageBitmap(new Blob([buf], { type: "image/png" }), { colorSpaceConversion: "none", premultiplyAlpha: "none" }).then(function (bm) {
-          var w = bm.width, h = bm.height, c = new OffscreenCanvas(w, h), g = c.getContext("2d", { willReadFrequently: true });
-          g.drawImage(bm, 0, 0);
-          var im = g.getImageData(0, 0, w, h), d = im.data, hole = false;
-          for (var i = 0; i < d.length; i += 4) if (d[i] === 128 && d[i + 1] === 0 && d[i + 2] === 0) { hole = true; break; }
-          if (!hole) return { data: buf };
-          for (var y = 0; y < h; y++) {
-            var row = y * w * 4, left = new Array(w), last = null, x, k;
-            for (x = 0; x < w; x++) { k = row + x * 4; if (!(d[k] === 128 && d[k + 1] === 0 && d[k + 2] === 0)) last = k; left[x] = last; }
-            var right = null;
-            for (x = w - 1; x >= 0; x--) {
-              k = row + x * 4;
-              if (!(d[k] === 128 && d[k + 1] === 0 && d[k + 2] === 0)) { right = k; continue; }
-              var a = left[x], b = right, src = a == null ? b : b == null ? a : (val(d, a) <= val(d, b) ? a : b);
-              if (src == null) { d[k] = 0; d[k + 1] = 0; d[k + 2] = 0; }      // 行ぜんぶが無し（海）: 0m
-              else { d[k] = d[src]; d[k + 1] = d[src + 1]; d[k + 2] = d[src + 2]; }
-            }
-          }
-          g.putImageData(im, 0, 0);
-          return c.convertToBlob({ type: "image/png" }).then(function (b) { return b.arrayBuffer(); }).then(function (out) { return { data: out }; });
-        });
-      });
-    });
-  }
-  // 地理院の標高 PNG の値（m）。2^23 以上は負の値
-  function val(d, k) { var v = d[k] * 65536 + d[k + 1] * 256 + d[k + 2]; return (v >= 8388608 ? v - 16777216 : v) * 0.01; }
+  // 地理院の標高の「データ無し」（湖など）は gsidem.js で埋める（gsidem://〜）
+  function gsiDemProtocol() { if (window.HutsGoGsiDem) HutsGoGsiDem.register(); }
 
   function style(world) {
     // 標高は z12 まで（約 30m 格子）。それより細かい段を使うと、動かすたびに地形の細かさが切り替わって山がちらつく（flyover.js で確かめた）

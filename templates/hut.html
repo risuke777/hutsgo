@@ -39,7 +39,7 @@
   </header>
   {% if world %}{{ rifugio_guide() }}{% endif %}
   {% for p in h.photos[:1] %}
-  <figure class="photo">{{ img(p) }}<figcaption>{{ p.caption_t }} <span class="credit">{{ p.credit_t }}</span></figcaption></figure>
+  <figure class="photo">{{ img(p) }}<figcaption>{{ p.caption_t }} <span class="credit">{{ p.credit_t }}{% if p.license %} / {% if p.source_url %}<a href="{{ p.source_url }}" rel="noopener">{{ p.license }}（Wikimedia Commons）</a>{% else %}{{ p.license }}{% endif %}{% endif %}</span></figcaption></figure>
   {% endfor %}
 
   <section class="block" aria-labelledby="season-h">

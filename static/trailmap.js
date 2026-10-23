@@ -177,7 +177,7 @@
     set(0);
   }
   function show3d(el) {
-    if (!el || map3d) { if (map3d) map3d.resize(); return; }
+    if (!el || map3d) { if (map3d && map3d.resize) map3d.resize(); return; }   // 読み込み中（"loading"）にもう一度押されても何もしない
     map3d = "loading";
     el.innerHTML = '<p class="t3d-load">' + (LANG === "en" ? "Loading the 3D map…" : "3D の地図を読み込み中…") + "</p>";
     var pts = []; try { pts = JSON.parse(el.dataset.points || "[]"); } catch (e) { pts = []; }
@@ -186,12 +186,14 @@
     loadLib().then(function () {
       el.innerHTML = '<p class="t3d-hint">' + (el.dataset.hint || "") + "</p>";
       var GSI = "https://cyberjapandata.gsi.go.jp/xyz/";
+      // 標高の「データ無し」（湖など）は gsidem.js で岸の高さに埋める（そのままだと高さ約 8 万 m の縞が立つ）
+      var GSIDEM = window.HutsGoGsiDem ? (HutsGoGsiDem.register(), "gsidem://cyberjapandata.gsi.go.jp/xyz/") : GSI;
       // 日本の外（docs/REGIONS.md）: 写真は EOxCloudless（非商用のみ）、標高は AWS Terrain Tiles、道の線は OpenStreetMap
       var world = el.dataset.region === "world";
       var dem = world
         ? { type: "raster-dem", tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "terrarium",
             attribution: 'Terrain Tiles (AWS Open Data) · Route © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' }
-        : { type: "raster-dem", tiles: [GSI + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
+        : { type: "raster-dem", tiles: [GSIDEM + "dem_png/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 14, encoding: "custom",
             redFactor: 655.36, greenFactor: 2.56, blueFactor: 0.01, baseShift: 0, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' };
       var photo = world
         ? { type: "raster", tiles: ["https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2025_3857/default/g/{z}/{y}/{x}.jpg"], tileSize: 256, maxzoom: 15,

@@ -35,7 +35,17 @@
    46.3006569,
    11.7925601
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_capanna_cervino",
+   "by": "Maurizio Ceol",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Il_cimon_della_pala_e_la_vezzana_con_capanna_cervino,maestoso_-_panoramio.jpg",
+   "pos": [
+    46.304578,
+    11.796913
+   ]
+  }
  },
  {
   "id": "casera_ere",
@@ -101,7 +111,13 @@
    46.6745743,
    12.2972254
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_dreischusterhuette",
+   "by": "Steffen 962",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:2010_Sextener_Dolomiten_005_Dreischusterh%C3%BCtte.jpg"
+  }
  },
  {
   "id": "grasleitenhuette",
@@ -130,7 +146,13 @@
    46.4848754,
    11.6299146
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_grasleitenhuette",
+   "by": "Ansgar Koreng",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:140626_Grasleitenh%C3%BCtte_von_oben.jpg"
+  }
  },
  {
   "id": "heiligkreuz_hospiz",
@@ -164,7 +186,13 @@
    46.6144981,
    11.9384619
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_heiligkreuz_hospiz",
+   "by": "Alex1011",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:KircheMitHospiz.jpg"
+  }
  },
  {
   "id": "koelner_huette",
@@ -201,7 +229,13 @@
    46.4426795,
    11.6120472
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_koelner_huette",
+   "by": "Cm95",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C3%B6lner_H%C3%BCtte_vor_Rosengarten.jpg"
+  }
  },
  {
   "id": "kreuzwiesenalm",
@@ -272,7 +306,17 @@
    46.4932659,
    12.0654463
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_malga_giau",
+   "by": "Naunede",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Malga_Giau.jpg",
+   "pos": [
+    46.49291886,
+    12.06581653
+   ]
+  }
  },
  {
   "id": "malga_valmaggiore",
@@ -355,7 +399,17 @@
    46.692475,
    11.8267652
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_maurerberghuette",
+   "by": "Mateus2019",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:ITA_%E2%80%94_Trentino-Alto_Adige_%E2%80%94_Provinz_Bozen%E2%80%93S%C3%BCdtirol_%E2%80%94_St._Martin_in_Thurn_(San_Martino_in_Badia)_%E2%80%94_Str._B%C3%B6rz_19_(Maurerbergh%C3%BCtte)_%E2%80%94_Mattes_2023-06-12.jpg",
+   "pos": [
+    46.691444,
+    11.82728
+   ]
+  }
  },
  {
   "id": "plattkofelhuette",
@@ -396,7 +450,17 @@
    46.5044282,
    11.7008981
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_plattkofelhuette",
+   "by": "FkMohr, Supakon Mohr",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:19-PlattkofelH-S.jpg",
+   "pos": [
+    46.504267,
+    11.70059
+   ]
+  }
  },
  {
   "id": "plosehuette",
@@ -436,7 +500,13 @@
    46.6949927,
    11.7321657
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_plosehuette",
+   "by": "Hopfenmalz",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Ploseh%C3%BCtte.jpg"
+  }
  },
  {
   "id": "rifugio_antelao",
@@ -499,7 +569,17 @@
    46.4770453,
    11.6639392
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_antermoia",
+   "by": "Adert",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Antermoia_refuge_2.jpg",
+   "pos": [
+    46.477058,
+    11.663904
+   ]
+  }
  },
  {
   "id": "rifugio_aquileia",
@@ -579,7 +659,13 @@
   ],
   "pos_src": "osm",
   "ele": 2413,
-  "ele_src": "osm"
+  "ele_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_averau",
+   "by": "Lorenzo Colombo (Olonia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Averau.JPG"
+  }
  },
  {
   "id": "rifugio_baion",
@@ -605,7 +691,17 @@
    46.4987045,
    12.3847398
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_baion",
+   "by": "Naunede (it.wikipedia)",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Bajon_-_Domegge_di_Cadore_01.jpg",
+   "pos": [
+    46.49887715,
+    12.38494127
+   ]
+  }
  },
  {
   "id": "rifugio_berti",
@@ -661,7 +757,13 @@
   ],
   "pos_src": "osm",
   "ele": 1950,
-  "ele_src": "osm"
+  "ele_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_berti",
+   "by": "Steffen 962",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:2010_Sextener_Dolomiten_337_Bertih%C3%BCtte.jpg"
+  }
  },
  {
   "id": "rifugio_bianchet",
@@ -707,7 +809,13 @@
    46.2434585,
    12.1613464
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_bianchet",
+   "by": "AllegheNico",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Bianchet.JPG"
+  }
  },
  {
   "id": "rifugio_biella",
@@ -766,7 +874,13 @@
    46.6656313,
    12.0845833
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_biella",
+   "by": "Llorenzi",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Biella.JPG"
+  }
  },
  {
   "id": "rifugio_boe",
@@ -800,7 +914,13 @@
    46.514612,
    11.8232878
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_boe",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Bo%C3%A8,_2873_m.jpg"
+  }
  },
  {
   "id": "rifugio_bottari",
@@ -980,7 +1100,13 @@
    46.5089703,
    11.8281424
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_capanna_piz_fassa",
+   "by": "Unterillertaler",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Capanna_Fassa.jpg"
+  }
  },
  {
   "id": "rifugio_capanna_trieste",
@@ -1007,7 +1133,13 @@
    46.3440549,
    12.031768
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_capanna_trieste",
+   "by": "Gere72",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:CapannaTrieste.jpg"
+  }
  },
  {
   "id": "rifugio_carducci",
@@ -1072,7 +1204,13 @@
    46.6151418,
    12.373581
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_carducci",
+   "by": "Salvixb (it.wikipedia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Carducci.jpg"
+  }
  },
  {
   "id": "rifugio_carestiato",
@@ -1168,7 +1306,17 @@
    46.4828415,
    12.3474338
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_chiggiato",
+   "by": "Kufoleto",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_chiggiato_calalzo.JPG",
+   "pos": [
+    46.48408333,
+    12.34958333
+   ]
+  }
  },
  {
   "id": "rifugio_cima_d_asta",
@@ -1210,7 +1358,17 @@
    46.1703065,
    11.6043945
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_cima_d_asta",
+   "by": "Hermann Hammer",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Cima_d%27Asta.JPG",
+   "pos": [
+    46.17046667,
+    11.60536111
+   ]
+  }
  },
  {
   "id": "rifugio_cinque_torri",
@@ -1249,7 +1407,13 @@
    46.5082169,
    12.0547338
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_cinque_torri",
+   "by": "Lorenzo Colombo (Olonia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Cinque_Torri.jpg"
+  }
  },
  {
   "id": "rifugio_citta_di_fiume",
@@ -1293,7 +1457,13 @@
    46.4369039,
    12.122577
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_citta_di_fiume",
+   "by": "Dirgela",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_citta_di_fiume.JPG"
+  }
  },
  {
   "id": "rifugio_col_de_varda",
@@ -1419,7 +1589,13 @@
    46.3993828,
    12.0688742
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_coldai",
+   "by": "Mauro742",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Coldai.jpg"
+  }
  },
  {
   "id": "rifugio_contrin",
@@ -1457,7 +1633,13 @@
    46.4297615,
    11.8158914
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_contrin",
+   "by": "SchiDD",
+   "license": "CC BY 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Canazei-Rifugio-Contrin.jpg"
+  }
  },
  {
   "id": "rifugio_croda_da_lago",
@@ -1665,7 +1847,13 @@
    46.5323971,
    12.0699062
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_dibona",
+   "by": "Lorenzo Colombo (Olonia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Dibona.jpg"
+  }
  },
  {
   "id": "rifugio_dona",
@@ -1740,7 +1928,13 @@
   ],
   "pos_src": "osm",
   "ele": 2098,
-  "ele_src": "osm"
+  "ele_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_duca_d_aosta",
+   "by": "Llorenzi",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Duca_d%27Aosta_01.JPG"
+  }
  },
  {
   "id": "rifugio_falier",
@@ -1806,7 +2000,13 @@
    46.4248538,
    11.8627064
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_falier",
+   "by": "Godromil",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Onofrio_Falier.jpg"
+  }
  },
  {
   "id": "rifugio_fanes",
@@ -1861,7 +2061,13 @@
    46.6121796,
    12.0141813
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_fanes",
+   "by": "Bbruno",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Fanes_01.JPG"
+  }
  },
  {
   "id": "rifugio_fedaia",
@@ -1961,7 +2167,13 @@
    46.5875216,
    11.7582949
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_firenze",
+   "by": "Llorenzi",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Firenze2.JPG"
+  }
  },
  {
   "id": "rifugio_fodara_vedla",
@@ -2006,7 +2218,13 @@
    46.6356434,
    12.0609551
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_fodara_vedla",
+   "by": "Bbruno",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Fodara.JPG"
+  }
  },
  {
   "id": "rifugio_fonda_savio",
@@ -2045,7 +2263,13 @@
    46.5852879,
    12.2874071
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_fonda_savio",
+   "by": "Coronium",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:FondaSavioHuette_20150718.jpg"
+  }
  },
  {
   "id": "rifugio_fonteghi",
@@ -2131,7 +2355,13 @@
    46.5018889,
    11.8123954
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_forcella_pordoi",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Forcella_Pordoi,_2848_m.jpg"
+  }
  },
  {
   "id": "rifugio_fredarola",
@@ -2203,7 +2433,17 @@
    46.5004073,
    11.7451847
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_friedrich_august",
+   "by": "Andreas Schäfer",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Die_Friedrich-August_H%C3%BCtte_(ca._2300m)_-_panoramio.jpg",
+   "pos": [
+    46.500648,
+    11.74561
+   ]
+  }
  },
  {
   "id": "rifugio_fuciade",
@@ -2293,7 +2533,17 @@
    46.4706906,
    12.2619269
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_galassi",
+   "by": "Hans Braam",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:6-8_Stage_5-6_Rifugio_Vandelli_-_Rifugio_Galassi_-_panoramio_(8).jpg",
+   "pos": [
+    46.470944,
+    12.260958
+   ]
+  }
  },
  {
   "id": "rifugio_gardeccia",
@@ -2326,7 +2576,13 @@
    46.4471951,
    11.6401112
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_gardeccia",
+   "by": "Syrio",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Gardeccia_2.jpg"
+  }
  },
  {
   "id": "rifugio_giussani",
@@ -2376,7 +2632,17 @@
    46.5446625,
    12.0608051
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_giussani",
+   "by": "Mauro Girotto",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Camillo_Giussani.jpg",
+   "pos": [
+    46.544683,
+    12.060877
+   ]
+  }
  },
  {
   "id": "rifugio_juac",
@@ -2432,7 +2698,13 @@
    46.5731871,
    11.7499218
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_juac",
+   "by": "Steffen 962",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:2017_Gr%C3%B6dental_435_Rifugio_JUAC_Schutzh%C3%BCtte.JPG"
+  }
  },
  {
   "id": "rifugio_kostner",
@@ -2467,7 +2739,13 @@
    46.5186117,
    11.8484885
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_kostner",
+   "by": "Rupert Pupkin",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Franz-Kostner-H%C3%BCtte.jpg"
+  }
  },
  {
   "id": "rifugio_la_rezila",
@@ -2501,7 +2779,17 @@
    46.356253,
    11.6937262
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_la_rezila",
+   "by": "Mateus2019",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:ITA_%E2%80%94_Trentino-Alto_Adige_%E2%80%94_Provincia_autonoma_di_Trento_%E2%80%94_Moena_(Rifugio_La_Rezila)_Mattes_2023-06-18.jpg",
+   "pos": [
+    46.35625278,
+    11.693725
+   ]
+  }
  },
  {
   "id": "rifugio_lagazuoi",
@@ -2558,7 +2846,17 @@
    46.5277342,
    12.0081329
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_lagazuoi",
+   "by": "Guba Zoky Rabko",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Lagazuoi_(_Lagazoi)_2752m_View_from_Cortina_-_panoramio.jpg",
+   "pos": [
+    46.523379,
+    12.007971
+   ]
+  }
  },
  {
   "id": "rifugio_lago_d_ajal",
@@ -2644,7 +2942,17 @@
    46.611228,
    12.0069906
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_lavarella",
+   "by": "holger mohaupt",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Lavarellah%C3%BCtte_-_panoramio.jpg",
+   "pos": [
+    46.61083,
+    12.006823
+   ]
+  }
  },
  {
   "id": "rifugio_lunelli",
@@ -2669,7 +2977,13 @@
    46.6336536,
    12.4187088
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_lunelli",
+   "by": "Fantasy (de.wikipedia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_I_Lunelli_alla_Selvapiana.JPG"
+  }
  },
  {
   "id": "rifugio_malga_cavallera",
@@ -2728,7 +3042,17 @@
    46.1704086,
    11.5400074
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_malga_conseria",
+   "by": "Syrio",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_malga_Conseria_05.jpg",
+   "pos": [
+    46.170467,
+    11.539174
+   ]
+  }
  },
  {
   "id": "rifugio_marmolada_castiglioni",
@@ -2761,7 +3085,13 @@
    46.463453,
    11.8619958
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_marmolada_castiglioni",
+   "by": "Syrio",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Castiglioni_Marmolada_01.jpg"
+  }
  },
  {
   "id": "rifugio_micheluzzi",
@@ -2912,7 +3242,13 @@
    46.3114242,
    11.8382075
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_mulaz",
+   "by": "ValterVB",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:RifugioMulaz.jpg"
+  }
  },
  {
   "id": "rifugio_munt_de_sennes",
@@ -2939,7 +3275,13 @@
   ],
   "pos_src": "osm",
   "ele": 2176,
-  "ele_src": "osm"
+  "ele_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_munt_de_sennes",
+   "by": "Bbruno",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Munt_Sennes_03.JPG"
+  }
  },
  {
   "id": "rifugio_negritella",
@@ -3010,7 +3352,13 @@
    46.4952418,
    12.045729
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_nuvolau",
+   "by": "Rüdiger Kratz, St. Ingbert",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio-Nuvolau_2972_a.jpg"
+  }
  },
  {
   "id": "rifugio_ospitale",
@@ -3230,7 +3578,13 @@
    46.4563154,
    11.6184395
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_passo_santner",
+   "by": "Adert",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Passo_Santner_2023_01.jpg"
+  }
  },
  {
   "id": "rifugio_passo_staulanza",
@@ -3307,7 +3661,13 @@
    46.5020842,
    11.7246156
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_pertini",
+   "by": "Steffen 962",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:2017_Gr%C3%B6dental_259_Rifugio_Sandro_Pertini.JPG"
+  }
  },
  {
   "id": "rifugio_pian_de_fontana",
@@ -3399,7 +3759,17 @@
    46.6316062,
    12.3413231
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_pian_di_cengia",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:B%C3%BCllelejochh%C3%BCtte,_2528_m.jpg",
+   "pos": [
+    46.631667,
+    12.340833
+   ]
+  }
  },
  {
   "id": "rifugio_pisciadu",
@@ -3450,7 +3820,13 @@
    46.5364216,
    11.8218047
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_pisciadu",
+   "by": "Falk2",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:I07_988_Pisciad%C3%B9h%C3%BCtte.jpg"
+  }
  },
  {
   "id": "rifugio_plan_boe",
@@ -3546,7 +3922,13 @@
    46.2442914,
    11.8543039
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_pradidali",
+   "by": "Svíčková",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Pradidali_NE.JPG"
+  }
  },
  {
   "id": "rifugio_pramperet",
@@ -3610,7 +3992,17 @@
    46.4580086,
    11.632589
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_preuss",
+   "by": "Petr1888",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Preuss1.jpg",
+   "pos": [
+    46.45848667,
+    11.63200333
+   ]
+  }
  },
  {
   "id": "rifugio_re_alberto",
@@ -3647,7 +4039,13 @@
    46.4592885,
    11.6229675
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_re_alberto",
+   "by": "Syrio",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Re_Alberto_02.jpg"
+  }
  },
  {
   "id": "rifugio_refavaie",
@@ -3711,7 +4109,13 @@
    46.6004461,
    11.662151
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_resciesa",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rasch%C3%B6tzh%C3%BCtte,_2164_m.jpg"
+  }
  },
  {
   "id": "rifugio_roda_di_vael",
@@ -3777,7 +4181,13 @@
    46.4201666,
    11.630125
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_roda_di_vael",
+   "by": "Obisnow",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Roda_di_Vael.jpg"
+  }
  },
  {
   "id": "rifugio_rosetta",
@@ -3834,7 +4244,13 @@
    46.2674386,
    11.8390215
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_rosetta",
+   "by": "Antonio.maesano",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Pedrotti.JPG"
+  }
  },
  {
   "id": "rifugio_salei",
@@ -3914,7 +4330,13 @@
    46.4766382,
    12.2280217
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_san_marco",
+   "by": "Thilotello",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rif._san_marco.jpg"
+  }
  },
  {
   "id": "rifugio_san_sebastiano",
@@ -4004,7 +4426,17 @@
    46.2597878,
    11.961249
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_scarpa",
+   "by": "Gion274",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Scarpa-Gurekian.jpg",
+   "pos": [
+    46.259804,
+    11.95953
+   ]
+  }
  },
  {
   "id": "rifugio_scoiattoli",
@@ -4029,7 +4461,17 @@
    46.5080886,
    12.0467715
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_scoiattoli",
+   "by": "kallerna",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Tofana_di_Rozes_3.jpg",
+   "pos": [
+    46.50670278,
+    12.04596111
+   ]
+  }
  },
  {
   "id": "rifugio_scotoni",
@@ -4073,7 +4515,17 @@
    46.5531001,
    11.9983952
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_scotoni",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Scotonih%C3%BCtte,_Fanesgruppe.jpg",
+   "pos": [
+    46.553889,
+    11.996944
+   ]
+  }
  },
  {
   "id": "rifugio_scotter_palatini",
@@ -4172,7 +4624,17 @@
    46.65364,
    12.0594256
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_sennes",
+   "by": "Marie-Lan Taÿ Pamart",
+   "license": "CC BY 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%9C%C4%87ia_de_S%C3%A9nes_20180820.jpg",
+   "pos": [
+    46.65362,
+    12.060141
+   ]
+  }
  },
  {
   "id": "rifugio_serot",
@@ -4220,7 +4682,13 @@
    46.0734662,
    11.3881872
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_serot",
+   "by": "Syrio",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Serot_03.jpg"
+  }
  },
  {
   "id": "rifugio_sette_selle",
@@ -4263,7 +4731,13 @@
    46.1323304,
    11.392362
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_sette_selle",
+   "by": "Francofranco56",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Sette_Selle.JPG"
+  }
  },
  {
   "id": "rifugio_settimo_alpini",
@@ -4297,7 +4771,17 @@
    46.2219463,
    12.1887713
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_settimo_alpini",
+   "by": "Mauro742",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_VII_Alpini.jpg",
+   "pos": [
+    46.22259015,
+    12.18904437
+   ]
+  }
  },
  {
   "id": "rifugio_son_forca",
@@ -4332,7 +4816,17 @@
    46.5682758,
    12.185462
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_son_forca",
+   "by": "Tiia Monto",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Son_Forca.jpg",
+   "pos": [
+    46.569334,
+    12.185076
+   ]
+  }
  },
  {
   "id": "rifugio_taramelli",
@@ -4378,7 +4872,17 @@
    46.3946206,
    11.7403115
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_taramelli",
+   "by": "Naioli",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Monzoni_Torquato_Taramelli.jpg",
+   "pos": [
+    46.394622,
+    11.740583
+   ]
+  }
  },
  {
   "id": "rifugio_tissi",
@@ -4419,7 +4923,13 @@
    46.388082,
    12.0332541
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_tissi",
+   "by": "Number 21",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Tissi.JPG"
+  }
  },
  {
   "id": "rifugio_toni_demetz",
@@ -4467,7 +4977,13 @@
    46.514639,
    11.7395744
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_toni_demetz",
+   "by": "Leo72 (it.wikipedia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Toni_Demetz_2.jpg"
+  }
  },
  {
   "id": "rifugio_torrani",
@@ -4491,7 +5007,13 @@
    46.3785754,
    12.0566559
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_torrani",
+   "by": "Ceddo",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugiotorrani.JPG"
+  }
  },
  {
   "id": "rifugio_torre_di_pisa",
@@ -4533,7 +5055,17 @@
    46.3609254,
    11.5595511
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_torre_di_pisa",
+   "by": "Luca88w",
+   "license": "CC0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Torre_di_Pisa_(Latemar)_2018.jpg",
+   "pos": [
+    46.360744,
+    11.559853
+   ]
+  }
  },
  {
   "id": "rifugio_treviso",
@@ -4563,7 +5095,17 @@
    46.2368222,
    11.9029066
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_treviso",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Treviso,_1630_m.jpg",
+   "pos": [
+    46.236111,
+    11.903333
+   ]
+  }
  },
  {
   "id": "rifugio_vajolet",
@@ -4609,7 +5151,13 @@
    46.458555,
    11.6327282
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vajolet",
+   "by": "Ansgar Koreng",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:140625_Rifugio_Vajolet.jpg"
+  }
  },
  {
   "id": "rifugio_vallaccia",
@@ -4651,7 +5199,17 @@
    46.3974976,
    11.7207583
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vallaccia",
+   "by": "Naioli",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Vallaccia.jpg",
+   "pos": [
+    46.397475,
+    11.721062
+   ]
+  }
  },
  {
   "id": "rifugio_vallandro",
@@ -4706,7 +5264,13 @@
    46.6419371,
    12.1958776
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vallandro",
+   "by": "Falk2",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:J40_091_D%C3%BCrrensteinh%C3%BCtte.jpg"
+  }
  },
  {
   "id": "rifugio_vandelli",
@@ -4766,7 +5330,17 @@
    46.5216727,
    12.2266178
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vandelli",
+   "by": "Kufoleto",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Vandelli_hut.JPG",
+   "pos": [
+    46.52172222,
+    12.22680556
+   ]
+  }
  },
  {
   "id": "rifugio_vazzoler",
@@ -4805,7 +5379,17 @@
    46.3541204,
    12.0309969
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vazzoler",
+   "by": "Hans Braam",
+   "license": "CC BY 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Vazzoler,_32027_Taibon_Agordino,_Province_of_Belluno,_Italy.jpg",
+   "pos": [
+    46.354261,
+    12.031131
+   ]
+  }
  },
  {
   "id": "rifugio_vederna",
@@ -4875,7 +5459,13 @@
    46.231342,
    11.8427414
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_velo_della_madonna",
+   "by": "Hopfenmalz",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Velo_1.jpg"
+  }
  },
  {
   "id": "rifugio_venezia_pelmo",
@@ -4906,7 +5496,13 @@
    46.4155761,
    12.1565265
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_venezia_pelmo",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Venezia,_1946_m_und_Cristallogruppe.jpg"
+  }
  },
  {
   "id": "rifugio_vicenza",
@@ -4938,7 +5534,13 @@
    46.5199011,
    11.7236497
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_vicenza",
+   "by": "Enrico se (it.wikipedia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Rifugio_Vicenza_2.jpg"
+  }
  },
  {
   "id": "rifugio_viel_dal_pan",
@@ -5019,7 +5621,13 @@
   ],
   "pos_src": "osm",
   "ele": 2224,
-  "ele_src": "osm"
+  "ele_src": "osm",
+  "photo": {
+   "file": "commons/hut_rifugio_zsigmondy_comici",
+   "by": "Steffen 962",
+   "license": "Public domain",
+   "page": "https://commons.wikimedia.org/wiki/File:2010_Sextener_Dolomiten_033_Zsigmondy_H%C3%BCtte_2224.jpg"
+  }
  },
  {
   "id": "schlernboedelehuette",
@@ -5119,7 +5727,13 @@
    46.5073218,
    11.574626
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_schlernhaus",
+   "by": "Ansgar Koreng",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:140627_Schlernhaus.jpg"
+  }
  },
  {
   "id": "schlueterhuette",
@@ -5178,7 +5792,17 @@
    46.635317,
    11.8045837
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_schlueterhuette",
+   "by": "Clemens Stockner",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Schl%C3%BCterh%C3%BCtte_01.jpg",
+   "pos": [
+    46.635343,
+    11.805864
+   ]
+  }
  },
  {
   "id": "schutzhaus_tschafon",
@@ -5226,7 +5850,13 @@
    46.4807819,
    11.5304722
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_schutzhaus_tschafon",
+   "by": "Ansgar Koreng",
+   "license": "CC BY-SA 3.0 de",
+   "page": "https://commons.wikimedia.org/wiki/File:140628_Tschafonh%C3%BCtte.jpg"
+  }
  },
  {
   "id": "talschlusshuette",
@@ -5265,7 +5895,13 @@
    46.6513776,
    12.3538667
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_talschlusshuette",
+   "by": "Fantasy (de.wikipedia)",
+   "license": "CC BY-SA 3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Talschlussh%C3%BCtte-Rifugio_Fondo_Valle.JPG"
+  }
  },
  {
   "id": "tierser_alpl_huette",
@@ -5330,6 +5966,16 @@
    46.4972406,
    11.632844
   ],
-  "pos_src": "osm"
+  "pos_src": "osm",
+  "photo": {
+   "file": "commons/hut_tierser_alpl_huette",
+   "by": "2015 Michael 2015",
+   "license": "CC BY-SA 4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Tierser-Alpl-H%C3%BCtte,_2444_m,_2018-10-19.jpg",
+   "pos": [
+    46.496979,
+    11.633805
+   ]
+  }
  }
 ]

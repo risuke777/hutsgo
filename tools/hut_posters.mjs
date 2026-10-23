@@ -35,6 +35,7 @@ const PAGE = `<!doctype html><meta charset="utf-8">
 <style>html,body,#m{margin:0;width:${W}px;height:${H}px;overflow:hidden}</style>
 <div id="m"></div>
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script>${fs.readFileSync(path.join(ROOT, "static", "gsidem.js"), "utf8")}</script>
 <script>${fs.readFileSync(path.join(ROOT, "static", "plan3d.js"), "utf8")}</script>
 <script>HutsGoMap3D.gsiDem();</script>`;
 

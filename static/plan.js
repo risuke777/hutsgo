@@ -822,7 +822,7 @@
     var v = $("#plan-map-view"), w = v.clientWidth, hh = v.clientHeight;
     // 広い画面ではカードが左にかぶるので小屋を右へ、狭い画面では下にかぶるので上へ
     return window.matchMedia && window.matchMedia("(min-width: 900px)").matches
-      ? [Math.round(Math.min(360, w * 0.4) / 2), 0] : [0, -Math.round(hh * 0.24)];
+      ? [Math.round(Math.min(320, w * 0.44) / 2), 0] : [0, -Math.round(hh * 0.24)];
   }
   function openSheet(id) {
     var box = $("#plan-sheet");
@@ -870,11 +870,19 @@
     box.appendChild(x);
     var pic = PICS[h.id];
     if (pic) {
-      var fig = el("figure", "plan-sheet-pic");
+      var fig = el("figure", "plan-sheet-pic" + (pic.kind === "3d" ? " is-3d" : ""));
       var img = el("img");
       img.src = BASE + pic.src; img.alt = pic.alt || ""; img.width = 640; img.height = 400; img.decoding = "async";
       fig.appendChild(img);
-      fig.appendChild(el("figcaption", null, pic.kind === "3d" ? t("sh_pic_3d") + " · " + credit3d(h) : (pic.credit || "")));
+      // 3D の絵は写真と取り違えないよう絵の上に札（A1）。出典・撮影者は絵の下に小さく（絵にかぶせない）
+      if (pic.kind === "3d") fig.appendChild(el("span", "plan-sheet-tag", t("sh_pic_3d")));
+      var cap = el("figcaption", null, pic.kind === "3d" ? credit3d(h) : "");
+      if (pic.kind !== "3d") {
+        var a = el(pic.page ? "a" : "span", null, pic.credit || "");
+        if (pic.page) { a.href = pic.page; a.target = "_blank"; a.rel = "noopener"; }
+        cap.appendChild(a);
+      }
+      fig.appendChild(cap);
       box.appendChild(fig);
     }
     var body = el("div", "plan-sheet-body");

@@ -904,6 +904,8 @@
   function getTile(url) {
     if (store.has(url)) { var hit = store.get(url); store.delete(url); store.set(url, hit); return hit; }   // 使ったものを新しい側へ
     var pr = fetch(url).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); });
+    // 地理院の標高の「データ無し」（湖など）は岸の高さに埋める（gsidem.js。そのままだと高さ約 8 万 m の縞が立つ）
+    if (/\/dem_png\//.test(url) && window.HutsGoGsiDem) pr = pr.then(HutsGoGsiDem.fill);
     pr.catch(function () { store.delete(url); });
     store.set(url, pr);
     if (store.size > STORE_MAX) store.delete(store.keys().next().value);

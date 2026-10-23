@@ -128,6 +128,14 @@ def load_hut_records(path):
             con.execute(f"INSERT INTO hut_facilities (hut_id,{','.join(cols)},source_url,last_verified_at,confidence) "
                         f"VALUES (?,{','.join('?' * len(cols))},?,?,?)",
                         (hid, *[fac[k] for k in cols], fac.get("src", src), fac.get("checked", chk), fac.get("conf", conf)))
+        # 小屋の写真（Wikimedia Commons など。CC BY / BY-SA / CC0 / PD だけ。撮影者とライセンスを写真の下に出す）
+        ph = r.get("photo")
+        if ph:
+            lat_, lon_ = (ph.get("pos") or [None, None])
+            con.execute("""INSERT INTO photos (id,file,alt,alt_en,caption,caption_en,credit,role,hut_id,sort,license,source_url,lat,lon)
+                           VALUES (?,?,?,?,?,?,?,'hut',?,0,?,?,?,?)""",
+                        (hid + "_photo", ph["file"], r["name_ja"], r.get("name_en"), r["name_ja"], r.get("name_en"), ph["by"], hid,
+                         ph["license"], ph["page"], lat_, lon_))
 
 
 for _f in sorted((ROOT / "content" / "huts").glob("*.json")):
@@ -1296,9 +1304,9 @@ for lang, prefix in LOCALES:
     for h in huts_l:
         _ph = next((p for p in h.get("photos") or [] if p["role"] == "hut"), None)
         if _ph:
-            _pics[h["id"]] = dict(src=f"/static/img/{_ph['file']}-800.jpg", kind="photo",
-                                  alt=(_ph.get("alt_en") if lang == "en" else None) or _ph["alt"],
-                                  credit=" ".join(x for x in (_ph.get("credit"), _ph.get("license")) if x))
+            _pics[h["id"]] = dict(src=f"/static/img/{_ph['file']}-800.jpg", kind="photo", alt=_ph["alt_t"],
+                                  credit=" / ".join(x for x in (_ph.get("credit_t"), _ph.get("license")) if x),
+                                  page=_ph.get("source_url"))
         elif (ROOT / "static" / "img" / "huts" / f"{h['id']}.jpg").exists():
             _pics[h["id"]] = dict(src=f"/static/img/huts/{h['id']}.jpg", kind="3d")
     write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings, plan_zones=_pz,
