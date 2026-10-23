@@ -248,6 +248,24 @@
 .plan-sheet-pic figcaption{padding:.2rem .9rem;font-size:.66rem;line-height:1.45;color:var(--ink-soft);background:var(--card);
   border-bottom:1px solid var(--line)}
 .plan-sheet-pic figcaption a{color:inherit}
+/* 広い画面のカルーセル（写真 → 3D の絵）。どの絵も同じ 2:1 で、送っても高さが変わらない */
+.plan-sheet-car{position:relative}
+.plan-sheet-track{display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+  overscroll-behavior-x:contain}
+.plan-sheet-track::-webkit-scrollbar{display:none}
+.plan-sheet-track > .plan-sheet-pic{flex:0 0 100%;scroll-snap-align:start}
+.plan-sheet-car .plan-sheet-pic img{aspect-ratio:2/1;max-height:none}
+.plan-sheet-over{position:absolute;left:0;right:0;top:0;aspect-ratio:2/1;pointer-events:none}
+.plan-sheet-nav{position:absolute;top:50%;width:1.9rem;height:1.9rem;margin-top:-.95rem;border:0;border-radius:999px;
+  background:rgba(0,0,0,.5);color:#fff;font-size:1.25rem;line-height:1;cursor:pointer;pointer-events:auto;opacity:.8}
+.plan-sheet-nav.is-prev{left:.35rem}
+.plan-sheet-nav.is-next{right:.35rem}
+.plan-sheet-car:hover .plan-sheet-nav,.plan-sheet-nav:focus-visible{opacity:1}
+.plan-sheet-nav:focus-visible,.plan-sheet-dot:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.plan-sheet-dots{position:absolute;left:0;right:0;bottom:.35rem;display:flex;justify-content:center;gap:.1rem}
+.plan-sheet-dot{width:1.1rem;height:1.1rem;padding:0;border:0;background:none;cursor:pointer;pointer-events:auto;display:grid;place-items:center}
+.plan-sheet-dot::before{content:"";width:.45rem;height:.45rem;border-radius:999px;background:rgba(255,255,255,.55);box-shadow:0 0 2px rgba(0,0,0,.6)}
+.plan-sheet-dot[aria-current]::before{background:#fff}
 .plan-sheet-body{padding:.55rem .9rem .8rem}
 .plan-sheet-k{margin:0;font-size:.75rem;color:var(--ink-soft)}
 .plan-sheet-n{margin:.1rem 2rem .35rem 0;font-size:1.1rem;line-height:1.3}

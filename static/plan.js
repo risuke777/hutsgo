@@ -818,11 +818,14 @@
   // 絵: 小屋の写真があればそれ、無ければ小屋のまわりの 3D の静止画（tools/hut_posters.mjs）。写真と取り違えないよう札を付ける
   var PICS = window.HUTSGO_PLAN_PICS || {};
   var sheetId = null;
+  var WIDE = window.matchMedia ? window.matchMedia("(min-width: 900px)") : null;
+  function isWide() { return !!(WIDE && WIDE.matches); }
+  // 画面の幅が広い/狭いをまたいだら、開いているカードを作り直す（絵の枚数が変わる）
+  if (WIDE && WIDE.addEventListener) WIDE.addEventListener("change", function () { if (sheetId) fillSheet(sheetId); });
   function sheetOffset() {
     var v = $("#plan-map-view"), w = v.clientWidth, hh = v.clientHeight;
     // 広い画面ではカードが左にかぶるので小屋を右へ、狭い画面では下にかぶるので上へ
-    return window.matchMedia && window.matchMedia("(min-width: 900px)").matches
-      ? [Math.round(Math.min(320, w * 0.44) / 2), 0] : [0, -Math.round(hh * 0.24)];
+    return isWide() ? [Math.round(Math.min(320, w * 0.44) / 2), 0] : [0, -Math.round(hh * 0.24)];
   }
   function openSheet(id) {
     var box = $("#plan-sheet");
@@ -859,6 +862,73 @@
     if (typeof v === "string") dd.textContent = v; else dd.appendChild(v);
     dl.appendChild(dd);
   }
+  function picFig(h, pic) {
+    var fig = el("figure", "plan-sheet-pic" + (pic.kind === "3d" ? " is-3d" : ""));
+    var img = el("img");
+    img.src = BASE + pic.src; img.alt = pic.alt || ""; img.width = 640; img.height = 400; img.decoding = "async";
+    fig.appendChild(img);
+    // 3D の絵は写真と取り違えないよう絵の上に札（A1）。出典・撮影者は絵の下に小さく（絵にかぶせない）
+    if (pic.kind === "3d") fig.appendChild(el("span", "plan-sheet-tag", t("sh_pic_3d")));
+    var cap = el("figcaption", null, pic.kind === "3d" ? credit3d(h) : "");
+    if (pic.kind !== "3d") {
+      var a = el(pic.page ? "a" : "span", null, pic.credit || "");
+      if (pic.page) { a.href = pic.page; a.target = "_blank"; a.rel = "noopener"; }
+      cap.appendChild(a);
+    }
+    fig.appendChild(cap);
+    return fig;
+  }
+  // 絵を横に並べてスクロールで 1 枚ずつ止める。‹ › と点で送る（端から端へ回る）。出典は絵ごとに絵の下
+  function picCarousel(h, pics) {
+    var n = pics.length, cur = 0;
+    var nth = function (i) { return t("sh_pic_n").replace("{i}", i + 1).replace("{n}", n); };
+    var wrap = el("div", "plan-sheet-car");
+    wrap.setAttribute("role", "region"); wrap.setAttribute("aria-roledescription", "carousel");
+    wrap.setAttribute("aria-label", t("sh_pics"));
+    var track = el("div", "plan-sheet-track");
+    pics.forEach(function (p, i) {
+      var f = picFig(h, p);
+      f.setAttribute("role", "group"); f.setAttribute("aria-roledescription", "slide"); f.setAttribute("aria-label", nth(i));
+      if (i) f.querySelector("img").loading = "lazy";
+      track.appendChild(f);
+    });
+    wrap.appendChild(track);
+    // ボタンと点は絵（2:1）の上だけに重ねる。下の出典の行にはかぶせない
+    var over = el("div", "plan-sheet-over");
+    var dots = el("div", "plan-sheet-dots");
+    var go = function (i) {
+      i = (i + n) % n;
+      var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      track.scrollTo({ left: i * track.clientWidth, behavior: still ? "auto" : "smooth" });
+    };
+    [["is-prev", "‹", "sh_prev", -1], ["is-next", "›", "sh_next", 1]].forEach(function (b) {
+      var btn = el("button", "plan-sheet-nav " + b[0], b[1]);
+      btn.type = "button"; btn.setAttribute("aria-label", t(b[2]));
+      btn.addEventListener("click", function () { go(cur + b[3]); });
+      over.appendChild(btn);
+    });
+    pics.forEach(function (p, i) {
+      var d = el("button", "plan-sheet-dot");
+      d.type = "button"; d.setAttribute("aria-label", nth(i));
+      d.addEventListener("click", function () { go(i); });
+      dots.appendChild(d);
+    });
+    over.appendChild(dots);
+    wrap.appendChild(over);
+    var mark = function () {
+      cur = Math.max(0, Math.min(n - 1, Math.round(track.scrollLeft / Math.max(1, track.clientWidth))));
+      for (var i = 0; i < n; i++) {
+        if (i === cur) dots.children[i].setAttribute("aria-current", "true"); else dots.children[i].removeAttribute("aria-current");
+        track.children[i].inert = i !== cur;   // 見えていない絵の出典リンクには Tab で入らない
+      }
+    };
+    track.addEventListener("scroll", mark, { passive: true });
+    wrap.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); go(cur + (e.key === "ArrowLeft" ? -1 : 1)); }
+    });
+    mark();
+    return wrap;
+  }
   function fillSheet(id) {
     var box = $("#plan-sheet"), h = huts[id];
     if (!box || !h) return;
@@ -868,23 +938,10 @@
     x.type = "button"; x.setAttribute("aria-label", t("sh_close"));
     x.addEventListener("click", function () { closeSheet(); });
     box.appendChild(x);
-    var pic = PICS[h.id];
-    if (pic) {
-      var fig = el("figure", "plan-sheet-pic" + (pic.kind === "3d" ? " is-3d" : ""));
-      var img = el("img");
-      img.src = BASE + pic.src; img.alt = pic.alt || ""; img.width = 640; img.height = 400; img.decoding = "async";
-      fig.appendChild(img);
-      // 3D の絵は写真と取り違えないよう絵の上に札（A1）。出典・撮影者は絵の下に小さく（絵にかぶせない）
-      if (pic.kind === "3d") fig.appendChild(el("span", "plan-sheet-tag", t("sh_pic_3d")));
-      var cap = el("figcaption", null, pic.kind === "3d" ? credit3d(h) : "");
-      if (pic.kind !== "3d") {
-        var a = el(pic.page ? "a" : "span", null, pic.credit || "");
-        if (pic.page) { a.href = pic.page; a.target = "_blank"; a.rel = "noopener"; }
-        cap.appendChild(a);
-      }
-      fig.appendChild(cap);
-      box.appendChild(fig);
-    }
+    // 広い画面は写真と 3D の絵をカルーセルで横に送る。狭い画面は 1 枚目だけ（カードを低く）
+    var pics = [].concat(PICS[h.id] || []);
+    if (!isWide()) pics = pics.slice(0, 1);
+    if (pics.length) box.appendChild(pics.length > 1 ? picCarousel(h, pics) : picFig(h, pics[0]));
     var body = el("div", "plan-sheet-body");
     var area = h.area && h.area.name ? (LANG === "en" ? (h.area.name.en || h.area.name.ja) : (h.area.name.ja || h.area.name.en)) : "";
     var ele = h.location && h.location.elevation_m;

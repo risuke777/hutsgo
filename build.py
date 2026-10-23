@@ -1299,16 +1299,20 @@ for lang, prefix in LOCALES:
         if any(h["zone"]["id"] == z["id"] for h in huts_l):
             _src = "topo" if any(r["country"]["line_source"] == "osm" for r in _rs) else "gsi"
             _pz.append(dict(id=z["id"], name=z["name"], source=_src))
-    # 地図で小屋を押したときの絵: 小屋の写真（role=hut）。無ければ小屋のまわりの 3D の静止画（tools/hut_posters.mjs）
+    # 地図で小屋を押したときの絵（並べる順）: 小屋の写真（role=hut）→ 小屋のまわりの 3D の静止画（tools/hut_posters.mjs）。
+    # 狭い画面は 1 枚目だけ、広い画面は全部をカルーセルで（plan.js）
     _pics = {}
     for h in huts_l:
+        _ls = []
         _ph = next((p for p in h.get("photos") or [] if p["role"] == "hut"), None)
         if _ph:
-            _pics[h["id"]] = dict(src=f"/static/img/{_ph['file']}-800.jpg", kind="photo", alt=_ph["alt_t"],
-                                  credit=" / ".join(x for x in (_ph.get("credit_t"), _ph.get("license")) if x),
-                                  page=_ph.get("source_url"))
-        elif (ROOT / "static" / "img" / "huts" / f"{h['id']}.jpg").exists():
-            _pics[h["id"]] = dict(src=f"/static/img/huts/{h['id']}.jpg", kind="3d")
+            _ls.append(dict(src=f"/static/img/{_ph['file']}-800.jpg", kind="photo", alt=_ph["alt_t"],
+                            credit=" / ".join(x for x in (_ph.get("credit_t"), _ph.get("license")) if x),
+                            page=_ph.get("source_url")))
+        if (ROOT / "static" / "img" / "huts" / f"{h['id']}.jpg").exists():
+            _ls.append(dict(src=f"/static/img/huts/{h['id']}.jpg", kind="3d"))
+        if _ls:
+            _pics[h["id"]] = _ls
     write(f"{d}plan/index.html", "plan.html", page="/plan/", plan_strings=plan_strings, plan_zones=_pz,
           plan_pics=_pics, trails=m["trails"], **g)
 
